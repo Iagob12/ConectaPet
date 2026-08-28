@@ -1,0 +1,302 @@
+# ConectaPet — Estrutura e texto da landing page
+
+> Documento de copy. Cada seção traz: objetivo, textos prontos e observações de conteúdo.
+> Trechos entre `[colchetes]` precisam de dado real antes de publicar.
+
+---
+
+## 0. Barra de aviso (topo)
+
+**Texto:** Frete grátis nas tags ConectaPet para todo o Brasil.
+**Link:** Ver condições
+
+---
+
+## 1. Menu principal
+
+**Logo:** ConectaPet
+
+**Itens de navegação:**
+- Como funciona
+- Produtos
+- Planos
+- Para petshops
+- Ajuda
+
+**Ações:**
+- Entrar
+- Quero minha tag
+
+---
+
+## 2. Hero (primeira dobra)
+
+**Título:** Se ele se perder, quem achar já sabe pra quem ligar.
+
+**Subtítulo:** A ConectaPet é uma tag NFC para coleira. Quem encontrar seu pet só encosta o celular na tag e vê seus dados de contato na hora — sem app, sem cadastro, sem ligar pra ninguém antes.
+
+**Botão principal:** Quero minha tag
+**Botão secundário:** Ver como funciona
+
+**Microcopy abaixo dos botões:** Sem mensalidade obrigatória · Funciona em iPhone e Android · Envio em até [X] dias úteis
+
+**Imagem:** cachorro de coleira com a tag em destaque + mão aproximando o celular.
+
+---
+
+## 3. Barra de confiança
+
+Faixa horizontal com quatro selos curtos:
+
+- **[X] mil** pets identificados
+- **[X]** reencontros registrados
+- **Toque e pronto** sem instalar aplicativo
+- **Dados protegidos** conforme a LGPD
+
+---
+
+## 4. Como funciona
+
+**Título:** Três passos e seu pet nunca mais fica sem identificação.
+
+**Passo 1 — Prenda na coleira**
+A tag é leve, resistente à água e cabe em qualquer coleira ou peitoral. Chega pronta para usar.
+
+**Passo 2 — Preencha o perfil**
+Você acessa o link da tag e cadastra nome do pet, seus telefones, WhatsApp e informações de saúde. Pode editar quando quiser, quantas vezes quiser.
+
+**Passo 3 — Quem achar, encosta o celular**
+A tag abre o perfil do seu pet automaticamente no navegador de quem encontrou. Em segundos, essa pessoa tem seu contato na tela.
+
+**Botão:** Quero minha tag
+
+---
+
+## 5. O problema (por que a tag existe)
+
+**Título:** A maioria dos pets perdidos volta pra casa por causa de um vizinho, não de uma busca.
+
+**Texto:** Quando alguém encontra um animal na rua, quase sempre quer ajudar — mas não sabe como. A plaquinha gravada fica ilegível com o tempo, o microchip só é lido em clínica ou ONG e o cartaz no poste depende de sorte. A ConectaPet resolve o único ponto que realmente importa nesse momento: colocar o seu telefone na mão de quem está com o seu pet.
+
+**Dado de apoio:** [inserir estatística de animais perdidos no Brasil com fonte]
+
+---
+
+## 6. Benefícios
+
+**Título:** Feita para o pior dia possível.
+
+**Contato na hora**
+Nome, telefone, WhatsApp e endereço aproximado aparecem em uma página simples, que qualquer pessoa entende.
+
+**Sem app para ninguém**
+Nem você nem quem encontrou precisa instalar nada. A tag abre direto no navegador do celular.
+
+**Perfil que você atualiza sozinho**
+Mudou de número, de cidade ou de tutor? Você edita o perfil e a tag continua a mesma.
+
+**Informações de saúde junto**
+Alergias, medicamentos de uso contínuo e contato do veterinário ficam visíveis para quem for socorrer.
+
+**Aguenta a rotina do pet**
+Resistente a água, banho, chuva e mordida. [Confirmar grau de resistência e material antes de publicar.]
+
+**Aviso de leitura**
+Você recebe uma notificação sempre que alguém acessa a tag do seu pet. [Confirmar se é recurso do plano pago.]
+
+---
+
+## 7. Produtos
+
+**Título:** Escolha o modelo do seu pet.
+
+**Subtítulo:** Todos os modelos vêm com o perfil digital incluído.
+
+**Tag Clássica** — R$ [preço]
+Formato redondo, em [material]. A escolhida por 8 em cada 10 tutores. Cães e gatos de todos os portes.
+
+**Tag Slim** — R$ [preço]
+Mais fina e leve, pensada para gatos e cães de pequeno porte que incomodam com peso na coleira.
+
+**Coleira ConectaPet** — R$ [preço]
+Coleira com a tag já integrada, sem pingente solto. Disponível em [tamanhos e cores].
+
+**Kit Multipet** — R$ [preço]
+Duas ou mais tags com desconto, cada uma com seu próprio perfil. Para quem tem mais de um animal em casa.
+
+**Botão de cada card:** Comprar
+
+---
+
+## 8. Planos
+
+**Título:** A tag funciona pra sempre. O plano é opcional.
+
+**ConectaPet Free — R$ 0**
+Incluso na compra da tag, sem prazo de validade.
+- Perfil do pet com foto e contatos
+- Leitura ilimitada da tag
+- Edição de dados quando quiser
+
+**ConectaPet Plus — R$ [preço]/mês**
+Para quem quer saber o que aconteceu enquanto o pet estava fora.
+- Tudo do Free
+- Alerta no seu celular a cada leitura da tag
+- Localização aproximada de onde a tag foi lida
+- Modo "pet perdido" com aviso na página
+- Até [X] contatos de emergência
+- Carteira de vacinação digital
+
+**Botão:** Assinar o Plus
+**Link discreto:** Comparar os planos em detalhe
+
+---
+
+## 9. O que aparece quando alguém encosta o celular
+
+**Título:** Uma tela só, com o que resolve.
+
+**Texto:** Quem encontrou seu pet vê uma página simples com foto e nome do animal, o botão de ligar, o botão de chamar no WhatsApp, o aviso de que o pet está perdido e as informações de saúde que você escolher mostrar. Nada de cadastro, nada de login. Você decide o que fica visível e o que fica escondido.
+
+**Elemento visual:** mockup da tela do celular.
+
+---
+
+## 10. Comparativo
+
+**Título:** ConectaPet, plaquinha e microchip: qual faz o quê.
+
+Tabela com as linhas:
+- Quem consegue ler
+- Precisa de equipamento especial
+- Dá para atualizar os dados
+- Mostra contato na hora
+- Mostra informações de saúde
+- Funciona sem internet [checar: a leitura NFC abre um link, então exige conexão — descrever com honestidade]
+
+**Texto de fechamento:** O microchip é a identificação legal e permanente do seu pet, e a ConectaPet não substitui isso. Ela cobre as primeiras horas, quando quem está com o animal é um vizinho e não uma clínica.
+
+---
+
+## 11. Histórias de reencontro
+
+**Título:** Quem já usou conta melhor.
+
+Três depoimentos com foto do pet, nome do tutor e cidade.
+
+*Espaço para depoimentos reais. Não publicar texto fictício aqui.*
+
+**Link:** Ver mais histórias
+
+---
+
+## 12. Compatibilidade
+
+**Título:** Funciona no celular de quem encontrou o seu pet?
+
+**Texto:** Quase sempre, sim. Todo iPhone a partir do [modelo] e a maioria dos Android lançados desde [ano] leem tags NFC sem precisar de aplicativo. Para os poucos aparelhos que não leem, cada tag também traz um QR Code impresso e um código curto que pode ser digitado no site.
+
+**Link:** Ver lista de aparelhos compatíveis
+
+---
+
+## 13. Para petshops, clínicas e ONGs
+
+**Título:** Sua marca na coleira dos seus clientes.
+
+**Texto:** Vendemos a ConectaPet no atacado, com personalização da tag e da página do pet. Indicado para petshops, clínicas veterinárias, adestradores e ONGs que querem entregar identificação junto com a adoção.
+
+**Botão:** Quero vender ConectaPet
+
+---
+
+## 14. Perguntas frequentes
+
+**A tag funciona sem bateria?**
+Sim. A tag NFC não tem bateria e não precisa ser carregada. Ela é ativada pela energia do próprio celular que encosta nela.
+
+**Meus dados ficam públicos?**
+Só aparece o que você marcar como visível. Endereço completo e documentos nunca são exibidos. Você pode desativar o perfil a qualquer momento.
+
+**Preciso pagar mensalidade?**
+Não. A tag e o perfil básico funcionam sem cobrança recorrente. O plano Plus é opcional.
+
+**E se eu perder a tag?**
+Você compra uma nova e transfere o perfil do seu pet para ela, sem preencher tudo de novo.
+
+**Serve para gato?**
+Serve. Recomendamos o modelo Slim junto com uma coleira de segurança com fecho que se solta sozinho.
+
+**A tag rastreia meu pet por GPS?**
+Não. A ConectaPet não é um rastreador: ela mostra seus contatos para quem encontrar o animal. [Manter essa pergunta em destaque — é a principal confusão do público.]
+
+**Quanto tempo demora a entrega?**
+[Prazo] para [regiões], com envio em até [X] dias úteis após a confirmação do pagamento.
+
+**Posso trocar ou devolver?**
+Sim, em até 7 dias corridos após o recebimento, conforme o Código de Defesa do Consumidor.
+
+---
+
+## 15. Conteúdo / blog
+
+**Título:** Dicas de quem entende de pet perdido.
+
+Quatro cards de artigos, por exemplo:
+- O que fazer nas primeiras 24 horas depois que seu pet sumiu
+- Como montar um cartaz de pet desaparecido que as pessoas leem
+- Microchip, tag e plaquinha: o que a lei exige no seu estado
+- Achei um cachorro na rua: o passo a passo
+
+---
+
+## 16. Newsletter
+
+**Título:** Novidades e dicas de segurança pet, sem spam.
+
+**Campos:** Seu e-mail · Qual é o seu pet? (cachorro / gato / outro)
+**Botão:** Cadastrar
+
+---
+
+## 17. Chamada final
+
+**Título:** Coloque na coleira hoje. Espere não precisar nunca.
+
+**Subtítulo:** Uma tag ConectaPet custa menos que um saco de ração e resolve o momento em que você mais vai precisar de ajuda.
+
+**Botão principal:** Quero minha tag
+**Botão secundário:** Falar com a gente no WhatsApp
+
+---
+
+## 18. Rodapé
+
+**Colunas:**
+- **Produtos:** Tag Clássica · Tag Slim · Coleira ConectaPet · Kit Multipet · Planos
+- **Ajuda:** Central de atendimento · Como ativar a tag · Rastrear meu pedido · Trocas e devoluções · Fale conosco
+- **Empresa:** Sobre a ConectaPet · Blog · Para petshops · Parcerias com ONGs · Trabalhe conosco
+- **Políticas:** Política de privacidade · Política de cookies · Termos de uso · Política de entrega
+
+**Redes sociais:** Instagram · TikTok · YouTube · WhatsApp
+
+**Formas de pagamento:** Pix, boleto e cartão de crédito
+
+**Linha legal:** ConectaPet · CNPJ [número] · [endereço] · © [ano] Todos os direitos reservados.
+
+---
+
+## 19. Bloco de texto para SEO (fim da página)
+
+**Título:** ConectaPet: tag NFC de identificação para cães e gatos
+
+A ConectaPet é uma tag de identificação por aproximação (NFC) que se prende à coleira do seu animal. Quando alguém encontra um pet perdido, basta encostar o celular na tag para abrir uma página com o nome do animal, os telefones do tutor, o contato de WhatsApp e informações de saúde relevantes. Não é preciso instalar aplicativo, criar conta ou ter um leitor especial: funciona com o NFC que já vem na maioria dos celulares e também por QR Code.
+
+**Identificação que você atualiza quando quiser**
+Diferente da plaquinha gravada, os dados da tag ficam em um perfil online que você edita a qualquer momento. Mudou de telefone, de endereço ou adicionou um contato de emergência? A atualização vale na hora, na mesma tag.
+
+**Complemento ao microchip**
+O microchip continua sendo a identificação permanente e legal do seu pet, lida em clínicas veterinárias e ONGs. A ConectaPet atua antes disso: nas primeiras horas, com a pessoa comum que encontrou o animal na rua e quer devolvê-lo.
+
+**Para cachorros, gatos e outros pets**
+Os modelos atendem desde gatos e cães de pequeno porte, com a versão Slim, até cães grandes, com a Tag Clássica e a coleira integrada. Quem tem mais de um animal pode usar o Kit Multipet, com um perfil independente para cada um.

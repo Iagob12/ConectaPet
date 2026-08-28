@@ -1,0 +1,280 @@
+# ConectaPet — Base de Design System
+
+Extraído da identidade visual de referência (mockup PupJoy) e adaptado aos dois contextos de uso do produto:
+
+- **Tutor** — cadastra e edita os dados dele e do cachorro. Sessão longa, formulário, calma.
+- **Quem encontrou** — abre a tag na rua, com o cachorro na mão. Sessão de 20 segundos, sol na tela, celular de outra pessoa. **Este é o contexto que manda nas decisões.**
+
+> Os códigos hex foram lidos da imagem e são aproximados. Confira contra o arquivo de origem antes de fechar os tokens.
+
+---
+
+## 1. Cores
+
+### 1.1 Paleta principal
+
+| Token | Hex | Uso |
+|---|---|---|
+| `purple-600` | `#6C4CF0` | Cor de marca. Botões primários, links, segunda linha dos títulos |
+| `purple-700` | `#5335D4` | Hover e pressed do primário |
+| `purple-100` | `#E9E3FE` | Fundo de chips, badges e estados selecionados |
+| `yellow-400` | `#FFD84A` | Moldura da página, blocos de destaque, newsletter |
+| `yellow-200` | `#FFEDB0` | Fundos suaves derivados do amarelo |
+| `ink-900` | `#101014` | Rodapé, primeira linha dos títulos, texto forte |
+
+O par assinatura da identidade é o **título em duas linhas**: linha 1 em `ink-900`, linha 2 em `purple-600`. Use isso como o elemento de marca mais reconhecível, não a moldura amarela.
+
+### 1.2 Paleta secundária (fundos de card)
+
+São os pastéis dos cards de "Bring home your perfect companion" e dos depoimentos. Servem para **agrupar informação**, nunca para hierarquizar ação.
+
+| Token | Hex |
+|---|---|
+| `pastel-peach` | `#FBE7CE` |
+| `pastel-mint` | `#DFEEDA` |
+| `pastel-lavender` | `#E7E1F7` |
+| `pastel-sky` | `#DCE9F5` |
+| `pastel-cream` | `#FFF8EE` |
+
+Regra: texto sobre pastel é sempre `ink-900` ou `gray-700`. Nunca branco.
+
+### 1.3 Neutros
+
+| Token | Hex | Uso |
+|---|---|---|
+| `white` | `#FFFFFF` | Fundo da folha, cards de formulário |
+| `gray-50` | `#F6F6F7` | Fundo de seção alternada, input desabilitado |
+| `gray-200` | `#E4E4E8` | Bordas, divisores |
+| `gray-500` | `#8A8A93` | Texto de apoio, placeholder, legenda |
+| `gray-700` | `#4A4A52` | Corpo de texto longo |
+
+### 1.4 Paleta de suporte (resgate e sistema)
+
+Esta paleta não existe no mockup de referência e é a adição mais importante do sistema. Ela existe só na tela de quem encontrou o pet.
+
+| Token | Hex | Uso |
+|---|---|---|
+| `rescue-call` | `#0F8F4E` | Botão "Ligar agora". Verde com branco por cima passa em contraste |
+| `rescue-whats` | `#128C7E` | Botão WhatsApp. Verde escuro da própria marca; o `#25D366` claro **reprova** com texto branco |
+| `alert-600` | `#D92D20` | Faixa "ESTE PET ESTÁ PERDIDO" |
+| `alert-50` | `#FEF0EF` | Fundo do bloco de alerta |
+| `success-600` | `#2E9E5B` | Confirmação de salvamento no painel do tutor |
+| `focus-ring` | `#6C4CF0` a 40% | Anel de foco de teclado, 3px |
+
+### 1.5 Regras de contraste
+
+Não negociáveis, porque a tela de resgate é lida na rua:
+
+1. **Nunca texto branco sobre `yellow-400`.** Sobre amarelo, só `ink-900`.
+2. `purple-600` sobre branco funciona em títulos grandes, mas fica no limite em texto de 14px. Para texto pequeno em roxo, use `purple-700`.
+3. Corpo de texto na página do finder: mínimo `gray-700`, nunca `gray-500`.
+4. Botões de contato: preencher com cor sólida, nunca outline. Outline some no sol.
+
+---
+
+## 2. Tipografia
+
+### 2.1 Fontes sugeridas
+
+O mockup usa uma display sans geométrica muito pesada em caixa alta, e uma sans neutra pequena no corpo. Equivalentes livres:
+
+- **Display (títulos de seção, hero):** `Archivo Black` — ou `Poppins` 800, se você quiser uma única família para tudo.
+- **Interface e corpo:** `Inter` — melhor legibilidade em telas pequenas e números tabulares para telefone.
+- **Alternativa de família única:** `Plus Jakarta Sans` (700/800 para títulos, 400/500 para corpo). Menos fiel ao mockup, mas reduz o peso da página, que importa em 3G na rua.
+
+Recomendação: **Archivo Black + Inter** no site de marketing, e **só Inter** no perfil do pet e no painel do tutor. Display pesada em caixa alta atrapalha leitura rápida.
+
+### 2.2 Hierarquia
+
+| Nível | Fonte / peso | Desktop | Mobile | Observação |
+|---|---|---|---|---|
+| Display | Archivo Black | 64 / 1.0 | 40 / 1.05 | Só o hero. Caixa alta, tracking -1% |
+| H1 | Archivo Black | 44 / 1.1 | 32 / 1.15 | Título de seção, caixa alta |
+| H2 | Poppins 700 | 32 / 1.2 | 26 / 1.25 | Caixa normal a partir daqui |
+| H3 | Inter 700 | 22 / 1.3 | 20 / 1.3 | Título de card |
+| Body L | Inter 400 | 18 / 1.6 | 17 / 1.6 | **Mínimo na página do finder** |
+| Body | Inter 400 | 16 / 1.6 | 16 / 1.6 | Padrão. Nunca abaixo de 16 em input |
+| Small | Inter 400 | 14 / 1.5 | 14 / 1.5 | Legenda, ajuda de campo |
+| Label | Inter 600 | 14 / 1.4 | 14 / 1.4 | Rótulo de formulário, sempre visível |
+| Button | Inter 600 | 16 | 17 | Sem caixa alta |
+
+Regras:
+- Caixa alta só em Display e H1. Em qualquer outro lugar ela custa velocidade de leitura.
+- Largura máxima de parágrafo: 68 caracteres.
+- Input com fonte abaixo de 16px faz o iOS dar zoom sozinho e desalinha a tela. Nunca.
+
+---
+
+## 3. Componentes
+
+### 3.1 Botões
+
+Todos em formato pílula (`radius-full`), como no mockup.
+
+| Variante | Fundo | Texto | Borda | Altura |
+|---|---|---|---|---|
+| Primário | `purple-600` | branco | — | 48 desktop / 52 mobile |
+| Secundário | branco | `ink-900` | 1.5px `ink-900` | 48 / 52 |
+| Sutil | `purple-100` | `purple-700` | — | 40 |
+| Texto | — | `purple-700` | — | — |
+| **Resgate — Ligar** | `rescue-call` | branco | — | **64, largura total** |
+| **Resgate — WhatsApp** | `rescue-whats` | branco | — | **64, largura total** |
+
+Especificação dos botões de resgate:
+- Largura 100%, empilhados, `gap: 12px`.
+- Ícone à esquerda, 24px, com rótulo escrito por extenso ("Ligar para a Ana"). Ícone sozinho não comunica.
+- Ficam **acima da dobra**, na zona do polegar. Nada de scroll para achar o telefone.
+- Alvo de toque mínimo 56×56 em qualquer botão da página do finder.
+- Estado pressed: escurece 8%. Sem animação de mais de 150ms.
+
+### 3.2 Inputs
+
+Usados quase só pelo tutor, mas o cadastro é onde ele desiste — então densidade baixa e clareza alta.
+
+- Altura 52px, `radius-md` (12px). **Pílula só em campo de busca e newsletter**, como no mockup; em formulário longo a pílula prejudica o alinhamento vertical.
+- Borda 1.5px `gray-200`; foco: borda `purple-600` + anel `focus-ring` 3px.
+- Erro: borda `alert-600`, mensagem abaixo em 14px com ícone. Nunca comunicar erro só por cor.
+- **Label sempre acima e sempre visível.** Placeholder que vira label some quando o campo é preenchido e quebra a revisão dos dados.
+- Campo de telefone com máscara `(00) 00000-0000` e teclado numérico (`inputmode="tel"`).
+- Campos opcionais marcados com "(opcional)" no label — é mais rápido que marcar os obrigatórios com asterisco.
+- Ajuda de campo em `gray-500`, 14px, abaixo do input, não em tooltip.
+- Upload de foto do pet: área tracejada 1.5px `gray-200`, `radius-lg`, com preview redondo de 96px.
+
+### 3.3 Cards
+
+Três tipos, herdados do mockup:
+
+**Card de conteúdo (site de marketing)**
+`radius-lg` 20px · fundo pastel ou branco · padding 24 · sem sombra · imagem interna com `radius-md` 16px.
+
+**Card de dado (painel do tutor)**
+`radius-lg` 20px · fundo branco · borda 1px `gray-200` · padding 20 · sombra `shadow-sm`.
+
+**Card de perfil do pet (tela do finder)**
+`radius-xl` 28px · fundo branco · foto do cachorro em 4:3 no topo com cantos superiores arredondados · nome em H2 logo abaixo · sem borda, com `shadow-md` para separar do fundo.
+
+Card inteiro clicável leva `cursor: pointer` e elevação no hover; nunca coloque dois destinos diferentes dentro do mesmo card.
+
+### 3.4 Faixa de alerta
+
+Exclusiva da página do finder, no topo, acima de tudo:
+fundo `alert-50`, borda superior 4px `alert-600`, texto `ink-900` em 18px semibold, ícone à esquerda. Sem animação piscando.
+
+---
+
+## 4. Estética
+
+### 4.1 Arredondamento
+
+| Token | Valor | Onde |
+|---|---|---|
+| `radius-sm` | 8px | Chips, tags, badges |
+| `radius-md` | 12px | Inputs, imagens dentro de card |
+| `radius-lg` | 20px | Cards |
+| `radius-xl` | 28px | Blocos grandes, card do pet, newsletter |
+| `radius-sheet` | 32px | Folha branca dentro da moldura amarela |
+| `radius-full` | 9999px | Botões, avatares, campo de busca |
+
+### 4.2 Sombras
+
+A identidade é praticamente plana — separação vem de cor de fundo, não de profundidade. Use pouco.
+
+```
+shadow-xs:  0 1px 2px  rgba(16,16,20,0.06)
+shadow-sm:  0 4px 12px rgba(16,16,20,0.08)
+shadow-md:  0 12px 28px rgba(16,16,20,0.10)
+shadow-focus: 0 0 0 3px rgba(108,76,240,0.40)
+```
+
+`shadow-md` só no card do pet e em modais. Nada de sombra colorida.
+
+### 4.3 Espaçamento
+
+Escala base 4px: **4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96**
+
+- Padding interno de card: 20 (mobile) / 24 (desktop)
+- Espaço entre campos de formulário: 20
+- Espaço entre grupos de campos: 32
+- Espaço entre seções da landing: 96 (desktop) / 64 (mobile)
+- Gutter da grade: 24 · container 1200px · 12 colunas desktop, 4 mobile
+- Margem lateral mobile: 20
+
+### 4.4 A moldura amarela
+
+É o elemento mais marcante da referência e o mais perigoso para o produto. Regra:
+
+- **Landing page e blog:** usar a moldura (24px desktop, 12px mobile) com a folha branca em `radius-sheet`.
+- **Painel do tutor:** moldura só no topo, como faixa de 8px. Nas laterais ela rouba largura útil do formulário.
+- **Página do finder:** **sem moldura.** Full bleed. Cada pixel serve para o botão de ligar. O amarelo aparece só como faixa fina de 6px no topo, para identificar a marca.
+
+---
+
+## 5. Regras específicas da tela de quem encontrou o pet
+
+Esta tela não é uma página de site. Trate como um cartão de emergência.
+
+**Ordem fixa do conteúdo, de cima para baixo:**
+1. Faixa de alerta "Este pet está perdido"
+2. Foto e nome do cachorro
+3. Botão Ligar (verde, largura total)
+4. Botão WhatsApp (verde escuro, largura total)
+5. "Avisar onde encontrei" — envia localização com um toque, permissão opcional
+6. Informações de saúde (alergias, medicação, contato do veterinário) em bloco aberto, não em acordeão fechado
+7. Segundo contato de emergência
+8. Marca ConectaPet, discreta, no fim
+
+**Proibido nesta tela:**
+- Login, cadastro, captcha, cookie banner, modal de newsletter
+- Carrossel, animação de entrada, scroll infinito
+- Fonte abaixo de 17px
+- Qualquer botão que não seja de contato acima da dobra
+- Fonte web bloqueante — carregue com `font-display: swap` e uma system font de fallback, porque essa página abre em rede ruim
+
+**Metas técnicas:** primeira renderização útil abaixo de 1,5s em 3G; página abaixo de 150KB; funciona sem JavaScript para os botões `tel:` e `wa.me`.
+
+---
+
+## 6. Tokens em CSS
+
+```css
+:root {
+  /* principal */
+  --purple-600:#6C4CF0; --purple-700:#5335D4; --purple-100:#E9E3FE;
+  --yellow-400:#FFD84A; --yellow-200:#FFEDB0; --ink-900:#101014;
+
+  /* secundária */
+  --pastel-peach:#FBE7CE; --pastel-mint:#DFEEDA;
+  --pastel-lavender:#E7E1F7; --pastel-sky:#DCE9F5; --pastel-cream:#FFF8EE;
+
+  /* neutros */
+  --white:#FFFFFF; --gray-50:#F6F6F7; --gray-200:#E4E4E8;
+  --gray-500:#8A8A93; --gray-700:#4A4A52;
+
+  /* suporte */
+  --rescue-call:#0F8F4E; --rescue-whats:#128C7E;
+  --alert-600:#D92D20; --alert-50:#FEF0EF; --success-600:#2E9E5B;
+
+  /* forma */
+  --radius-sm:8px; --radius-md:12px; --radius-lg:20px;
+  --radius-xl:28px; --radius-sheet:32px; --radius-full:9999px;
+
+  /* espaço */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-6:24px; --sp-8:32px; --sp-12:48px; --sp-16:64px; --sp-24:96px;
+
+  /* sombra */
+  --shadow-xs:0 1px 2px rgba(16,16,20,.06);
+  --shadow-sm:0 4px 12px rgba(16,16,20,.08);
+  --shadow-md:0 12px 28px rgba(16,16,20,.10);
+  --shadow-focus:0 0 0 3px rgba(108,76,240,.40);
+}
+```
+
+---
+
+## 7. Pendências antes de fechar o sistema
+
+- Confirmar os hex contra o arquivo original da identidade.
+- Testar a tela do finder ao sol, em celular Android de entrada — é o cenário real.
+- Definir versão em modo escuro? Sugestão: não fazer. A tela do finder deve ser sempre clara e de alto contraste, independente do sistema do celular de quem achou o pet.
+- Validar os dois verdes de resgate com quem cuida da marca; eles são a única cor do sistema que não vem da identidade.
