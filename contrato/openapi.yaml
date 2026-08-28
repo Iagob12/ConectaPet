@@ -1,0 +1,1874 @@
+openapi: 3.1.0
+
+info:
+  title: ConectaPet API
+  version: 0.1.0-rascunho
+  summary: Contrato provisório — fonte única para backend e frontend.
+  description: |
+    Contrato escrito **antes** da implementação, a partir das rotas aprovadas e do
+    documento de decisões. O backend implementa contra este arquivo; o frontend gera
+    cliente tipado e mocks a partir dele. Divergência vira erro de compilação.
+
+    ## Decisões que este arquivo materializa
+
+    - **Dois códigos.** `codigoPublico` (10 caracteres) vai gravado na tag e aparece na
+      URL. `codigoAtivacao` (8 caracteres) é impresso no cartão dentro da embalagem,
+      guardado só como hash BCrypt, e **nunca** trafega em URL, e-mail, log ou analytics.
+    - **Alfabeto dos dois códigos:** `23456789ABCDEFGHJKMNPQRSTVWXYZ` (30 símbolos —
+      dígitos e letras sem `0 O I 1 L U`). Não é Base32 de biblioteca: geração e
+      validação são manuais. Entropia: ~49 bits no público, ~39 bits no de ativação.
+    - **Indistinguibilidade.** Tag inexistente e tag não ativada produzem resposta
+      idêntica em `GET /public/tags/{codigo}`, em `/status` e em `POST /tags/reivindicar`:
+      mesmo status, mesmo corpo, mesmo piso de tempo de resposta.
+    - **Um pet pode ter várias tags** (`pets 1:N tags`): Kit Multipet, tag reserva e
+      migração de perfil.
+    - **Modo perdido é estado da tag.** O endpoint fica no pet por conveniência e
+      propaga para todas as tags dele.
+    - **Plano vencido não esconde contato.** O plano governa apenas alerta imediato,
+      localização aproximada e teto de contatos de emergência.
+
+    ## Divergência assumida em relação à especificação em prosa
+
+    A especificação original pedia **404 genérico** para tag inexistente, "com o mesmo
+    corpo de uma tag existente mas não ativada". Isso é autocontraditório: se inexistente
+    devolve 404 e não ativada devolve 200, o status code sozinho já permite enumerar os
+    códigos, que é exatamente o que a arquitetura de dois códigos existe para impedir.
+
+    Resolvido aqui como **`200` nos dois casos, com corpo idêntico** (`estado:
+    NAO_ATIVADA`). A página de resgate trata isso como estado, não como erro.
+
+    ## Registrar leitura ≠ notificar tutor
+
+    - `GET /public/tags/{codigo}` **registra** a leitura no histórico, sempre, marcando a
+      origem detectada (`SERVIDOR` ou `ROBO`). **Nunca notifica.**
+    - `POST /public/tags/{codigo}/leituras` é a confirmação de presença humana, enviada
+      pelo cliente via `sendBeacon`. É a única coisa que **notifica** o tutor, com
+      deduplicação por hash de IP numa janela de 10 minutos.
+
+    Isso evita que o robô de preview do WhatsApp dispare "seu pet foi encontrado", e
+    evita o mesmo alarme falso quando o próprio tutor testa a tag durante o cadastro.
+
+    ## Cabeçalhos obrigatórios
+
+    Toda resposta de `/public/tags/**` carrega `Cache-Control: no-store` e
+    `X-Robots-Tag: noindex, nofollow`. A meta tag equivalente é responsabilidade da página.
+
+  contact:
+    name: ConectaPet
+  license:
+    name: Proprietário
+
+servers:
+  - url: https://api.conectapet.com.br
+    description: Produção
+  - url: https://api-preview.conectapet.com.br
+    description: Preview (subdomínio próprio, para o cookie SameSite=Lax funcionar)
+  - url: http://localhost:8080
+    description: Desenvolvimento
+
+tags:
+  - name: Público
+    description: Sem autenticação. Única superfície aberta da API.
+  - name: Autenticação
+  - name: Tags
+  - name: Pets
+  - name: Conta
+  - name: Administrativo
+    description: Exige perfil ADMIN. OpenAPI protegido em produção.
+
+security:
+  - sessaoCookie: []
+
+paths:
+
+  # ==========================================================================
+  # PÚBLICO
+  # ==========================================================================
+
+  /api/public/tags/{codigoPublico}:
+    get:
+      tags: [Público]
+      summary: Perfil de resgate
+      description: |
+        O endpoint mais crítico do sistema. Devolve **apenas** os campos marcados como
+        visíveis em `visibilidade_perfil`, montados num DTO dedicado. A entidade JPA
+        nunca é serializada.
+
+        Nunca devolve: e-mail do tutor, endereço completo, documento, ID interno,
+        `codigoAtivacao`, nem qualquer campo oculto pelo tutor.
+
+        **Efeito colateral:** registra a leitura no histórico com a origem detectada
+        (`SERVIDOR` para navegador, `ROBO` para user-agent de robô conhecido). Não notifica.
+
+        **Indistinguibilidade:** código inexistente e tag em `CRIADA`/`ENVIADA`/`REIVINDICADA`
+        devolvem o mesmo `200` com `estado: NAO_ATIVADA`, o mesmo corpo e o mesmo piso de
+        tempo de resposta (~120 ms). Não há caminho que revele se o código existe.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CodigoPublico'
+      responses:
+        '200':
+          description: |
+            Perfil ativo, ou estado não ativado — inclusive quando o código não existe.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+            X-Robots-Tag: { $ref: '#/components/headers/NoIndex' }
+            RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PerfilPublico' }
+              examples:
+                ativo:
+                  summary: Tag ativa, tutor expôs telefone, WhatsApp e saúde
+                  value:
+                    estado: ATIVO
+                    modoPerdido: true
+                    pet:
+                      nome: Nina
+                      especie: CACHORRO
+                      raca: Vira-lata
+                      sexo: FEMEA
+                      pesoKg: 8.4
+                      cor: Caramelo
+                      cidade: São Paulo
+                      estado: SP
+                      foto:
+                        pequena: https://api.conectapet.com.br/f/9c2a/p.webp
+                        media: https://api.conectapet.com.br/f/9c2a/m.webp
+                        original: null
+                    tutor:
+                      nome: Ana
+                      telefoneExibicao: (11) 99999-0000
+                      telefoneE164: '+5511999990000'
+                      whatsappExibicao: (11) 99999-0000
+                      whatsappE164: '+5511999990000'
+                    saude:
+                      alergias: Alergia a dipirona
+                      medicacaoContinua: Remédio de coração todo dia
+                      condicoes: null
+                      cuidadosEspeciais: null
+                      veterinarioNome: Clínica Bicho Bom
+                      veterinarioTelefoneExibicao: (11) 3333-0000
+                      veterinarioTelefoneE164: '+551133330000'
+                    contatosEmergencia:
+                      - nome: Carlos
+                        parentesco: Irmão
+                        telefoneExibicao: (11) 98888-0000
+                        telefoneE164: '+5511988880000'
+                    mensagemPersonalizada: Ela é medrosa, chame baixinho.
+                naoAtivada:
+                  summary: Não ativada — e também o corpo devolvido quando o código não existe
+                  value:
+                    estado: NAO_ATIVADA
+                    modoPerdido: false
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  /api/public/tags/{codigoPublico}/status:
+    get:
+      tags: [Público]
+      summary: Status leve da tag
+      description: |
+        Versão enxuta, para a página decidir o que renderizar sem baixar o perfil inteiro.
+
+        **Sujeito à mesma regra de indistinguibilidade, ao mesmo piso de tempo e ao mesmo
+        limite de requisições** do endpoint principal. Sem isso ele seria o oráculo de
+        enumeração mais barato da API.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CodigoPublico'
+      responses:
+        '200':
+          description: Estado da tag, indistinguível para código inexistente.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+            X-Robots-Tag: { $ref: '#/components/headers/NoIndex' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StatusPublico' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  /api/public/tags/{codigoPublico}/leituras:
+    post:
+      tags: [Público]
+      summary: Confirmar leitura humana e notificar o tutor
+      description: |
+        Chamado pelo cliente via `navigator.sendBeacon` depois que a página renderiza.
+        É a **única** entrada que dispara notificação ao tutor.
+
+        Deduplicação por hash de IP numa janela de 10 minutos: aproximações repetidas do
+        mesmo celular não viram uma enxurrada de push.
+
+        Localização só é aceita com `localizacaoCompartilhada: true`, que o cliente só
+        envia depois de a pessoa tocar no botão e o navegador conceder permissão. Nunca
+        automaticamente ao abrir a página.
+
+        Código inexistente devolve o mesmo `202` de um código válido.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CodigoPublico'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LeituraEntrada' }
+      responses:
+        '202':
+          description: |
+            Aceito. O corpo confirma o envio à pessoa que encontrou o pet, e **não revela**
+            se o tutor recebeu, leu ou está online — isso é informação do tutor.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LeituraAceita' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  /api/public/lista-espera:
+    post:
+      tags: [Público]
+      summary: Entrar na lista de espera
+      description: |
+        Não existe checkout, pedido nem pagamento na API. Enquanto não existirem, este é o
+        destino honesto do CTA principal da landing.
+
+        Registra o consentimento com data, versão do documento e hash do IP.
+        Responde `202` mesmo para e-mail já cadastrado, para não revelar quem está na lista.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ListaEsperaEntrada' }
+      responses:
+        '202':
+          description: Sempre o mesmo corpo, exista o e-mail ou não.
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  # ==========================================================================
+  # AUTENTICAÇÃO
+  # ==========================================================================
+
+  /api/auth/registrar:
+    post:
+      tags: [Autenticação]
+      summary: Criar conta
+      description: |
+        Já devolve sessão válida: **a reivindicação não exige e-mail verificado**. O código
+        de ativação prova posse física da embalagem, evidência mais forte que um clique em
+        link, e mandar o cliente à caixa de entrada com a tag na mão é perdê-lo no melhor
+        momento.
+
+        Verificação de e-mail passa a ser exigida só para transferir titularidade, trocar
+        e-mail e excluir conta.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegistroEntrada' }
+      responses:
+        '201':
+          description: Conta criada. Cookies de sessão e refresh emitidos.
+          headers:
+            Set-Cookie: { $ref: '#/components/headers/SetCookieSessao' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '409':
+          description: E-mail já cadastrado.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Entrar
+      description: |
+        Resposta idêntica para e-mail inexistente e senha errada — não revela quem é cliente.
+        Bloqueio progressivo por IP e por conta após tentativas seguidas.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginEntrada' }
+      responses:
+        '200':
+          description: Autenticado.
+          headers:
+            Set-Cookie: { $ref: '#/components/headers/SetCookieSessao' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '401':
+          description: Credenciais inválidas. Corpo genérico, sem distinguir a causa.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '423':
+          description: Conta ou IP temporariamente bloqueado por tentativas seguidas.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  /api/auth/refresh:
+    post:
+      tags: [Autenticação]
+      summary: Renovar sessão
+      description: |
+        Rotação: cada uso emite um refresh novo e invalida o anterior.
+
+        **Janela de tolerância de 10 segundos:** o token imediatamente anterior continua
+        aceito nesse intervalo, sem ser tratado como reuso. Sem isso, duas abas abertas
+        renovando ao mesmo tempo derrubam a sessão de um usuário legítimo.
+
+        Fora da janela, apresentar um token já usado é reuso: revoga a família inteira e
+        derruba a sessão.
+      security:
+        - refreshCookie: []
+      responses:
+        '200':
+          description: Sessão renovada.
+          headers:
+            Set-Cookie: { $ref: '#/components/headers/SetCookieSessao' }
+        '401':
+          description: Refresh ausente, expirado, revogado, ou reuso detectado.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/auth/logout:
+    post:
+      tags: [Autenticação]
+      summary: Sair
+      description: Revoga o refresh atual e limpa os cookies.
+      responses:
+        '204': { description: Sessão encerrada. }
+
+  /api/auth/esqueci-senha:
+    post:
+      tags: [Autenticação]
+      summary: Pedir redefinição de senha
+      description: Devolve sempre `202`, exista o e-mail ou não.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailEntrada' }
+      responses:
+        '202': { description: Se o e-mail existir, uma mensagem foi enfileirada. }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  /api/auth/redefinir-senha:
+    post:
+      tags: [Autenticação]
+      summary: Redefinir senha com token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RedefinirSenhaEntrada' }
+      responses:
+        '204': { description: Senha alterada. Todas as sessões anteriores revogadas. }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '410':
+          description: Token expirado ou já usado.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/auth/verificar-email:
+    post:
+      tags: [Autenticação]
+      summary: Verificar e-mail com token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TokenEntrada' }
+      responses:
+        '204': { description: E-mail verificado. }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '410':
+          description: Token expirado ou já usado.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/auth/reenviar-verificacao:
+    post:
+      tags: [Autenticação]
+      summary: Reenviar e-mail de verificação
+      description: |
+        Não estava na especificação original, mas o fluxo precisa: sem ele, quem não recebeu
+        o e-mail fica travado nas ações que exigem verificação.
+      responses:
+        '202': { description: Enfileirado. }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  # ==========================================================================
+  # TAGS
+  # ==========================================================================
+
+  /api/tags:
+    get:
+      tags: [Tags]
+      summary: Minhas tags
+      responses:
+        '200':
+          description: Tags do usuário autenticado.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tag' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+
+  /api/tags/reivindicar:
+    post:
+      tags: [Tags]
+      summary: Reivindicar uma tag
+      description: |
+        Valida o `codigoAtivacao` contra o hash BCrypt, exige status `CRIADA` ou `ENVIADA`,
+        vincula ao usuário, move para `REIVINDICADA` e registra em auditoria.
+
+        **`403` idêntico para código público inexistente e para código de ativação errado.**
+        Mesmo status, mesmo corpo, mesmo piso de tempo. Sem isso, criar uma conta bastaria
+        para enumerar todos os códigos por esta rota, derrubando a proteção que motivou a
+        arquitetura de dois códigos.
+
+        **Limite de tentativas — dois baldes independentes:**
+        - por IP: 5 falhas por hora;
+        - por código: 5 falhas por hora, **global, sem IP na chave** — senão um atacante com
+          200 IPs faz 1.000 tentativas por hora no mesmo código.
+
+        Só tentativas **falhas** contam. Quem tem Kit Multipet ativa quatro tags seguidas e
+        não pode ser trancado por isso.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReivindicarEntrada' }
+      responses:
+        '200':
+          description: Tag reivindicada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tag' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '403':
+          description: |
+            Código de ativação incorreto **ou** código público inexistente. Corpo idêntico
+            nos dois casos.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '409':
+          description: |
+            Tag já reivindicada. O corpo orienta sobre transferência de titularidade —
+            este é o único caso em que a API confirma que um código existe, e só depois de
+            o usuário provar posse com o código de ativação correto.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '423':
+          description: Bloqueado por tentativas seguidas.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/tags/{uuid}:
+    get:
+      tags: [Tags]
+      summary: Detalhe da tag
+      parameters: [{ $ref: '#/components/parameters/Uuid' }]
+      responses:
+        '200':
+          description: Tag.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tag' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+
+  /api/tags/{uuid}/titularidade:
+    post:
+      tags: [Tags]
+      summary: Transferir titularidade — gerar código
+      description: |
+        **Fluxo 1 de 2.** A tag muda de dono. Gera um código de uso único e validade curta
+        (15 minutos), que o dono atual entrega ao novo dono.
+
+        Ao ser aceito, a tag é **desvinculada** do pet e do tutor atual. O registro do pet
+        **não é apagado** — o dado do tutor A morre com a conta dele, não com a venda de um
+        chaveiro.
+
+        Exige e-mail verificado.
+      parameters: [{ $ref: '#/components/parameters/Uuid' }]
+      responses:
+        '201':
+          description: Código gerado. Devolvido uma única vez.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CodigoTransferencia' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '403':
+          description: Não é o dono, ou e-mail não verificado.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '409':
+          description: Estado da tag não permite transferência.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+    delete:
+      tags: [Tags]
+      summary: Cancelar transferência pendente
+      parameters: [{ $ref: '#/components/parameters/Uuid' }]
+      responses:
+        '204': { description: Código invalidado, tag volta ao estado anterior. }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+
+  /api/tags/titularidade/aceitar:
+    post:
+      tags: [Tags]
+      summary: Aceitar transferência de titularidade
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AceitarTransferenciaEntrada' }
+      responses:
+        '200':
+          description: Tag agora pertence a quem aceitou, com perfil vazio.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tag' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '403':
+          description: Código inválido.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '410':
+          description: Código expirado ou já usado.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/tags/{uuid}/migrar-perfil:
+    post:
+      tags: [Tags]
+      summary: Migrar perfil para esta tag
+      description: |
+        **Fluxo 2 de 2.** Mesmo tutor, tag nova. É o que o FAQ do site promete: *"Você compra
+        uma nova e transfere o perfil do seu pet para ela, sem preencher tudo de novo."*
+        Não existia na especificação original.
+
+        Como `pets 1:N tags`, isso é uma troca de ponteiro: a tag de destino passa a apontar
+        para o pet informado. Todos os dados são preservados.
+
+        Com `desativarTagAnterior: true`, a tag antiga vai para `DESATIVADA` na mesma
+        transação — é o caso da tag perdida ou quebrada.
+      parameters: [{ $ref: '#/components/parameters/Uuid' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MigrarPerfilEntrada' }
+      responses:
+        '200':
+          description: Perfil migrado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tag' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '403':
+          description: Tag ou pet não pertencem ao usuário.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '409':
+          description: Tag de destino não está em estado que aceite perfil.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/tags/{uuid}/desativar:
+    post:
+      tags: [Tags]
+      summary: Desativar tag
+      description: |
+        Para tag perdida ou danificada. **Não volta a ficar ativa sem intervenção
+        administrativa.** Registrado em auditoria.
+      parameters: [{ $ref: '#/components/parameters/Uuid' }]
+      responses:
+        '204': { description: Tag desativada. }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+        '409': { $ref: '#/components/responses/EstadoInvalido' }
+
+  # ==========================================================================
+  # PETS
+  # ==========================================================================
+
+  /api/pets:
+    get:
+      tags: [Pets]
+      summary: Meus pets
+      responses:
+        '200':
+          description: Pets do usuário.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Pet' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+    post:
+      tags: [Pets]
+      summary: Cadastrar pet
+      description: |
+        `tagUuid` é opcional e vincula o pet a uma tag já reivindicada no mesmo passo — é o
+        caminho do onboarding, logo após a reivindicação.
+
+        Cria também as linhas de `pet_saude` e `visibilidade_perfil`, esta última já com os
+        defaults: telefone e WhatsApp visíveis, saúde visível, microchip oculto.
+
+        Se o pet ficar com nome preenchido e ao menos um canal de contato visível, a tag
+        vinculada passa automaticamente de `REIVINDICADA` para `ATIVA`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PetEntrada' }
+      responses:
+        '201':
+          description: Pet criado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pet' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  /api/pets/{uuid}:
+    parameters: [{ $ref: '#/components/parameters/Uuid' }]
+    get:
+      tags: [Pets]
+      summary: Detalhe do pet
+      responses:
+        '200':
+          description: Pet.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pet' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    put:
+      tags: [Pets]
+      summary: Atualizar pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PetEntrada' }
+      responses:
+        '200':
+          description: Atualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pet' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+    delete:
+      tags: [Pets]
+      summary: Excluir pet
+      description: Exclusão lógica. Tags vinculadas voltam para `REIVINDICADA`.
+      responses:
+        '204': { description: Excluído. }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  /api/pets/{uuid}/saude:
+    parameters: [{ $ref: '#/components/parameters/Uuid' }]
+    put:
+      tags: [Pets]
+      summary: Atualizar informações de saúde
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SaudeEntrada' }
+      responses:
+        '200':
+          description: Atualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Saude' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  /api/pets/{uuid}/contatos:
+    parameters: [{ $ref: '#/components/parameters/Uuid' }]
+    get:
+      tags: [Pets]
+      summary: Contatos de emergência
+      responses:
+        '200':
+          description: Lista ordenada.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Contato' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+    post:
+      tags: [Pets]
+      summary: Adicionar contato de emergência
+      description: |
+        Teto por plano. **Plus vencido não apaga nem esconde contatos já cadastrados** —
+        eles continuam visíveis ao público; o que fica bloqueado é adicionar mais.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContatoEntrada' }
+      responses:
+        '201':
+          description: Criado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contato' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+        '409':
+          description: Teto do plano atingido.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/pets/{uuid}/contatos/{uuidContato}:
+    parameters:
+      - { $ref: '#/components/parameters/Uuid' }
+      - name: uuidContato
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      tags: [Pets]
+      summary: Atualizar contato
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContatoEntrada' }
+      responses:
+        '200':
+          description: Atualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contato' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+    delete:
+      tags: [Pets]
+      summary: Remover contato
+      responses:
+        '204': { description: Removido. }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  /api/pets/{uuid}/visibilidade:
+    parameters: [{ $ref: '#/components/parameters/Uuid' }]
+    get:
+      tags: [Pets]
+      summary: Configuração de visibilidade
+      responses:
+        '200':
+          description: Configuração atual.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Visibilidade' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+    put:
+      tags: [Pets]
+      summary: Alterar visibilidade
+      description: |
+        Registrado em auditoria.
+
+        **`400` se `mostrarTelefone` e `mostrarWhatsapp` forem ambos `false`.** Um perfil sem
+        canal de contato é uma tela de emergência inútil — o oposto do produto. Regra de
+        negócio, validada no servidor; o frontend também bloqueia, mas não pode ser a única
+        barreira.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Visibilidade' }
+      responses:
+        '200':
+          description: Atualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Visibilidade' }
+        '400':
+          description: Dados inválidos, incluindo o caso de nenhum canal de contato visível.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  /api/pets/{uuid}/modo-perdido:
+    parameters: [{ $ref: '#/components/parameters/Uuid' }]
+    post:
+      tags: [Pets]
+      summary: Ligar modo perdido
+      description: |
+        O estado vive na **tag** — é ela que a pessoa na rua lê. O endpoint fica no pet por
+        conveniência e **propaga para todas as tags vinculadas** a ele.
+
+        Precisa ser acionável em uma tela: quem acabou de perder o cachorro está na rua e
+        nervoso. Há link direto no e-mail de leitura e atalho no topo de `/app`.
+      responses:
+        '200':
+          description: Modo perdido ligado nas tags do pet.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tag' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+        '409':
+          description: Pet sem tag vinculada.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+    delete:
+      tags: [Pets]
+      summary: Desligar modo perdido
+      responses:
+        '204': { description: Desligado em todas as tags do pet. }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  /api/pets/{uuid}/foto:
+    parameters: [{ $ref: '#/components/parameters/Uuid' }]
+    post:
+      tags: [Pets]
+      summary: Enviar foto do pet
+      description: |
+        Limite de 5 MB. Aceita JPEG, PNG e WebP, **validando os bytes reais do arquivo, não
+        a extensão nem o `Content-Type` declarado**.
+
+        Na ingestão: reencode, **remoção de EXIF** — a foto do pet costuma carregar as
+        coordenadas GPS da casa do tutor — e geração das variantes `pequena` e `media` em
+        WebP com fallback JPEG.
+
+        Armazenamento em object storage. A imagem é servida **pela própria API, sob a mesma
+        regra de visibilidade do perfil**, ou por URL assinada de vida curta. Nunca por
+        bucket público: uma foto acessível com o perfil oculto ou a tag desativada é
+        vazamento.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [arquivo]
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Foto processada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Foto' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+        '413':
+          description: Arquivo acima de 5 MB.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '415':
+          description: |
+            Conteúdo real não é JPEG, PNG nem WebP — inclui o caso de extensão de imagem com
+            bytes de outra coisa.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+    delete:
+      tags: [Pets]
+      summary: Remover foto
+      responses:
+        '204': { description: Removida do storage e do perfil. }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  /api/pets/{uuid}/leituras:
+    parameters:
+      - { $ref: '#/components/parameters/Uuid' }
+      - { $ref: '#/components/parameters/Pagina' }
+      - { $ref: '#/components/parameters/Tamanho' }
+    get:
+      tags: [Pets]
+      summary: Histórico de leituras
+      description: |
+        Agrega as leituras de todas as tags do pet.
+
+        No plano Free o histórico existe, mas localização aproximada e detalhe por leitura
+        são omitidos — a interface mostra o recurso bloqueado com o que ele entrega, em vez
+        de esconder.
+
+        Coordenada e telefone de quem encontrou são expurgados em **90 dias**; o restante da
+        leitura, em **12 meses**.
+      responses:
+        '200':
+          description: Página de leituras.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginaLeituras' }
+        '403': { $ref: '#/components/responses/NaoEDono' }
+
+  # ==========================================================================
+  # CONTA
+  # ==========================================================================
+
+  /api/me:
+    get:
+      tags: [Conta]
+      summary: Meus dados
+      responses:
+        '200':
+          description: Usuário autenticado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+    put:
+      tags: [Conta]
+      summary: Atualizar meus dados
+      description: Trocar e-mail exige e-mail verificado e dispara nova verificação.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UsuarioEntrada' }
+      responses:
+        '200':
+          description: Atualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '403':
+          description: Troca de e-mail sem verificação prévia.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+    delete:
+      tags: [Conta]
+      summary: Excluir conta
+      description: |
+        Anonimiza o usuário e **libera as tags**, que voltam para `CRIADA`.
+
+        Exige e-mail verificado. Devolve `409` se houver transferência pendente.
+
+        A auditoria preserva apenas o UUID do usuário como pseudônimo estável, nunca e-mail
+        nem telefone em claro.
+
+        **Pendente jurídico:** o equilíbrio entre o direito à eliminação e a retenção da
+        auditoria precisa ser validado por quem cuida do jurídico antes de implementar.
+      responses:
+        '202': { description: Exclusão agendada. }
+        '403':
+          description: E-mail não verificado.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '409':
+          description: Há transferência de titularidade pendente.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/me/senha:
+    put:
+      tags: [Conta]
+      summary: Trocar senha
+      description: Exige a senha atual. Revoga todas as outras sessões.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TrocarSenhaEntrada' }
+      responses:
+        '204': { description: Alterada. }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '403':
+          description: Senha atual incorreta.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/me/exportar:
+    post:
+      tags: [Conta]
+      summary: Exportar meus dados
+      description: Gera o arquivo de forma assíncrona e envia link de vida curta por e-mail.
+      responses:
+        '202': { description: Exportação enfileirada. }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
+  /api/me/assinatura:
+    get:
+      tags: [Conta]
+      summary: Meu plano
+      responses:
+        '200':
+          description: Assinatura atual.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Assinatura' }
+
+  # ==========================================================================
+  # ADMINISTRATIVO
+  # ==========================================================================
+
+  /api/admin/reautenticar:
+    post:
+      tags: [Administrativo]
+      summary: Reautenticação para operação sensível
+      description: |
+        Devolve um token de elevação de curta duração (5 minutos), exigido para recuperar os
+        códigos de ativação de um lote ainda não confirmado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SenhaEntrada' }
+      responses:
+        '200':
+          description: Token de elevação.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  expiraEm: { type: string, format: date-time }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+  /api/admin/lotes:
+    get:
+      tags: [Administrativo]
+      summary: Listar lotes
+      responses:
+        '200':
+          description: Lotes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Lote' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+    post:
+      tags: [Administrativo]
+      summary: Gerar lote de tags
+      description: |
+        Gera N tags com `codigoPublico` e `codigoAtivacao` por `SecureRandom`, nunca
+        sequenciais — códigos sequenciais permitiriam varrer o site e coletar o telefone de
+        todos os tutores.
+
+        **O lote nasce em `NAO_CONFIRMADO`.** Os códigos de ativação permanecem
+        recuperáveis mediante reautenticação até que o admin confirme explicitamente o
+        recebimento do arquivo. Só então passam a existir apenas como hash.
+
+        Sem isso, uma conexão que cai no meio do download perde os códigos de um lote de
+        tags **já gravadas fisicamente** — prejuízo material, não inconveniência.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoteEntrada' }
+      responses:
+        '201':
+          description: Lote gerado, ainda não confirmado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lote' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+  /api/admin/lotes/{id}/codigos:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      tags: [Administrativo]
+      summary: Baixar códigos do lote
+      description: |
+        CSV com `codigoPublico`, `codigoAtivacao` e a URL completa para gravação e impressão.
+
+        Só funciona enquanto o lote estiver `NAO_CONFIRMADO`, e exige o token de elevação de
+        `POST /api/admin/reautenticar`. Cada acesso é registrado em auditoria.
+      security:
+        - sessaoCookie: []
+          stepUpAdmin: []
+      responses:
+        '200':
+          description: CSV dos códigos.
+          content:
+            text/csv:
+              schema: { type: string }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+        '409':
+          description: Lote já confirmado — os códigos de ativação não existem mais em claro.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  /api/admin/lotes/{id}/confirmar:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    post:
+      tags: [Administrativo]
+      summary: Confirmar recebimento do arquivo
+      description: |
+        Ação irreversível: apaga os códigos de ativação em claro, deixando apenas o hash.
+        Só depois disso o lote pode ser marcado como enviado.
+      responses:
+        '204': { description: Confirmado. Códigos de ativação agora são irrecuperáveis. }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+  /api/admin/tags:
+    get:
+      tags: [Administrativo]
+      summary: Buscar tags
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/StatusTag' }
+        - name: loteId
+          in: query
+          schema: { type: integer, format: int64 }
+        - { $ref: '#/components/parameters/Pagina' }
+        - { $ref: '#/components/parameters/Tamanho' }
+      responses:
+        '200':
+          description: Página de tags.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginaTags' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+  /api/admin/tags/{uuid}/marcar-enviada:
+    parameters: [{ $ref: '#/components/parameters/Uuid' }]
+    post:
+      tags: [Administrativo]
+      summary: Marcar tag como enviada
+      description: Exige que o lote esteja confirmado.
+      responses:
+        '204': { description: Marcada. }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+        '409': { $ref: '#/components/responses/EstadoInvalido' }
+
+  /api/admin/metricas:
+    get:
+      tags: [Administrativo]
+      summary: Métricas
+      description: |
+        A taxa de ativação usa apenas leituras de origem `CLIENTE`. Contar `ROBO` sujaria a
+        métrica com previews de link compartilhado.
+      parameters:
+        - name: de
+          in: query
+          schema: { type: string, format: date }
+        - name: ate
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Métricas do período.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Metricas' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+# ============================================================================
+components:
+
+  securitySchemes:
+    sessaoCookie:
+      type: apiKey
+      in: cookie
+      name: cp_sessao
+      description: |
+        Cookie `HttpOnly`, `Secure`, `SameSite=Lax`, domínio `.conectapet.com.br`.
+        Nunca em `localStorage` — qualquer XSS levaria junto os dados de contato de todos
+        os pets do tutor.
+
+        Previews usam `preview-*.conectapet.com.br` para o `SameSite=Lax` funcionar.
+        `SameSite=None` está proibido, inclusive só em preview: é o tipo de configuração que
+        vaza para produção.
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: cp_refresh
+      description: Cookie `HttpOnly`, escopo restrito a `/api/auth/refresh`.
+    stepUpAdmin:
+      type: apiKey
+      in: header
+      name: X-Reautenticacao
+      description: Token de elevação de 5 minutos, de `POST /api/admin/reautenticar`.
+
+  parameters:
+    CodigoPublico:
+      name: codigoPublico
+      in: path
+      required: true
+      description: 10 caracteres do alfabeto `23456789ABCDEFGHJKMNPQRSTVWXYZ`.
+      schema:
+        type: string
+        pattern: '^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{10}$'
+      example: K7M2PQ9XVB
+    Uuid:
+      name: uuid
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Pagina:
+      name: pagina
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    Tamanho:
+      name: tamanho
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  headers:
+    NoStore:
+      description: Sempre `no-store`. O perfil de um pet com telefone do tutor não pode ficar em cache de CDN.
+      schema: { type: string, const: 'no-store' }
+    NoIndex:
+      description: Sempre `noindex, nofollow`.
+      schema: { type: string, const: 'noindex, nofollow' }
+    RateLimitRemaining:
+      description: Requisições restantes na janela.
+      schema: { type: integer }
+    SetCookieSessao:
+      description: Emite `cp_sessao` (15 min) e `cp_refresh` (rotativo).
+      schema: { type: string }
+
+  responses:
+    DadosInvalidos:
+      description: Falha de validação. `errors` traz o erro por campo, para a interface exibir no campo certo.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    NaoAutenticado:
+      description: Sessão ausente ou expirada.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    NaoEDono:
+      description: |
+        Autenticado, mas o recurso é de outro usuário. Verificação explícita de posse em
+        cada serviço — é a falha mais comum em API deste formato.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    SemPermissao:
+      description: Exige perfil ADMIN.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    NaoEncontrado:
+      description: Recurso inexistente.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    EstadoInvalido:
+      description: Transição não permitida pela máquina de estados da tag.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    LimiteExcedido:
+      description: |
+        Limite por janela excedido.
+
+        | Rota | Limite |
+        |---|---|
+        | `GET /public/tags/{codigo}` | 30/min por **IP + código** |
+        | `POST /public/tags/{codigo}/leituras` | 10/min |
+        | `POST /public/lista-espera` | 5/hora |
+        | `POST /tags/reivindicar` | 5 falhas/hora por IP **e** 5 falhas/hora por código |
+        | `POST /auth/login` | 10/min, com bloqueio progressivo |
+        | `POST /auth/esqueci-senha` | 3/hora |
+
+        Por IP e por código o limite é global — não pode ter IP na chave do balde por código,
+        senão um atacante com 200 IPs faz 1.000 tentativas por hora no mesmo código.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  schemas:
+
+    ProblemDetail:
+      type: object
+      description: RFC 7807. Mensagem ao usuário em português; detalhe técnico só no log.
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              campo: { type: string }
+              mensagem: { type: string }
+      example:
+        type: https://api.conectapet.com.br/erros/codigo-invalido
+        title: Código de ativação inválido
+        status: 403
+        detail: Confira o código impresso no cartão dentro da embalagem.
+
+    # ---- Público -----------------------------------------------------------
+
+    EstadoPerfil:
+      type: string
+      enum: [ATIVO, NAO_ATIVADA]
+
+    PerfilPublico:
+      type: object
+      required: [estado, modoPerdido]
+      description: |
+        DTO dedicado, montado a partir de `visibilidade_perfil`. Campo oculto pelo tutor
+        **não aparece no JSON** — não vem como `null` nem como string vazia, porque a
+        página não pode ter rótulo órfão nem espaço reservado.
+      properties:
+        estado: { $ref: '#/components/schemas/EstadoPerfil' }
+        modoPerdido:
+          type: boolean
+          description: Liga a faixa vermelha de "este pet está perdido".
+        pet: { $ref: '#/components/schemas/PetPublico' }
+        tutor: { $ref: '#/components/schemas/TutorPublico' }
+        saude: { $ref: '#/components/schemas/SaudePublica' }
+        contatosEmergencia:
+          type: array
+          items: { $ref: '#/components/schemas/ContatoPublico' }
+        mensagemPersonalizada: { type: string }
+
+    StatusPublico:
+      type: object
+      required: [estado, modoPerdido]
+      properties:
+        estado: { $ref: '#/components/schemas/EstadoPerfil' }
+        modoPerdido: { type: boolean }
+
+    PetPublico:
+      type: object
+      properties:
+        nome: { type: string }
+        especie: { $ref: '#/components/schemas/Especie' }
+        raca: { type: string }
+        sexo: { $ref: '#/components/schemas/Sexo' }
+        pesoKg: { type: number }
+        cor: { type: string }
+        castrado: { type: boolean }
+        numeroMicrochip:
+          type: string
+          description: Só quando `mostrarMicrochip` — oculto por padrão.
+        cidade: { type: string }
+        estado: { type: string }
+        observacoes: { type: string }
+        foto: { $ref: '#/components/schemas/Foto' }
+
+    TutorPublico:
+      type: object
+      description: Nunca inclui e-mail, endereço completo, documento nem ID interno.
+      properties:
+        nome: { type: string }
+        telefoneExibicao: { type: string, example: '(11) 99999-0000' }
+        telefoneE164: { type: string, example: '+5511999990000' }
+        whatsappExibicao: { type: string }
+        whatsappE164: { type: string }
+
+    SaudePublica:
+      type: object
+      properties:
+        alergias: { type: string }
+        medicacaoContinua: { type: string }
+        condicoes: { type: string }
+        cuidadosEspeciais: { type: string }
+        veterinarioNome: { type: string }
+        veterinarioTelefoneExibicao: { type: string }
+        veterinarioTelefoneE164: { type: string }
+        clinica: { type: string }
+
+    ContatoPublico:
+      type: object
+      properties:
+        nome: { type: string }
+        parentesco: { type: string }
+        telefoneExibicao: { type: string }
+        telefoneE164: { type: string }
+
+    Foto:
+      type: object
+      description: |
+        Variantes geradas na ingestão, em WebP com fallback JPEG e sem EXIF. A página de
+        resgate usa `media`, dimensionada para ~400px. **Redimensionar no cliente está
+        proibido nessa página** — a foto é o orçamento principal dela.
+      properties:
+        pequena: { type: string, format: uri }
+        media: { type: string, format: uri }
+        original:
+          type: string
+          format: uri
+          description: Só para o dono, no painel. Nunca no perfil público.
+
+    LeituraEntrada:
+      type: object
+      properties:
+        localizacaoCompartilhada:
+          type: boolean
+          default: false
+          description: |
+            Só `true` quando a pessoa tocou no botão e o navegador concedeu permissão.
+            Nunca pedida automaticamente ao abrir a página.
+        latitude: { type: number }
+        longitude: { type: number }
+        precisaoM: { type: number }
+        mensagem: { type: string, maxLength: 500 }
+        telefoneDeQuemEncontrou:
+          type: string
+          description: |
+            Dado pessoal de terceiro que está fazendo um favor. Expurgado em 90 dias, junto
+            com a coordenada.
+
+    LeituraAceita:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: Avisamos o tutor. Obrigado por ajudar.
+          description: Não revela se o tutor recebeu, leu ou está online.
+
+    ListaEsperaEntrada:
+      type: object
+      required: [email, consentimento]
+      properties:
+        email: { type: string, format: email }
+        tipoPet: { $ref: '#/components/schemas/Especie' }
+        consentimento:
+          type: boolean
+          description: Registrado com data, versão do documento e hash do IP.
+
+    # ---- Autenticação ------------------------------------------------------
+
+    RegistroEntrada:
+      type: object
+      required: [email, senha, nome, aceiteTermos]
+      properties:
+        email: { type: string, format: email }
+        senha: { type: string, minLength: 10, format: password }
+        nome: { type: string, minLength: 2, maxLength: 120 }
+        telefonePrincipal: { type: string, example: '(11) 99999-0000' }
+        aceiteTermos: { type: boolean }
+        versaoTermos: { type: string }
+
+    LoginEntrada:
+      type: object
+      required: [email, senha]
+      properties:
+        email: { type: string, format: email }
+        senha: { type: string, format: password }
+
+    EmailEntrada:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+
+    TokenEntrada:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+
+    RedefinirSenhaEntrada:
+      type: object
+      required: [token, novaSenha]
+      properties:
+        token: { type: string }
+        novaSenha: { type: string, minLength: 10, format: password }
+
+    TrocarSenhaEntrada:
+      type: object
+      required: [senhaAtual, novaSenha]
+      properties:
+        senhaAtual: { type: string, format: password }
+        novaSenha: { type: string, minLength: 10, format: password }
+
+    SenhaEntrada:
+      type: object
+      required: [senha]
+      properties:
+        senha: { type: string, format: password }
+
+    # ---- Tags --------------------------------------------------------------
+
+    StatusTag:
+      type: string
+      description: |
+        Máquina de estados:
+
+        ```
+        CRIADA → ENVIADA → REIVINDICADA → ATIVA ⇄ MODO_PERDIDO
+                                 ↓            ↓
+                        EM_TRANSFERENCIA   DESATIVADA
+                                 ↓
+                          REIVINDICADA (novo dono)
+        ```
+
+        `REIVINDICADA`: tem dono, sem pet vinculado.
+        `ATIVA`: pet vinculado, com nome preenchido **e** ao menos um canal de contato
+        visível. A transição é automática ao salvar o perfil.
+
+        Enquanto `REIVINDICADA`, o endpoint público responde como não ativada.
+
+        `DESATIVADA` não volta a ficar ativa sem intervenção administrativa.
+        Transição inválida devolve `409`.
+      enum: [CRIADA, ENVIADA, REIVINDICADA, ATIVA, MODO_PERDIDO, EM_TRANSFERENCIA, DESATIVADA]
+
+    ModeloTag:
+      type: string
+      enum: [CLASSICA, SLIM, COLEIRA]
+
+    Tag:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        codigoPublico: { type: string }
+        modelo: { $ref: '#/components/schemas/ModeloTag' }
+        status: { $ref: '#/components/schemas/StatusTag' }
+        petUuid:
+          type: string
+          format: uuid
+          description: Nulo enquanto a tag não tem perfil.
+        urlPublica: { type: string, format: uri }
+        reivindicadaEm: { type: string, format: date-time }
+        enviadaEm: { type: string, format: date-time }
+        desativadaEm: { type: string, format: date-time }
+
+    ReivindicarEntrada:
+      type: object
+      required: [codigoPublico, codigoAtivacao]
+      properties:
+        codigoPublico:
+          type: string
+          pattern: '^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{10}$'
+        codigoAtivacao:
+          type: string
+          pattern: '^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{8}$'
+          description: |
+            Impresso no cartão dentro da embalagem. **Nunca** aparece em URL, e-mail, log
+            ou analytics — só existe no corpo deste POST.
+
+    CodigoTransferencia:
+      type: object
+      properties:
+        codigo:
+          type: string
+          description: Uso único, devolvido uma única vez.
+        expiraEm: { type: string, format: date-time }
+
+    AceitarTransferenciaEntrada:
+      type: object
+      required: [codigo]
+      properties:
+        codigo: { type: string }
+
+    MigrarPerfilEntrada:
+      type: object
+      required: [petUuid]
+      properties:
+        petUuid:
+          type: string
+          format: uuid
+          description: Pet que passa a responder por esta tag. Precisa ser do mesmo tutor.
+        desativarTagAnterior:
+          type: boolean
+          default: false
+          description: Caso da tag perdida ou quebrada. Executado na mesma transação.
+
+    # ---- Pets --------------------------------------------------------------
+
+    Especie:
+      type: string
+      enum: [CACHORRO, GATO, OUTRO]
+
+    Sexo:
+      type: string
+      enum: [MACHO, FEMEA, NAO_INFORMADO]
+
+    Pet:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        nome: { type: string }
+        especie: { $ref: '#/components/schemas/Especie' }
+        raca: { type: string }
+        sexo: { $ref: '#/components/schemas/Sexo' }
+        dataNascimento: { type: string, format: date }
+        pesoKg: { type: number }
+        cor: { type: string }
+        castrado: { type: boolean }
+        numeroMicrochip: { type: string }
+        cidade: { type: string }
+        estado: { type: string, maxLength: 2 }
+        observacoes: { type: string }
+        foto: { $ref: '#/components/schemas/Foto' }
+        tags:
+          type: array
+          description: Um pet pode ter várias tags — Kit Multipet, reserva, migração.
+          items: { $ref: '#/components/schemas/Tag' }
+
+    PetEntrada:
+      type: object
+      required: [nome, especie]
+      properties:
+        nome: { type: string, minLength: 1, maxLength: 60 }
+        especie: { $ref: '#/components/schemas/Especie' }
+        raca: { type: string, maxLength: 60 }
+        sexo: { $ref: '#/components/schemas/Sexo' }
+        dataNascimento: { type: string, format: date }
+        pesoKg: { type: number, minimum: 0, maximum: 200 }
+        cor: { type: string, maxLength: 40 }
+        castrado: { type: boolean }
+        numeroMicrochip: { type: string, maxLength: 20 }
+        cidade: { type: string, maxLength: 80 }
+        estado: { type: string, maxLength: 2 }
+        observacoes: { type: string, maxLength: 500 }
+        tagUuid:
+          type: string
+          format: uuid
+          description: Opcional. Vincula à tag recém-reivindicada no mesmo passo.
+
+    Saude:
+      allOf:
+        - $ref: '#/components/schemas/SaudeEntrada'
+
+    SaudeEntrada:
+      type: object
+      properties:
+        alergias: { type: string, maxLength: 300 }
+        medicacaoContinua: { type: string, maxLength: 300 }
+        condicoes: { type: string, maxLength: 300 }
+        cuidadosEspeciais: { type: string, maxLength: 300 }
+        veterinarioNome: { type: string, maxLength: 120 }
+        veterinarioTelefone: { type: string }
+        clinica: { type: string, maxLength: 120 }
+
+    Contato:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          description: |
+            UUID, não ID sequencial. A regra vale para todo identificador exposto — a
+            especificação original tinha esquecido esta tabela.
+        nome: { type: string }
+        parentesco: { type: string }
+        telefoneExibicao: { type: string }
+        telefoneE164: { type: string }
+        ordem: { type: integer }
+
+    ContatoEntrada:
+      type: object
+      required: [nome, telefone]
+      properties:
+        nome: { type: string, minLength: 2, maxLength: 120 }
+        telefone: { type: string }
+        parentesco: { type: string, maxLength: 40 }
+        ordem: { type: integer, minimum: 0 }
+
+    Visibilidade:
+      type: object
+      description: |
+        Rótulos da interface em linguagem de gente, não de banco: "Quem encontrar pode
+        chamar no WhatsApp", nunca `mostrar_whatsapp`.
+      properties:
+        mostrarTelefone: { type: boolean, default: true }
+        mostrarWhatsapp: { type: boolean, default: true }
+        mostrarContatosEmergencia: { type: boolean, default: true }
+        mostrarSaude: { type: boolean, default: true }
+        mostrarCidade: { type: boolean, default: true }
+        mostrarMicrochip: { type: boolean, default: false }
+        mensagemPersonalizada: { type: string, maxLength: 200 }
+
+    OrigemLeitura:
+      type: string
+      description: |
+        `SERVIDOR` — registrada ao servir o perfil, navegador humano.
+        `ROBO` — user-agent de robô conhecido (preview de link em WhatsApp, Telegram,
+        LinkedIn). Registra, nunca notifica.
+        `CLIENTE` — confirmada por `sendBeacon`. **A única que notifica o tutor.**
+
+        A métrica de ativação conta apenas `CLIENTE`.
+      enum: [SERVIDOR, CLIENTE, ROBO]
+
+    Leitura:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        ocorridaEm: { type: string, format: date-time }
+        origem: { $ref: '#/components/schemas/OrigemLeitura' }
+        tagUuid: { type: string, format: uuid }
+        cidade: { type: string }
+        regiao: { type: string }
+        pais: { type: string }
+        localizacaoCompartilhada: { type: boolean }
+        latitude:
+          type: number
+          description: Só com consentimento. Expurgada em 90 dias.
+        longitude: { type: number }
+        precisaoM: { type: number }
+        mensagemDeQuemEncontrou: { type: string }
+        telefoneDeQuemEncontrou:
+          type: string
+          description: Expurgado em 90 dias.
+        disponivelNoPlano:
+          type: boolean
+          description: |
+            `false` no Free para os campos de localização. A interface mostra o recurso
+            bloqueado com o que ele entrega, em vez de esconder.
+
+    PaginaLeituras:
+      type: object
+      properties:
+        conteudo:
+          type: array
+          items: { $ref: '#/components/schemas/Leitura' }
+        pagina: { type: integer }
+        tamanho: { type: integer }
+        total: { type: integer, format: int64 }
+
+    PaginaTags:
+      type: object
+      properties:
+        conteudo:
+          type: array
+          items: { $ref: '#/components/schemas/Tag' }
+        pagina: { type: integer }
+        tamanho: { type: integer }
+        total: { type: integer, format: int64 }
+
+    # ---- Conta -------------------------------------------------------------
+
+    Usuario:
+      type: object
+      properties:
+        uuid: { type: string, format: uuid }
+        email: { type: string, format: email }
+        nome: { type: string }
+        telefonePrincipalExibicao: { type: string }
+        telefonePrincipalE164: { type: string }
+        telefoneSecundarioExibicao: { type: string }
+        telefoneSecundarioE164: { type: string }
+        whatsappExibicao:
+          type: string
+          description: Campo que faltava no modelo original. Nem sempre é o telefone principal.
+        whatsappE164: { type: string }
+        emailVerificado: { type: boolean }
+        plano: { $ref: '#/components/schemas/Plano' }
+
+    UsuarioEntrada:
+      type: object
+      properties:
+        nome: { type: string, minLength: 2, maxLength: 120 }
+        email: { type: string, format: email }
+        telefonePrincipal: { type: string }
+        telefoneSecundario: { type: string }
+        whatsapp: { type: string }
+
+    Plano:
+      type: string
+      enum: [FREE, PLUS]
+
+    Assinatura:
+      type: object
+      description: |
+        Plano vencido **não esconde contato nem saúde** — a promessa do site é que a tag
+        funciona para sempre. O plano governa só alerta imediato, localização aproximada e
+        teto de contatos de emergência.
+      properties:
+        plano: { $ref: '#/components/schemas/Plano' }
+        status: { type: string, enum: [ATIVA, VENCIDA, CANCELADA] }
+        iniciadaEm: { type: string, format: date-time }
+        expiraEm: { type: string, format: date-time }
+        tetoContatosEmergencia: { type: integer }
+        alertaImediatoLeitura: { type: boolean }
+        localizacaoAproximada: { type: boolean }
+
+    # ---- Administrativo ----------------------------------------------------
+
+    StatusLote:
+      type: string
+      description: |
+        `NAO_CONFIRMADO` — códigos de ativação ainda recuperáveis mediante reautenticação.
+        `CONFIRMADO` — apagados em claro, só o hash permanece. Irreversível.
+      enum: [NAO_CONFIRMADO, CONFIRMADO]
+
+    Lote:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        nome: { type: string }
+        quantidade: { type: integer }
+        modelo: { $ref: '#/components/schemas/ModeloTag' }
+        status: { $ref: '#/components/schemas/StatusLote' }
+        produzidoEm: { type: string, format: date-time }
+        confirmadoEm: { type: string, format: date-time }
+        observacoes: { type: string }
+
+    LoteEntrada:
+      type: object
+      required: [nome, quantidade, modelo]
+      properties:
+        nome: { type: string, maxLength: 80 }
+        quantidade: { type: integer, minimum: 1, maximum: 10000 }
+        modelo: { $ref: '#/components/schemas/ModeloTag' }
+        observacoes: { type: string, maxLength: 300 }
+
+    Metricas:
+      type: object
+      properties:
+        tagsProduzidas: { type: integer }
+        tagsEnviadas: { type: integer }
+        tagsAtivadas: { type: integer }
+        taxaAtivacao: { type: number }
+        leiturasPeriodo:
+          type: integer
+          description: Apenas origem `CLIENTE`.
+        petsEmModoPerdido: { type: integer }

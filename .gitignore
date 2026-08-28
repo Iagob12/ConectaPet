@@ -1,0 +1,4 @@
+node_modules/
+_val/
+.env
+.env.local
