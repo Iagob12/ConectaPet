@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+conectapet:
+  seed:
+    habilitado: false
+  limites:
+    reivindicacao-por-ip: 5
+    reivindicacao-por-codigo: 5
+    reivindicacao-janela: PT1H
+    piso-resposta-publica: PT0S

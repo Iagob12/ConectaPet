@@ -1,0 +1,101 @@
+spring:
+  application:
+    name: conectapet-api
+
+  datasource:
+    url: ${BANCO_URL:jdbc:mysql://localhost:3306/conectapet}
+    username: ${MYSQL_USER:conectapet}
+    password: ${MYSQL_PASSWORD:senha-local}
+
+  jpa:
+    # Nunca "update". O esquema e responsabilidade exclusiva do Flyway;
+    # "validate" faz a aplicacao morrer cedo se entidade e tabela divergirem.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
+  jackson:
+    default-property-inclusion: non_null   # campo oculto some do JSON em vez de virar null
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+  forward-headers-strategy: framework   # IP real atras do proxy da hospedagem
+
+conectapet:
+  jwt:
+    segredo: ${JWT_SEGREDO}
+    duracao-acesso: PT15M
+    duracao-refresh: P30D
+    # Duas abas renovando ao mesmo tempo derrubariam a sessao de um usuario
+    # legitimo sem esta janela: a segunda apresentaria um token ja rotacionado.
+    tolerancia-rotacao: PT10S
+  privacidade:
+    ip-pimenta: ${IP_PIMENTA}
+  tag:
+    url-publica: ${URL_PUBLICA_TAG:https://conectapet.com.br/p/}
+  cors:
+    origens: ${CORS_ORIGENS:http://localhost:4321}
+  limites:
+    # Piso de tempo das rotas publicas de tag. Sem ele, a diferenca de latencia
+    # entre "existe" e "nao existe" reintroduz a enumeracao que os dois codigos
+    # existem para impedir.
+    piso-resposta-publica: PT0.12S
+    reivindicacao-por-ip: 5
+    reivindicacao-por-codigo: 5
+    reivindicacao-janela: PT1H
+
+springdoc:
+  swagger-ui:
+    path: /docs
+
+logging:
+  level:
+    br.com.conectapet: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    show-sql: false
+logging:
+  level:
+    br.com.conectapet: DEBUG
+    org.hibernate.SQL: DEBUG
+conectapet:
+  seed:
+    # Gera um lote de 10 tags e imprime os codigos de ativacao no console.
+    # So no perfil dev: em qualquer outro isso seria vazamento.
+    habilitado: true
+    quantidade: 10
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+springdoc:
+  api-docs:
+    enabled: false      # OpenAPI protegido em producao
+  swagger-ui:
+    enabled: false
+conectapet:
+  seed:
+    habilitado: false

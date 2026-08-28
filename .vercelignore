@@ -5,3 +5,6 @@ contrato/
 # Materiais de trabalho, não fazem parte do site
 copy.txt
 Desing System.txt
+
+# Backend Java: nada disso e site
+api/
