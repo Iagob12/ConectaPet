@@ -51,6 +51,13 @@ conectapet:
     url-publica: ${URL_PUBLICA_TAG:https://conectapet.com.br/p/}
   cors:
     origens: ${CORS_ORIGENS:http://localhost:4321}
+  planos:
+    # Plus vencido nao esconde contato: o teto so bloqueia ADICIONAR mais.
+    # O numero do Plus veio como [X] na copy e segue pendente de dado real.
+    free:
+      teto-contatos: 1
+    plus:
+      teto-contatos: 5
   limites:
     # Piso de tempo das rotas publicas de tag. Sem ele, a diferenca de latencia
     # entre "existe" e "nao existe" reintroduz a enumeracao que os dois codigos

@@ -116,13 +116,11 @@ class ReivindicacaoIT extends TesteIntegracao {
     @Test
     @DisplayName("5. codigo inexistente e codigo errado sao indistinguiveis")
     void indistinguivel() {
-        ProblemaException naoExiste = catchThrowableOfType(
-                () -> servico.reivindicar("ZZZZZZZZZZ", "ZZZZZZZZ", ana, "ip-a"),
-                ProblemaException.class);
+        ProblemaException naoExiste = catchThrowableOfType(ProblemaException.class,
+                () -> servico.reivindicar("ZZZZZZZZZZ", "ZZZZZZZZ", ana, "ip-a"));
 
-        ProblemaException existeMasErrado = catchThrowableOfType(
-                () -> servico.reivindicar(tag.getCodigoPublico(), "YYYYYYYY", ana, "ip-b"),
-                ProblemaException.class);
+        ProblemaException existeMasErrado = catchThrowableOfType(ProblemaException.class,
+                () -> servico.reivindicar(tag.getCodigoPublico(), "YYYYYYYY", ana, "ip-b"));
 
         // Mesmo tipo, mesmo status, mesmo titulo, mesmo detalhe. Se diferissem,
         // criar uma conta bastaria para enumerar todos os codigos por esta rota.

@@ -76,12 +76,18 @@ Flyway; `validate` faz a aplicação morrer cedo se entidade e tabela divergirem
 reautenticação até o admin confirmar que recebeu o arquivo. Sem isso, uma conexão que cai
 no meio do download perde os códigos de um lote de tags já gravadas fisicamente.
 
+**Critério de ATIVA.** A tag vira `ATIVA` sozinha quando o pet vinculado tem nome
+preenchido **e** um canal de contato de fato utilizável. "Utilizável" exige as duas coisas:
+a chave ligada na visibilidade **e** o telefone existindo no cadastro do tutor — só a chave,
+sem número, produziria uma tag ativa cuja página de resgate não aciona ninguém. Se o dado
+some depois, a tag volta para `REIVINDICADA`.
+
 ## Estado atual
 
-Implementado: fundação, autenticação, máquina de estados da tag e reivindicação.
+Implementado: fundação, autenticação, máquina de estados da tag, reivindicação, perfil do
+pet, saúde, contatos de emergência, visibilidade e modo perdido.
 
-Pendente, na ordem: perfil do pet e visibilidade → leituras e notificações → transferência
-e migração → administrativo.
+Pendente, na ordem: leituras e notificações → transferência e migração → administrativo.
 
-O que ainda não existe em código, mas já está no contrato: endpoints públicos de perfil,
-`/status`, leituras, lista de espera, pets, conta e administrativo.
+Ainda não existe em código, mas já está no contrato: endpoints públicos de perfil e
+`/status`, leituras, lista de espera, upload de foto, conta e administrativo.

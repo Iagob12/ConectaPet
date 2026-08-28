@@ -12,3 +12,8 @@ conectapet:
     reivindicacao-por-codigo: 5
     reivindicacao-janela: PT1H
     piso-resposta-publica: PT0S
+  planos:
+    free:
+      teto-contatos: 1
+    plus:
+      teto-contatos: 5
