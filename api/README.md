@@ -82,12 +82,35 @@ a chave ligada na visibilidade **e** o telefone existindo no cadastro do tutor �
 sem número, produziria uma tag ativa cuja página de resgate não aciona ninguém. Se o dado
 some depois, a tag volta para `REIVINDICADA`.
 
+**Registrar leitura ≠ notificar tutor.** `GET` do perfil registra sempre, marcando a
+origem (`SERVIDOR` ou `ROBO`) e **nunca** notifica. Só o `POST` de confirmação, enviado
+pelo cliente via `sendBeacon`, notifica — com deduplicação por hash de IP em 10 minutos.
+Filtrar notificação por user-agent seria uma corrida que se perde: cada rede social tem o
+seu e eles mudam. Com a separação, o robô de preview do WhatsApp nunca dispara "seu pet foi
+encontrado", e o próprio tutor deixa de receber push a cada aproximação enquanto testa a
+tag no cadastro.
+
+**Perfil público montado campo a campo.** A entidade JPA nunca é serializada. Campo oculto
+não vira `null` nem string vazia: ele não existe no JSON, porque a página não pode ter
+rótulo órfão. Uma resposta só para "não ativada" e "código não existe", num método único —
+se fossem dois caminhos, alguém acabaria acrescentando um detalhe em um deles.
+
+**Telefone em dois campos, derivados de E.164 guardado.** O `wa.me` exige
+`5511999990000` e a tela exige `(11) 99999-0000`. Números com forma ambígua são
+recusados em vez de "corrigidos": aceitar `01999990000` gravaria um número válido e
+diferente do pretendido, e a página de resgate ligaria para um estranho.
+
+**Retenção em duas etapas.** Coordenada, mensagem e telefone de quem encontrou saem em 90
+dias — são dados de um terceiro que só quis ajudar. O resto da leitura vive 12 meses.
+
 ## Estado atual
 
 Implementado: fundação, autenticação, máquina de estados da tag, reivindicação, perfil do
-pet, saúde, contatos de emergência, visibilidade e modo perdido.
+pet, saúde, contatos, visibilidade, modo perdido, endpoints públicos, leituras,
+notificações por outbox, lista de espera e expurgo por retenção.
 
-Pendente, na ordem: leituras e notificações → transferência e migração → administrativo.
+Pendente, na ordem: transferência e migração → administrativo.
 
-Ainda não existe em código, mas já está no contrato: endpoints públicos de perfil e
-`/status`, leituras, lista de espera, upload de foto, conta e administrativo.
+Ainda não existe em código, mas já está no contrato: upload de foto, conta e
+administrativo. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
+não toca nenhum outro arquivo.

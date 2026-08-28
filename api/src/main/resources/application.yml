@@ -66,6 +66,22 @@ conectapet:
     reivindicacao-por-ip: 5
     reivindicacao-por-codigo: 5
     reivindicacao-janela: PT1H
+    # Chave IP + codigo, nao so IP: CGNAT de operadora movel compartilha
+    # endereco entre muitos assinantes.
+    leitura-publica-por-minuto: 30
+    registro-leitura-por-minuto: 10
+    lista-espera-por-hora: 5
+  leitura:
+    # Aproximacoes repetidas do mesmo celular nao viram uma enxurrada de push.
+    janela-dedup: PT10M
+  retencao:
+    # Coordenada, mensagem e telefone de quem encontrou: dado de terceiro que so
+    # quis ajudar. Sai antes do resto.
+    dados-de-terceiro: P90D
+    leitura: P365D
+    cron: "0 30 3 * * *"
+  outbox:
+    intervalo-ms: 15000
 
 springdoc:
   swagger-ui:

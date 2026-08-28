@@ -17,3 +17,11 @@ conectapet:
       teto-contatos: 1
     plus:
       teto-contatos: 5
+  leitura:
+    janela-dedup: PT10M
+  retencao:
+    dados-de-terceiro: P90D
+    leitura: P365D
+    cron: "0 0 4 * * *"
+  outbox:
+    intervalo-ms: 600000
