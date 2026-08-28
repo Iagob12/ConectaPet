@@ -8,6 +8,9 @@
 <title>ConectaPet — Tag NFC de identificação para cães e gatos</title>
 <meta name="description" content="A ConectaPet é uma tag NFC para coleira. Quem encontrar seu pet só encosta o celular na tag e vê seus dados de contato na hora — sem app, sem cadastro.">
 <meta name="theme-color" content="#FCEBD2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=Poppins:wght@700&display=swap">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="Se ele se perder, quem achar já sabe pra quem ligar.">
@@ -101,7 +104,7 @@ body{
 }
 img,svg,video{ max-width:100%; }
 img{ display:block; height:auto; }
-p{ margin:0 0 var(--sp-4); max-width:68ch; }
+p{ margin:0 0 var(--sp-4); max-width:60ch; }   /* ~68 caracteres reais */
 p:last-child{ margin-bottom:0; }
 ul,ol{ margin:0; padding:0; }
 a{ color:var(--brand-700); text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1.5px; transition:color .15s ease; }
@@ -274,10 +277,17 @@ strong,b{ color:var(--ink-900); font-weight:700; }
   margin-bottom:var(--sp-4);
 }
 p.step-chip,.step-chip{
-  display:inline-flex; align-items:center; gap:8px;
-  background:var(--brand-100); color:var(--brand-800);
-  font-size:14px; font-weight:600; line-height:1.4;
-  padding:6px 12px; border-radius:var(--radius-sm); margin-bottom:var(--sp-3);
+  display:flex; align-items:center; gap:10px;
+  margin:0 0 var(--sp-3); color:var(--brand-800);
+  font-size:13px; font-weight:600; line-height:1; letter-spacing:.08em; text-transform:uppercase;
+}
+.step-chip__num{
+  order:-1;   /* desenho: numeral antes do rótulo; leitura no DOM: "Passo 1" */
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; flex:none;
+  border-radius:var(--radius-full); background:var(--brand-700); color:#fff;
+  font-family:var(--font-display); font-weight:900; font-size:22px; line-height:1;
+  letter-spacing:0;
 }
 
 /* ==========================================================================
@@ -470,7 +480,7 @@ p.step-chip,.step-chip{
   display:block; width:100%; height:auto; aspect-ratio:1/1;
   border-radius:var(--radius-md); object-fit:cover;
 }
-.problem__caption{ text-align:center; margin-top:var(--sp-3); }
+.problem__caption{ text-align:center; margin-top:var(--sp-3); color:var(--gray-700); }
 
 /* ==========================================================================
    12. PRODUTOS
@@ -524,15 +534,29 @@ p.product__price,.product__price{
 }
 .finder-alert svg{ color:var(--alert-600); flex:none; margin-top:2px; }
 .finder-pet{ padding:16px; }
+.finder-pet__card{
+  background:var(--white); border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-md); overflow:hidden; margin-bottom:16px;
+}
 .finder-pet__photo{
-  border-radius:var(--radius-lg); overflow:hidden; background:var(--pastel-peach);
+  background:var(--pastel-peach);
   aspect-ratio:4/3; display:flex; align-items:center; justify-content:center;
 }
+.finder-pet__card .finder-pet__name,
+.finder-pet__card .finder-pet__meta{ padding-inline:16px; }
+.finder-pet__card .finder-pet__meta{ padding-bottom:14px; }
 .finder-pet__photo svg{ height:80%; width:auto; }
 .finder-pet__name{
   font-family:var(--font-title); font-weight:700; font-size:26px; line-height:1.2;
   color:var(--ink-900); margin:14px 0 2px;
 }
+.finder-contato{
+  display:flex; align-items:center; gap:10px; margin-top:12px;
+  padding:12px 14px; border:1.5px solid var(--gray-200); border-radius:var(--radius-md);
+  font-size:15px; color:var(--gray-700); line-height:1.4;
+}
+.finder-contato svg{ flex:none; color:var(--ink-900); }
+.finder-contato strong{ display:block; font-size:14px; }
 .finder-pet__meta{ font-size:15px; color:var(--gray-700); margin:0 0 14px; }
 .finder-btn{
   display:flex; align-items:center; justify-content:center; gap:10px;
@@ -540,7 +564,7 @@ p.product__price,.product__price{
   font-size:17px; font-weight:600; margin-bottom:12px;
 }
 .finder-btn--call{ background:var(--rescue-call); min-height:64px; font-size:18px; }
-.finder-btn--whats{ background:var(--rescue-whats); }
+.finder-btn--whats{ background:var(--rescue-whats); min-height:64px; font-size:18px; }
 .finder-btn--ghost{ background:var(--white); color:var(--ink-900); box-shadow:inset 0 0 0 1.5px var(--ink-900); }
 .finder-health{
   background:var(--gray-50); border-radius:var(--radius-md);
@@ -567,7 +591,7 @@ table.compare thead th:first-child{ background:var(--white); }
 table.compare tbody th{ font-weight:600; color:var(--ink-900); width:230px; }
 table.compare tbody tr:last-child th,table.compare tbody tr:last-child td{ border-bottom:0; }
 table.compare tbody tr:hover td,table.compare tbody tr:hover th{ background:var(--gray-50); }
-.compare__close{ margin-top:var(--sp-6); max-width:68ch; }
+.compare__close{ margin-top:var(--sp-6); max-width:60ch; }
 table.compare tbody tr:nth-child(odd) th,table.compare tbody tr:nth-child(odd) td{ background:var(--gray-50); }
 table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(--brand-100); }
 @media (max-width:767px){
@@ -657,7 +681,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
 .faq__q:hover{ color:var(--brand-700); }
 .faq__q svg{ flex:none; color:var(--brand-700); transition:transform .2s ease; }
 .faq__item[open] .faq__q svg{ transform:rotate(180deg); }
-.faq__a{ padding:0 4px 20px; max-width:68ch; }
+.faq__a{ padding:0 4px 20px; max-width:60ch; }
 .faq__item--highlight{
   background:var(--brand-100); border-bottom:0; border-radius:var(--radius-lg);
   padding-inline:16px; margin-block:var(--sp-4);
@@ -668,7 +692,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
    19. BLOCO SEO + RODAPÉ
    ========================================================================== */
 .seo h3{ margin-top:var(--sp-8); }
-.seo p{ max-width:68ch; }
+.seo p{ max-width:60ch; }
 
 .site-footer{
   background:var(--ink-900); color:var(--gray-200);
@@ -1122,7 +1146,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
           <div class="step__art">
             <svg viewBox="0 0 200 160" width="200" height="160" role="img" aria-label="Tag ConectaPet pendurada em uma coleira" focusable="false"><use href="#ill-step1"/></svg>
           </div>
-          <p class="step-chip">Passo 1</p>
+          <p class="step-chip">Passo <span class="step-chip__num">1</span></p>
           <h3 class="h3">Prenda na coleira</h3>
           <p>A tag é leve, resistente à água e cabe em qualquer coleira ou peitoral. Chega pronta para usar.</p>
         </li>
@@ -1130,7 +1154,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
           <div class="step__art">
             <svg viewBox="0 0 200 160" width="200" height="160" role="img" aria-label="Tela de cadastro do perfil do pet com foto, contatos e informações de saúde" focusable="false"><use href="#ill-step2"/></svg>
           </div>
-          <p class="step-chip">Passo 2</p>
+          <p class="step-chip">Passo <span class="step-chip__num">2</span></p>
           <h3 class="h3">Preencha o perfil</h3>
           <p>Você acessa o link da tag e cadastra nome do pet, seus telefones, WhatsApp e informações de saúde. Pode editar quando quiser, quantas vezes quiser.</p>
         </li>
@@ -1138,7 +1162,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
           <div class="step__art">
             <svg viewBox="0 0 200 160" width="200" height="160" role="img" aria-label="Celular encostando na tag e abrindo o perfil do pet" focusable="false"><use href="#ill-step3"/></svg>
           </div>
-          <p class="step-chip">Passo 3</p>
+          <p class="step-chip">Passo <span class="step-chip__num">3</span></p>
           <h3 class="h3">Quem achar, encosta o celular</h3>
           <p>A tag abre o perfil do seu pet automaticamente no navegador de quem encontrou. Em segundos, essa pessoa tem seu contato na tela.</p>
         </li>
@@ -1168,7 +1192,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
           loading="lazy"
           alt="Tag ConectaPet em formato de pingente redondo, pendurada em um chaveiro sobre couro marrom, com a ilustração de um cachorro e um gato sobre ondas de aproximação NFC."
           class="problem__photo">
-        <p class="problem__caption small muted">A tag ConectaPet: o que substitui a plaquinha e o cartaz no poste.</p>
+        <p class="problem__caption small">A tag ConectaPet: o que substitui a plaquinha e o cartaz no poste.</p>
       </div>
     </div>
   </section>
@@ -1331,7 +1355,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
       </div>
 
       <div class="reveal">
-        <div class="phone" role="img" aria-label="Mockup da tela que abre no celular de quem encontrou o pet: faixa vermelha de pet perdido, foto e nome do animal, botão verde de ligar, botão de WhatsApp, botão para avisar onde encontrou e bloco com informações de saúde.">
+        <div class="phone" role="img" aria-label="Mockup da tela que abre no celular de quem encontrou o pet: faixa vermelha de pet perdido, foto e nome do animal, botão verde de ligar, botão de WhatsApp, botão para avisar onde encontrou, bloco com informações de saúde e segundo contato de emergência.">
           <div class="phone__screen">
             <div class="phone__brandbar"></div>
             <p class="finder-alert">
@@ -1339,11 +1363,13 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
               <span>ESTE PET ESTÁ PERDIDO</span>
             </p>
             <div class="finder-pet">
-              <div class="finder-pet__photo">
-                <svg width="88" height="88" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg>
+              <div class="finder-pet__card">
+                <div class="finder-pet__photo">
+                  <svg width="88" height="88" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg>
+                </div>
+                <p class="finder-pet__name">Nina</p>
+                <p class="finder-pet__meta">Vira-lata · 8 kg · São Paulo, SP</p>
               </div>
-              <p class="finder-pet__name">Nina</p>
-              <p class="finder-pet__meta">Vira-lata · 8 kg · São Paulo, SP</p>
               <p class="finder-btn finder-btn--call">
                 <svg width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-phone"/></svg>
                 <span>Ligar para a Ana</span>
@@ -1359,6 +1385,10 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
               <p class="finder-health">
                 <strong>Informações de saúde</strong>
                 Alergia a dipirona · Toma remédio de coração todo dia · Vet.: Clínica Bicho Bom
+              </p>
+              <p class="finder-contato">
+                <svg width="22" height="22" aria-hidden="true" focusable="false"><use href="#i-phone"/></svg>
+                <span><strong>Segundo contato</strong>Carlos · (11) 9 9999-0000</span>
               </p>
             </div>
             <p class="finder-foot">ConectaPet · Aproxima e Protege</p>
