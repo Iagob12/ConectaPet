@@ -117,6 +117,17 @@ novo — `/p/{codigo}` já mostra o perfil de uma tag ativa a qualquer pessoa. O
 travado é o outro lado: código inexistente não devolve nada além de "inválido", e o limite
 de tentativas é o que contém a varredura.
 
+**Login com freio, em dois baldes.** Por conta (10 falhas em 15 min) e por IP (30). Por
+conta é o apertado, porque escolher uma vítima e insistir nela é o ataque que de fato
+derruba senha fraca; por IP é largo de propósito, já que operadora móvel compartilha
+endereço de saída entre muitos assinantes. Só falha conta, e acertar a senha limpa o balde
+da conta. A janela **não** é estendida a cada tentativa nova — renovar deixaria a conta
+trancada enquanto o atacante insistisse, e aí o bloqueio vira o ataque.
+
+O preço disso é conhecido: alguém pode trancar um tutor por 15 minutos errando a senha dele
+de propósito. O estrago é pequeno porque **a página de resgate não depende de sessão** — a
+tag do pet continua funcionando normalmente; o que fica suspenso é só editar o perfil.
+
 **Dois baldes de tentativa, independentes.** Um por IP e um **global por código**, sem IP
 na chave. Com IP na chave, um atacante com 200 endereços faria 1.000 tentativas por hora
 no mesmo código. Só tentativas *falhas* contam: quem compra o Kit Multipet ativa quatro

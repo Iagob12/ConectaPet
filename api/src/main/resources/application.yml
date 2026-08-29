@@ -101,6 +101,11 @@ conectapet:
     reivindicacao-por-ip: 5
     reivindicacao-por-codigo: 5
     reivindicacao-janela: PT1H
+    # Adivinhacao de senha. Por conta e apertado (e o ataque que importa); por
+    # IP e largo, porque operadora movel compartilha endereco entre assinantes.
+    login-por-conta: 10
+    login-por-ip: 30
+    login-janela: PT15M
     # Chave IP + codigo, nao so IP: CGNAT de operadora movel compartilha
     # endereco entre muitos assinantes.
     leitura-publica-por-minuto: 30

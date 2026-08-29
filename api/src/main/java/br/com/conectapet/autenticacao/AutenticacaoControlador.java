@@ -30,10 +30,14 @@ public class AutenticacaoControlador {
     private final UsuarioAtual usuarioAtual;
     private final RecuperacaoSenhaServico recuperacao;
     private final VerificacaoEmailServico verificacao;
+    private final LimiteTentativasLogin limiteLogin;
+    private final String ipPimenta;
 
     public AutenticacaoControlador(AutenticacaoServico servico, JwtServico jwt, CookieServico cookies,
                                    PropriedadesJwt props, UsuarioRepositorio usuarios, UsuarioAtual usuarioAtual,
-                                   RecuperacaoSenhaServico recuperacao, VerificacaoEmailServico verificacao) {
+                                   RecuperacaoSenhaServico recuperacao, VerificacaoEmailServico verificacao,
+                                   LimiteTentativasLogin limiteLogin,
+                                   @org.springframework.beans.factory.annotation.Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta) {
         this.servico = servico;
         this.jwt = jwt;
         this.cookies = cookies;
@@ -42,6 +46,8 @@ public class AutenticacaoControlador {
         this.usuarioAtual = usuarioAtual;
         this.recuperacao = recuperacao;
         this.verificacao = verificacao;
+        this.limiteLogin = limiteLogin;
+        this.ipPimenta = ipPimenta;
     }
 
     /**
@@ -61,9 +67,29 @@ public class AutenticacaoControlador {
                 .body(UsuarioResposta.de(u));
     }
 
+    /**
+     * A tentativa e contada aqui, e nao no servico, porque so aqui existe o IP.
+     * O limite fica antes do BCrypt: quem ja estourou o teto nao merece gastar
+     * um hash de custo 12 do servidor a cada chute.
+     */
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResposta> login(@Valid @RequestBody LoginEntrada dto) {
-        Usuario u = servico.autenticar(dto.email(), dto.senha());
+    public ResponseEntity<UsuarioResposta> login(@Valid @RequestBody LoginEntrada dto,
+                                                 HttpServletRequest req) {
+        String ipHash = br.com.conectapet.comum.util.Hashes.ipPseudonimo(req.getRemoteAddr(), ipPimenta);
+        limiteLogin.verificar(dto.email(), ipHash);
+
+        Usuario u;
+        try {
+            u = servico.autenticar(dto.email(), dto.senha());
+        } catch (ProblemaException e) {
+            // So falha de credencial conta. Conta inativa ou erro interno nao
+            // sao adivinhacao, e contar tudo trancaria quem nao errou senha.
+            if (e.tipo() == TipoErro.CREDENCIAIS_INVALIDAS) {
+                limiteLogin.registrarFalha(dto.email(), ipHash);
+            }
+            throw e;
+        }
+        limiteLogin.registrarSucesso(dto.email());
         return ResponseEntity.ok().headers(comSessao(u)).body(UsuarioResposta.de(u));
     }
 
