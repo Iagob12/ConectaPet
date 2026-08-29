@@ -41,6 +41,11 @@ public class ArmazenamentoS3 implements ArmazenamentoFotos {
     private final S3Client cliente;
     private final String bucket;
 
+    // @Autowired e obrigatorio aqui: a classe tem dois construtores, e sem a
+    // anotacao o Spring nao escolhe — procura um construtor sem argumentos,
+    // nao acha, e derruba a aplicacao na subida com "No default constructor
+    // found". Foi exatamente o que aconteceu no primeiro deploy.
+    @org.springframework.beans.factory.annotation.Autowired
     public ArmazenamentoS3(
             @Value("${conectapet.foto.s3.bucket}") String bucket,
             @Value("${conectapet.foto.s3.regiao:auto}") String regiao,
@@ -83,7 +88,13 @@ public class ArmazenamentoS3 implements ArmazenamentoFotos {
         return construtor.build();
     }
 
-    /** Só para teste: injeta um cliente já configurado. */
+    /**
+     * Só para teste: injeta um cliente já configurado.
+     *
+     * A existência deste construtor foi o que exigiu o @Autowired acima. Um
+     * segundo construtor numa classe gerenciada pelo Spring muda como ela é
+     * instanciada, e o teste que usa este aqui nunca exercitaria isso.
+     */
     ArmazenamentoS3(S3Client cliente, String bucket) {
         this.cliente = cliente;
         this.bucket = bucket;

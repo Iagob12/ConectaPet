@@ -183,6 +183,30 @@ class ArmazenamentoS3Test {
     }
 
     @Test
+    @DisplayName("o Spring sabe qual construtor usar")
+    void construtorSemAmbiguidade() {
+        // Esta classe tem dois construtores: o de producao e o que este teste
+        // usa. Sem @Autowired no primeiro, o Spring nao escolhe — procura um
+        // construtor sem argumentos, nao acha, e derruba a aplicacao na subida.
+        //
+        // Aconteceu no primeiro deploy, e os testes daqui nao pegaram porque
+        // todos chamam o construtor direto, sem nunca pedir ao Spring que
+        // construa o bean. A verificacao e por reflexao, e nao por contexto,
+        // para custar milissegundos e nao exigir banco.
+        var construtores = ArmazenamentoS3.class.getDeclaredConstructors();
+        if (construtores.length > 1) {
+            long anotados = java.util.Arrays.stream(construtores)
+                    .filter(c -> c.isAnnotationPresent(
+                            org.springframework.beans.factory.annotation.Autowired.class))
+                    .count();
+            assertThat(anotados)
+                    .as("com %d construtores, exatamente um precisa de @Autowired",
+                        construtores.length)
+                    .isEqualTo(1);
+        }
+    }
+
+    @Test
     @DisplayName("nada aqui devolve URL: os bytes voltam para a API")
     void naoExpoeUrl() {
         // O bucket e privado. Se algum dia esta classe passar a devolver
