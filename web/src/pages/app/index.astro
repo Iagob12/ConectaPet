@@ -2,13 +2,14 @@
 export const prerender = false;
 
 import Painel from '../../layouts/Painel.astro';
-import { paraLogin, ESPECIES, type Pet, type Tag } from '../../lib/painel';
+import { paraLogin, ESPECIES, type Pet, type Tag, type Conta } from '../../lib/painel';
 
 // As duas listas vem juntas: a tag sabe o status e o modo perdido, o pet sabe
 // o nome e o que falta. Uma sozinha nao monta o cartao.
-const [rp, rt] = await Promise.all([
+const [rp, rt, rme] = await Promise.all([
   Astro.locals.api<Pet[]>('/api/pets'),
   Astro.locals.api<Tag[]>('/api/tags'),
+  Astro.locals.api<Conta>('/api/me'),
 ]);
 
 if (rp.status === 401 || rt.status === 401) return paraLogin(Astro);
@@ -95,5 +96,11 @@ const perdidos = pets.filter((p) => tagDoPet.get(p.uuid)?.modoPerdido);
 
   {(pets.length > 0 || semPerfil.length > 0) && (
     <p class="rodape-link"><a class="link" href="/ativar">Ativar outra tag</a></p>
+  )}
+
+  {/* Quem administra tambem e tutor: sem este link, a unica forma de achar o
+      administrativo seria decorar o endereco. */}
+  {rme.dados?.papel === 'ADMIN' && (
+    <p class="rodape-link"><a class="link" href="/admin">Ir para o administrativo</a></p>
   )}
 </Painel>

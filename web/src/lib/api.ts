@@ -24,11 +24,13 @@ export type Opcoes = {
   /** Objeto vira JSON; FormData vai como multipart, sem tocar no boundary. */
   corpo?: unknown;
   cookie?: string | null;
+  /** Cabecalhos extras. Usado pela reautenticacao do administrativo. */
+  cabecalhos?: Record<string, string>;
 };
 
 /** A resposta crua, para quando o corpo nao e JSON (imagem, CSV). */
 export async function chamarBruto(caminho: string, opcoes: Opcoes = {}): Promise<Response> {
-  const { metodo = 'GET', corpo, cookie } = opcoes;
+  const { metodo = 'GET', corpo, cookie, cabecalhos } = opcoes;
   const multipart = typeof FormData !== 'undefined' && corpo instanceof FormData;
 
   return fetch(`${BASE}${caminho}`, {
@@ -38,6 +40,7 @@ export async function chamarBruto(caminho: string, opcoes: Opcoes = {}): Promise
       // boundary, e escrever o cabecalho a mao quebraria o parse do outro lado.
       ...(corpo && !multipart ? { 'Content-Type': 'application/json' } : {}),
       ...(cookie ? { Cookie: cookie } : {}),
+      ...(cabecalhos ?? {}),
     },
     body: corpo == null ? undefined : (multipart ? (corpo as FormData) : JSON.stringify(corpo)),
     redirect: 'manual',

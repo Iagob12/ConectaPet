@@ -89,6 +89,10 @@ conectapet:
     # Elevacao curta: sessao aberta em computador destravado nao pode virar
     # acesso ao segredo de um lote inteiro.
     validade-reautenticacao: PT5M
+    # Promove a ADMIN uma conta que JA existe, na subida. A pessoa se cadastra
+    # pelo site escolhendo a propria senha; aqui so muda o papel. Nao cria
+    # conta: promover um cadastro inexistente seria abrir um admin fantasma.
+    email-inicial: ${ADMIN_EMAIL:}
   transferencia:
     # Curta de proposito: o codigo e um portador, quem o tem vira dono.
     validade: PT15M

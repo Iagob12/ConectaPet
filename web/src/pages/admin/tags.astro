@@ -1,0 +1,146 @@
+---
+export const prerender = false;
+
+import Admin from '../../layouts/Admin.astro';
+import { exigirAdmin, STATUS_TAG, MODELOS, type TagAdmin, type Lote } from '../../lib/admin';
+import { quando } from '../../lib/painel';
+import { verDepois } from '../../lib/api';
+
+const porta = await exigirAdmin(Astro);
+if ('resposta' in porta) return porta.resposta;
+
+let erro: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  const alvo = String(d.get('uuid') ?? '');
+  const volta = String(d.get('volta') ?? '');
+
+  const r = await Astro.locals.api(`/api/admin/tags/${alvo}/marcar-enviada`, { metodo: 'POST' });
+  if (r.status === 401) return Astro.redirect('/entrar?next=%2Fadmin%2Ftags');
+  if (r.ok) return verDepois(`/admin/tags${volta}${volta ? '&' : '?'}enviada=1`);
+  erro = r.erro;
+}
+
+const q = Astro.url.searchParams;
+const status = q.get('status') ?? '';
+const loteId = q.get('loteId') ?? '';
+const pagina = Math.max(0, Number(q.get('pagina') ?? 0) || 0);
+
+const busca = new URLSearchParams({ pagina: String(pagina), tamanho: '50' });
+if (status) busca.set('status', status);
+if (loteId) busca.set('loteId', loteId);
+
+const [rt, rl] = await Promise.all([
+  Astro.locals.api<{ conteudo: TagAdmin[]; pagina: number; tamanho: number; total: number }>(
+    `/api/admin/tags?${busca}`
+  ),
+  Astro.locals.api<Lote[]>('/api/admin/lotes'),
+]);
+
+const dados = rt.dados ?? { conteudo: [], pagina: 0, tamanho: 50, total: 0 };
+const tags = dados.conteudo;
+const lotes = (rl.dados ?? []).slice().sort((a, b) => b.id - a.id);
+const confirmados = new Set(lotes.filter((l) => l.status === 'CONFIRMADO').map((l) => l.id));
+const ultimaPagina = Math.max(0, Math.ceil(dados.total / dados.tamanho) - 1);
+
+// Volta para o mesmo filtro depois de marcar: sem isto, marcar uma tag jogava
+// a lista inteira de volta ao começo.
+const filtro = q.toString().replace(/(^|&)pagina=[^&]*/, '').replace(/(^|&)enviada=[^&]*/, '');
+const volta = filtro ? `?${filtro.replace(/^&/, '')}` : '';
+
+if (q.has('enviada') && !erro) erro = null;
+const feito = q.has('enviada') ? 'Tag marcada como enviada.' : null;
+---
+
+<Admin titulo="Tags" aba="tags">
+  <h1>Tags</h1>
+  <p class="sub">Onde cada tag está: gravada, enviada ao cliente ou já ativada por ele.</p>
+
+  {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  <form class="cartao" method="GET">
+    <div class="dupla">
+      <div class="campo">
+        <label for="status">Situação</label>
+        <select id="status" name="status">
+          <option value="" selected={!status}>Todas</option>
+          {Object.entries(STATUS_TAG).map(([v, t]) => (
+            <option value={v} selected={status === v}>{t}</option>
+          ))}
+        </select>
+      </div>
+      <div class="campo">
+        <label for="loteId">Lote</label>
+        <select id="loteId" name="loteId">
+          <option value="" selected={!loteId}>Todos</option>
+          {lotes.map((l) => (
+            <option value={String(l.id)} selected={loteId === String(l.id)}>{l.id} — {l.nome}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <button class="btn btn--principal" type="submit">Filtrar</button>
+  </form>
+
+  <section class="cartao">
+    <h2 class="cartao__titulo">{dados.total} {dados.total === 1 ? 'tag' : 'tags'}</h2>
+    {tags.length === 0 ? (
+      <p class="cartao__nota" style="margin:8px 0 0">Nenhuma tag com esse filtro.</p>
+    ) : (
+      <div class="tabela-rolagem">
+        <table class="dados">
+          <thead>
+            <tr>
+              <th scope="col">Código</th><th scope="col">Lote</th><th scope="col">Modelo</th>
+              <th scope="col">Situação</th><th scope="col">Enviada</th><th scope="col">Ativada</th><th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {tags.map((t) => (
+              <tr>
+                <td class="codigo">{t.codigoPublico}</td>
+                <td>{t.loteId}</td>
+                <td>{MODELOS[t.modelo] ?? t.modelo}</td>
+                <td>{STATUS_TAG[t.status] ?? t.status}</td>
+                <td>{t.enviadaEm ? quando(t.enviadaEm) : '—'}</td>
+                <td>{t.reivindicadaEm ? quando(t.reivindicadaEm) : '—'}</td>
+                <td>
+                  {t.status === 'CRIADA' && confirmados.has(t.loteId) && (
+                    <form method="POST">
+                      <input type="hidden" name="uuid" value={t.uuid} />
+                      <input type="hidden" name="volta" value={volta} />
+                      <button class="copiar" type="submit">Marcar enviada</button>
+                    </form>
+                  )}
+                  {t.status === 'CRIADA' && !confirmados.has(t.loteId) && (
+                    <span class="item__quando">Confirme o lote antes</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </section>
+
+  {ultimaPagina > 0 && (
+    <div class="acoes">
+      {pagina > 0 && (
+        <a class="btn btn--secundario" style="margin-top:0"
+           href={`?${filtro.replace(/^&/, '')}${filtro ? '&' : ''}pagina=${pagina - 1}`}>Anterior</a>
+      )}
+      {pagina < ultimaPagina && (
+        <a class="btn btn--secundario" style="margin-top:0"
+           href={`?${filtro.replace(/^&/, '')}${filtro ? '&' : ''}pagina=${pagina + 1}`}>Próxima</a>
+      )}
+    </div>
+  )}
+</Admin>

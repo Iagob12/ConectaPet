@@ -204,3 +204,27 @@ antes de produção é uma classe nova implementando `ArmazenamentoFotos`.
 **Perfil `dev`:** cria `admin@conectapet.local` / `admin-de-desenvolvimento` e um lote
 de 10 tags com os códigos no console. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
 não toca nenhum outro arquivo.
+
+## O primeiro administrador, em produção
+
+O seed do perfil `dev` não serve fora dele: ele imprime códigos de ativação no console,
+que é justamente o segredo que impede quem manuseia a encomenda de virar dono da tag.
+
+Em produção não há criação de conta de admin por configuração. O caminho é:
+
+1. Cadastre-se pelo site como qualquer tutor, escolhendo a própria senha.
+2. Defina `ADMIN_EMAIL` com esse e-mail.
+3. Suba a API. A conta é promovida a `ADMIN` na inicialização.
+
+Nenhuma senha passa pela configuração, e a variável não cria conta: se o e-mail não
+tiver cadastro, o serviço registra um aviso e segue. Promover um cadastro inexistente
+seria abrir um administrador fantasma. Depois de promovida, a variável pode ficar — ela
+é idempotente.
+
+## O que vai gravado no NFC
+
+`URL_PUBLICA_TAG` (padrão `https://conectapet.com.br/p/`) é o prefixo do endereço que o
+administrativo manda gravar em cada tag. **Ele é imutável na prática**: uma vez gravado
+no chip e entregue ao cliente, mudar o domínio quebra todas as tags em campo. Confira
+antes de gravar o primeiro lote — a tela de códigos avisa se o endereço apontar para
+`localhost`, mas não tem como saber se o domínio está errado.

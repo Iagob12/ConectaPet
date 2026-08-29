@@ -1,0 +1,39 @@
+---
+interface Props {
+  titulo: string;
+  voltar?: { href: string; texto: string };
+  aba?: 'lotes' | 'tags';
+}
+const { titulo, voltar, aba } = Astro.props;
+
+import '../styles/base.css';
+---
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{titulo} — Administrativo ConectaPet</title>
+  <style>
+    /* A barra do administrativo e escura de proposito: e para ficar obvio, de
+       relance, que a tela aberta nao e a do tutor. */
+    .barra--admin{background:var(--navy-900)}
+  </style>
+</head>
+<body>
+  <header class="barra barra--admin">
+    <a class="barra__marca" href="/admin">ConectaPet · admin</a>
+    <nav class="barra__menu" aria-label="Administrativo">
+      <a href="/admin" aria-current={aba === 'lotes' ? 'page' : undefined}>Lotes</a>
+      <a href="/admin/tags" aria-current={aba === 'tags' ? 'page' : undefined}>Tags</a>
+      <a href="/sair">Sair</a>
+    </nav>
+  </header>
+  <main class="folha folha--larga">
+    {voltar && <a class="voltar" href={voltar.href}>&larr; {voltar.texto}</a>}
+    <slot />
+  </main>
+</body>
+</html>

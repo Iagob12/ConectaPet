@@ -125,3 +125,27 @@ textarea:focus{outline:3px solid var(--teal-500);outline-offset:2px}
 }
 .dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:420px){.dupla{grid-template-columns:1fr}}
+
+/* ---- Administrativo ----------------------------------------------------- */
+
+.folha--larga{max-width:900px}
+.metricas{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.metrica{background:var(--white);border:2px solid var(--navy-900);border-radius:16px;padding:14px 16px}
+.metrica dt{font-size:14px;color:var(--navy-700);margin:0}
+.metrica dd{font-size:26px;font-weight:700;color:var(--navy-900);margin:2px 0 0;letter-spacing:-.02em}
+
+.tabela-rolagem{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.dados{border-collapse:collapse;width:100%;font-size:15px}
+table.dados th,table.dados td{text-align:left;padding:10px 12px;border-bottom:2px solid var(--gray-300);white-space:nowrap}
+table.dados th{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--navy-700)}
+table.dados tbody tr:nth-child(even){background:var(--sand-100)}
+table.dados td.codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;font-weight:600;color:var(--navy-900)}
+table.dados td.url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;white-space:normal;word-break:break-all;min-width:230px}
+
+.segredo{border-color:var(--alert-600);background:var(--alert-50)}
+.perigo{background:var(--alert-600);color:#fff;border-color:var(--alert-600)}
+.copiar{
+  min-height:36px;padding:4px 12px;font:600 14px/1 inherit;cursor:pointer;
+  background:var(--white);color:var(--navy-900);border:2px solid var(--navy-900);border-radius:999px;
+}
+.copiar[data-feito="1"]{background:var(--teal-100)}

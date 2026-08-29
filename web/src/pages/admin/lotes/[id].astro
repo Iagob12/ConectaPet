@@ -1,0 +1,248 @@
+---
+export const prerender = false;
+
+import Admin from '../../../layouts/Admin.astro';
+import { exigirAdmin, elevar, MODELOS, STATUS_TAG, type Lote, type TagAdmin } from '../../../lib/admin';
+import { quando } from '../../../lib/painel';
+import { verDepois } from '../../../lib/api';
+
+const porta = await exigirAdmin(Astro);
+if ('resposta' in porta) return porta.resposta;
+
+const id = Astro.params.id!;
+
+type Linha = { publico: string; ativacao: string; url: string };
+
+let erro: string | null = null;
+let linhas: Linha[] | null = null;
+
+/**
+ * Os códigos só aparecem depois da senha, e apenas nesta resposta.
+ *
+ * O token de elevação não é guardado em cookie de propósito: guardá-lo faria a
+ * senha valer por cinco minutos de navegação, que é exatamente o que a
+ * reautenticação existe para impedir. Cada revelação é uma digitação e um
+ * registro de auditoria.
+ */
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  const acao = String(d.get('acao') ?? '');
+  const senha = String(d.get('senha') ?? '');
+
+  const el = await elevar(Astro, senha);
+  if (el.status === 401) return Astro.redirect(`/entrar?next=%2Fadmin%2Flotes%2F${id}`);
+
+  if (!el.ok) {
+    erro = el.status === 403 || el.status === 400 ? 'Senha incorreta.' : el.erro;
+  } else {
+    const cabecalhos = { 'X-Reautenticacao': el.dados!.token };
+
+    if (acao === 'confirmar') {
+      const r = await Astro.locals.api(`/api/admin/lotes/${id}/confirmar`, {
+        metodo: 'POST', cabecalhos,
+      });
+      if (r.ok) return verDepois(`/admin/lotes/${id}?confirmado=1`);
+      erro = r.erro;
+    } else {
+      const r = await Astro.locals.apiBruto(`/api/admin/lotes/${id}/codigos`, { cabecalhos });
+
+      if (!r.ok) {
+        erro = r.status === 409 || r.status === 422
+          ? 'Este lote já foi confirmado: os códigos de ativação não existem mais em claro.'
+          : 'Não consegui buscar os códigos.';
+      } else {
+        const csv = await r.text();
+
+        // Baixar entrega o mesmo CSV que a API gerou, sem passar por aqui: é o
+        // arquivo que vai para a gravadora de NFC e para a gráfica.
+        if (acao === 'baixar') {
+          return new Response(csv, {
+            headers: {
+              'Content-Type': 'text/csv; charset=utf-8',
+              'Content-Disposition': `attachment; filename="lote-${id}.csv"`,
+              'Cache-Control': 'no-store',
+            },
+          });
+        }
+
+        linhas = csv.trim().split('\n').slice(1)
+          .map((l) => l.split(','))
+          .filter((c) => c.length >= 3)
+          .map((c) => ({ publico: c[0].trim(), ativacao: c[1].trim(), url: c[2].trim() }));
+      }
+    }
+  }
+}
+
+const [rl, rt] = await Promise.all([
+  Astro.locals.api<Lote[]>('/api/admin/lotes'),
+  Astro.locals.api<{ conteudo: TagAdmin[]; total: number }>(`/api/admin/tags?loteId=${id}&tamanho=100`),
+]);
+const lote = (rl.dados ?? []).find((l) => String(l.id) === String(id));
+if (!lote) return Astro.redirect('/admin');
+
+const tags = rt.dados?.conteudo ?? [];
+const confirmado = lote.status === 'CONFIRMADO';
+
+const q = Astro.url.searchParams;
+const feito = q.has('confirmado')
+  ? 'Lote confirmado. Os códigos de ativação em claro foram apagados.'
+  : q.has('novo') ? 'Lote gerado. Revele os códigos abaixo para gravar os NFCs.' : null;
+
+// O endereço gravado no NFC vem da configuração da API. Se ele apontar para a
+// máquina local, a tag sai de fábrica com um link que só funciona aqui.
+const base = linhas?.[0]?.url ?? '';
+const baseSuspeita = /localhost|127\.0\.0\.1|:\d{4}/.test(base);
+---
+
+<Admin titulo={`Lote ${lote.id}`} voltar={{ href: '/admin', texto: 'Lotes' }} aba="lotes">
+  <h1>{lote.nome}</h1>
+  <p class="sub">
+    Lote {lote.id} · {lote.quantidade} tags · {MODELOS[lote.modelo] ?? lote.modelo} ·
+    gerado em {quando(lote.produzidoEm)}
+  </p>
+
+  {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  {confirmado ? (
+    <section class="cartao">
+      <h2 class="cartao__titulo">Códigos já confirmados</h2>
+      <p class="cartao__nota" style="margin-bottom:0">
+        Confirmado em {quando(lote.confirmadoEm)}. Os códigos de ativação deste
+        lote existem apenas como hash — nem esta tela nem o banco conseguem
+        mostrá-los de novo. Os endereços públicos continuam na lista abaixo.
+      </p>
+    </section>
+  ) : (
+    <>
+      <form class="cartao segredo" method="POST">
+        <h2 class="cartao__titulo">Ver os códigos</h2>
+        <p class="cartao__nota">
+          O código de ativação é o que impede quem manuseia a encomenda de se
+          cadastrar como dono. Por isso a senha é pedida de novo, e cada
+          consulta fica registrada.
+        </p>
+        <div class="campo">
+          <label for="senha">Sua senha</label>
+          <input id="senha" name="senha" type="password" required autocomplete="current-password" />
+        </div>
+        <div class="acoes">
+          <button class="btn btn--principal" type="submit" name="acao" value="ver">Mostrar na tela</button>
+          <button class="btn btn--secundario" style="margin-top:0" type="submit" name="acao" value="baixar">Baixar CSV</button>
+        </div>
+      </form>
+
+      {linhas && (
+        <section class="cartao">
+          <h2 class="cartao__titulo">{linhas.length} tags deste lote</h2>
+          <p class="cartao__nota">
+            Grave a coluna <strong>endereço</strong> em cada NFC e imprima o
+            <strong> código de ativação</strong> no cartão que vai dentro da
+            mesma caixa daquela tag. Os dois precisam casar: o cartão trocado
+            deixa a tag impossível de ativar.
+          </p>
+
+          {baseSuspeita && (
+            <p class="aviso" role="alert">
+              <span>
+                <strong>Este endereço aponta para a máquina local.</strong><br />
+                Uma tag gravada assim só abre neste computador. Ajuste
+                <code> URL_PUBLICA_TAG </code> na API antes de gravar.
+              </span>
+            </p>
+          )}
+
+          <div class="tabela-rolagem">
+            <table class="dados">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Endereço para o NFC</th>
+                  <th scope="col">Código de ativação</th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {linhas.map((l, i) => (
+                  <tr>
+                    <td>{i + 1}</td>
+                    <td class="url">{l.url}</td>
+                    <td class="codigo">{l.ativacao}</td>
+                    <td><button class="copiar" type="button" data-url={l.url}>Copiar</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      <form class="cartao perigo" method="POST">
+        <h2 class="cartao__titulo" style="color:#fff">Confirmar o lote</h2>
+        <p class="cartao__nota" style="color:#fff">
+          Só depois de gravar os NFCs e imprimir os cartões. Confirmar apaga os
+          códigos de ativação em claro para sempre: se um cartão se perder
+          depois disso, aquela tag não tem como ser ativada e vira perda.
+        </p>
+        <div class="campo">
+          <label for="senha-confirmar" style="color:#fff">Sua senha</label>
+          <input id="senha-confirmar" name="senha" type="password" required autocomplete="current-password" />
+        </div>
+        <button class="btn btn--secundario" style="margin-top:0" type="submit" name="acao" value="confirmar">
+          Já gravei tudo, apagar os códigos
+        </button>
+      </form>
+    </>
+  )}
+
+  <section class="cartao">
+    <h2 class="cartao__titulo">Situação das tags</h2>
+    {tags.length === 0 ? (
+      <p class="cartao__nota" style="margin:8px 0 0">Nenhuma tag encontrada neste lote.</p>
+    ) : (
+      <div class="tabela-rolagem">
+        <table class="dados">
+          <thead>
+            <tr>
+              <th scope="col">Código público</th><th scope="col">Situação</th>
+              <th scope="col">Enviada</th><th scope="col">Ativada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tags.map((t) => (
+              <tr>
+                <td class="codigo">{t.codigoPublico}</td>
+                <td>{STATUS_TAG[t.status] ?? t.status}</td>
+                <td>{t.enviadaEm ? quando(t.enviadaEm) : '—'}</td>
+                <td>{t.reivindicadaEm ? quando(t.reivindicadaEm) : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </section>
+</Admin>
+
+<script>
+  // Conveniência para gravar tag a tag: o endereço já fica visível na tabela,
+  // então isto só evita seleção manual num texto longo.
+  for (const b of document.querySelectorAll<HTMLButtonElement>('.copiar')) {
+    b.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(b.dataset.url ?? '');
+        b.dataset.feito = '1';
+        b.textContent = 'Copiado';
+        setTimeout(() => { b.dataset.feito = ''; b.textContent = 'Copiar'; }, 1500);
+      } catch {
+        b.textContent = 'Copie à mão';
+      }
+    });
+  }
+</script>
