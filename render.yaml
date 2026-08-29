@@ -77,10 +77,16 @@ services:
         sync: false
 
       # ---- Fotos ----
-      # "local" no Render é enganoso: o disco do container é efêmero e some a
-      # cada deploy. Aqui object storage não é melhoria, é requisito.
+      # ATENÇÃO: "local", e isto é TEMPORÁRIO.
+      #
+      # No Render o disco do container é efêmero: com "local", TODA FOTO DE PET
+      # SOME a cada deploy. Está assim só para a pilha subir antes de o bucket
+      # existir — com "s3" e as chaves em branco, a aplicação nem inicia.
+      #
+      # TROQUE PARA `s3` ASSIM QUE O BUCKET EXISTIR. A foto é o que faz quem
+      # achou o pet reconhecer o bicho; perdê-la não é perder um enfeite.
       - key: FOTO_ARMAZENAMENTO
-        value: s3
+        value: local
       - key: FOTO_S3_BUCKET
         sync: false
       - key: FOTO_S3_ENDPOINT
