@@ -116,10 +116,22 @@ conectapet:
     leitura: P365D
     cron: "0 30 3 * * *"
   foto:
-    armazenamento: local   # trocar por s3 quando houver credenciais
-    diretorio: ./dados/fotos
+    # "local" grava em disco e NAO sobrevive a redeploy; "s3" usa object
+    # storage — S3, R2, MinIO, Backblaze. O bucket nunca e publico: os bytes
+    # voltam para a API, que os serve sob a regra de visibilidade do perfil.
+    armazenamento: ${FOTO_ARMAZENAMENTO:local}
+    diretorio: ${FOTO_DIRETORIO:./dados/fotos}
     max-bytes: 5242880     # 5 MB
     max-pixels: 40000000   # trava contra bomba de descompressao
+    s3:
+      bucket: ${FOTO_S3_BUCKET:}
+      # "auto" serve para R2. Na AWS, a regiao de verdade.
+      regiao: ${FOTO_S3_REGIAO:auto}
+      # Vazio usa a AWS. Preenchido, liga path-style e desliga a assinatura
+      # em blocos, que nem todo servico compativel aceita.
+      endpoint: ${FOTO_S3_ENDPOINT:}
+      chave: ${FOTO_S3_CHAVE:}
+      segredo: ${FOTO_S3_SEGREDO:}
   admin:
     # Elevacao curta: sessao aberta em computador destravado nao pode virar
     # acesso ao segredo de um lote inteiro.

@@ -297,6 +297,35 @@ Falha de envio **sobe** em vez de ser engolida: quem chama conta a tentativa, re
 erro e reagenda com espera crescente (1, 2, 4, 8 minutos, e desiste na quinta). Engolir
 marcaria como enviada uma mensagem que nunca saiu.
 
+## Onde ficam as fotos
+
+Por padrão, em disco (`FOTO_ARMAZENAMENTO=local`). Serve para desenvolver e **não
+sobrevive a um redeploy** — a foto é o que faz quem achou o pet reconhecer o bicho, então
+perdê-la não é perder um enfeite.
+
+Em produção, object storage:
+
+```bash
+FOTO_ARMAZENAMENTO=s3
+FOTO_S3_BUCKET=fotos-conectapet
+FOTO_S3_ENDPOINT=https://<conta>.r2.cloudflarestorage.com   # vazio = AWS
+FOTO_S3_REGIAO=auto                                          # na AWS, a região real
+FOTO_S3_CHAVE=...
+FOTO_S3_SEGREDO=...
+```
+
+Serve S3 e qualquer compatível — R2, MinIO, Backblaze. Com endpoint preenchido, o cliente
+liga *path-style* (esses serviços não usam subdomínio por bucket) e **desliga a assinatura
+em blocos**: a AWS aceita, o Backblaze recusa, e o efeito de não desligar é a foto ser
+gravada com os cabeçalhos de bloco no meio dos bytes — corrompida, e só se descobre quando
+alguém tenta vê-la.
+
+**O bucket nunca é público.** Nada no código devolve URL de objeto: os bytes voltam para a
+API, que os serve sob a mesma regra de visibilidade do perfil. Com bucket público, a foto
+continuaria acessível depois de o tutor ocultar o perfil ou desativar a tag — e o endereço
+dela já teria vazado para quem abriu a página. A credencial também não precisa de
+permissão de listagem: as chaves são conhecidas, uma pasta por foto.
+
 ## O primeiro administrador, em produção
 
 O seed do perfil `dev` não serve fora dele: ele imprime códigos de ativação no console,

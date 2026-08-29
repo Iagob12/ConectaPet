@@ -48,6 +48,21 @@
       <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
 
+    <!-- Object storage. Serve S3 e qualquer compativel (R2, MinIO, Backblaze). -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>2.29.45</version>
+      <exclusions>
+        <!-- O SDK traz Netty para o cliente assincrono; usamos o sincrono com
+             Apache HTTP, e sem isto sobem duas pilhas de rede no jar. -->
+        <exclusion>
+          <groupId>software.amazon.awssdk</groupId>
+          <artifactId>netty-nio-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <!-- Migrations versionadas. ddl-auto fica em "validate" em todos os perfis. -->
     <dependency>
       <groupId>org.flywaydb</groupId>
