@@ -1,4 +1,14 @@
-const BASE = import.meta.env.API_URL ?? 'http://localhost:8080';
+/**
+ * Endereco da API.
+ *
+ * process.env vem primeiro porque import.meta.env e resolvido em tempo de
+ * BUILD: o valor fica congelado no bundle, e definir API_URL no ambiente do
+ * deploy nao teria efeito nenhum — o site em producao tentaria falar com
+ * localhost:8080 e falharia inteiro. So se descobriria em producao.
+ */
+const BASE = (typeof process !== 'undefined' ? process.env.API_URL : undefined)
+  ?? import.meta.env.API_URL
+  ?? 'http://localhost:8080';
 
 /**
  * A pagina conversa com a API pelo SERVIDOR, nao pelo navegador.

@@ -10,7 +10,12 @@
 export const prerender = false;
 
 const { codigo } = Astro.params;
-const API = import.meta.env.API_URL ?? 'http://localhost:8080';
+// process.env antes de import.meta.env: o segundo e congelado no build. Aqui
+// o endereco tambem vai para o navegador (foto e confirmacao de leitura),
+// entao em producao ele precisa ser publicamente alcancavel.
+const API = (typeof process !== 'undefined' ? process.env.API_URL : undefined)
+  ?? import.meta.env.API_URL
+  ?? 'http://localhost:8080';
 
 let perfil = null;
 let falhou = false;
