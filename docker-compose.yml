@@ -1,0 +1,100 @@
+# A pilha inteira: banco, API e site.
+#
+# Um comando sobe tudo:
+#   cp .env.producao.example .env && (edite o .env) && docker compose up -d --build
+#
+# O que este arquivo NÃO resolve, e você precisa decidir: onde ele roda, o
+# domínio, o certificado TLS e o backup do banco. Ele entrega os três serviços
+# de pé e falando entre si.
+
+services:
+  banco:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina no .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-conectapet}
+      MYSQL_USER: ${MYSQL_USER:?defina no .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina no .env}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      # O volume é o que faz os dados sobreviverem ao redeploy. Sem ele, cada
+      # `docker compose down -v` apaga os pets de todo mundo.
+      - dados-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    # Sem `ports`: o banco não fica exposto fora da rede do compose. Para
+    # acessá-lo de fora, use um túnel — publicar a 3306 na internet é como o
+    # banco de dados de um produto vira notícia.
+
+  api:
+    build:
+      context: ./api
+    restart: unless-stopped
+    depends_on:
+      banco:
+        # Espera o banco aceitar conexão. Sem isso a API sobe primeiro, o
+        # Flyway falha e o container reinicia em laço até dar certo por sorte.
+        condition: service_healthy
+    environment:
+      BANCO_URL: jdbc:mysql://banco:3306/${MYSQL_DATABASE:-conectapet}?useSSL=false&allowPublicKeyRetrieval=true
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+      JWT_SEGREDO: ${JWT_SEGREDO:?gere com openssl rand -base64 48}
+      IP_PIMENTA: ${IP_PIMENTA:?gere com openssl rand -base64 32}
+
+      # A aplicação recusa subir se qualquer um destes apontar para localhost.
+      URL_PUBLICA_TAG: ${URL_PUBLICA_TAG:?o endereco gravado no NFC}
+      URL_SITE: ${URL_SITE:?o endereco publico do site}
+      CORS_ORIGENS: ${CORS_ORIGENS:?o dominio do site}
+
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+
+      EMAIL_PROVEDOR: ${EMAIL_PROVEDOR:-log}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORTA: ${SMTP_PORTA:-587}
+      SMTP_USUARIO: ${SMTP_USUARIO:-}
+      SMTP_SENHA: ${SMTP_SENHA:-}
+
+      FOTO_ARMAZENAMENTO: ${FOTO_ARMAZENAMENTO:-local}
+      FOTO_S3_BUCKET: ${FOTO_S3_BUCKET:-}
+      FOTO_S3_ENDPOINT: ${FOTO_S3_ENDPOINT:-}
+      FOTO_S3_REGIAO: ${FOTO_S3_REGIAO:-auto}
+      FOTO_S3_CHAVE: ${FOTO_S3_CHAVE:-}
+      FOTO_S3_SEGREDO: ${FOTO_S3_SEGREDO:-}
+    volumes:
+      # Só serve enquanto FOTO_ARMAZENAMENTO=local. Com S3 configurado, este
+      # volume fica vazio e pode sair.
+      - dados-fotos:/app/dados/fotos
+    ports:
+      # O navegador fala com a API direto para buscar a foto e confirmar a
+      # leitura da tag, então ela precisa estar publicamente alcançável.
+      - "${PORTA_API:-8080}:8080"
+
+  site:
+    build:
+      context: ./web
+      args:
+        # Em tempo de BUILD, não de execução. Ver o Dockerfile do site.
+        URL_SITE: ${URL_SITE:?o endereco publico do site}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      # Esta, sim, é de execução: o endereço público da API, o mesmo que o
+      # navegador usa.
+      API_URL: ${URL_API_PUBLICA:?o endereco publico da API}
+    ports:
+      - "${PORTA_SITE:-4321}:4321"
+
+volumes:
+  dados-mysql:
+  dados-fotos:

@@ -1,0 +1,7 @@
+# Nao entra na imagem: pesa o build e, no caso do .env, vazaria segredo.
+**/node_modules
+**/dist
+**/target
+**/.git
+**/.env
+**/dados
