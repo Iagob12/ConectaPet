@@ -7,7 +7,6 @@ import br.com.conectapet.seguranca.UsuarioAutenticado;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,14 +41,13 @@ public class ReivindicacaoServico {
     private final TentativaRepositorio tentativas;
     private final RegistroTentativas registro;
     private final br.com.conectapet.auditoria.AuditoriaServico auditoria;
-    private final PasswordEncoder encoder;
     private final int limitePorIp;
     private final int limitePorCodigo;
     private final Duration janela;
 
     public ReivindicacaoServico(TagRepositorio tags, TentativaRepositorio tentativas,
                                 RegistroTentativas registro,
-                                br.com.conectapet.auditoria.AuditoriaServico auditoria, PasswordEncoder encoder,
+                                br.com.conectapet.auditoria.AuditoriaServico auditoria,
                                 @Value("${conectapet.limites.reivindicacao-por-ip}") int limitePorIp,
                                 @Value("${conectapet.limites.reivindicacao-por-codigo}") int limitePorCodigo,
                                 @Value("${conectapet.limites.reivindicacao-janela}") Duration janela) {
@@ -57,7 +55,6 @@ public class ReivindicacaoServico {
         this.tentativas = tentativas;
         this.registro = registro;
         this.auditoria = auditoria;
-        this.encoder = encoder;
         this.limitePorIp = limitePorIp;
         this.limitePorCodigo = limitePorCodigo;
         this.janela = janela;
@@ -132,7 +129,4 @@ public class ReivindicacaoServico {
         }
     }
 
-    /** BCrypt descartavel, so para gastar o mesmo tempo quando a tag nao existe. */
-    private static final String HASH_FALSO =
-            "$2a$12$C6UzMDM.H6dfI/f/IKcEe.7dEA9GYAKRT5pW7XHZQZgVMFj9nNzXe";
 }

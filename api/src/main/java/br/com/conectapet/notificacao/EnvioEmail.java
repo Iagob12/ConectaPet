@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
  * SMTP nao toca em nenhum outro arquivo — e o ponto da interface.
  */
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+        name = "conectapet.email.provedor", havingValue = "log", matchIfMissing = true)
 public class EnvioEmail implements CanalEnvio {
 
     private static final Logger log = LoggerFactory.getLogger(EnvioEmail.class);

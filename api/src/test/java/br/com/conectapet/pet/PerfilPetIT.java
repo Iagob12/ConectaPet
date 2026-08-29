@@ -46,7 +46,7 @@ class PerfilPetIT extends TesteIntegracao {
 
         Lote lote = loteServico.gerar("Lote", 2, ModeloTag.CLASSICA, null);
         Tag bruta = tags.findByLoteId(lote.getId()).get(0);
-        tagDaAna = reivindicacao.reivindicar(bruta.getCodigoPublico(), bruta.getCodigoAtivacaoClaro(), ana, "ip-ana");
+        tagDaAna = reivindicacao.reivindicar(bruta.getCodigoPublico(), ana, "ip-ana");
     }
 
     // ---- Criterio de ATIVA -------------------------------------------------
@@ -71,7 +71,7 @@ class PerfilPetIT extends TesteIntegracao {
         UsuarioAutenticado semFone = criarUsuario("semfone@teste.com", null);
         Lote lote = loteServico.gerar("Lote 2", 1, ModeloTag.SLIM, null);
         Tag bruta = tags.findByLoteId(lote.getId()).get(0);
-        Tag tag = reivindicacao.reivindicar(bruta.getCodigoPublico(), bruta.getCodigoAtivacaoClaro(),
+        Tag tag = reivindicacao.reivindicar(bruta.getCodigoPublico(),
                 semFone, "ip-x");
 
         Pet p = petServico.criar(pet("Rex"), tag.getUuid(), semFone);
@@ -142,7 +142,7 @@ class PerfilPetIT extends TesteIntegracao {
 
         Lote lote = loteServico.gerar("Reserva", 1, ModeloTag.SLIM, null);
         Tag bruta = tags.findByLoteId(lote.getId()).get(0);
-        Tag segunda = reivindicacao.reivindicar(bruta.getCodigoPublico(), bruta.getCodigoAtivacaoClaro(),
+        Tag segunda = reivindicacao.reivindicar(bruta.getCodigoPublico(),
                 ana, "ip-ana");
         petServico.vincularTag(segunda.getUuid(), nina, ana);
 

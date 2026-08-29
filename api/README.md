@@ -223,6 +223,34 @@ motivo da reautenticação do administrativo.
 de 10 tags com os códigos no console. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
 não toca nenhum outro arquivo.
 
+## Ligar o envio de e-mail
+
+Por padrão o envio é um stub que registra no console (`conectapet.email.provedor=log`).
+Para enviar de verdade, o provedor precisa falar SMTP — SES, Resend, Postmark ou o
+servidor do próprio domínio, tanto faz:
+
+```bash
+EMAIL_PROVEDOR=smtp
+EMAIL_REMETENTE="ConectaPet <nao-responda@conectapet.com.br>"
+EMAIL_RESPONDER_PARA=ajuda@conectapet.com.br   # opcional; vazio desliga
+SMTP_HOST=email-smtp.sa-east-1.amazonaws.com
+SMTP_PORTA=587
+SMTP_USUARIO=...
+SMTP_SENHA=...
+```
+
+**O padrão é `log` de propósito.** Um ambiente de homologação que herdasse SMTP por
+engano mandaria "alguém leu a tag do seu pet" para cliente de verdade. Ligar envio é uma
+decisão explícita, por ambiente.
+
+Os dois canais são mutuamente exclusivos: o mapa de canais tem uma chave por canal, então
+declarar os dois derruba a aplicação na subida — melhor do que subir com um deles escolhido
+por sorteio.
+
+Falha de envio **sobe** em vez de ser engolida: quem chama conta a tentativa, registra o
+erro e reagenda com espera crescente (1, 2, 4, 8 minutos, e desiste na quinta). Engolir
+marcaria como enviada uma mensagem que nunca saiu.
+
 ## O primeiro administrador, em produção
 
 O seed do perfil `dev` não serve fora dele: ele imprime códigos de ativação no console,

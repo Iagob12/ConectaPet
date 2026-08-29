@@ -13,12 +13,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Os testes de seguranca da reivindicacao — a rota mais atacavel do sistema.
+ * Reivindicacao: a rota mais atacavel do sistema.
+ *
+ * Reescrito depois que o codigo de ativacao impresso deixou de ser exigido. Os
+ * testes que mediam "codigo de ativacao errado" sairam porque a coisa que eles
+ * mediam nao existe mais — manter versoes adaptadas deles daria a impressao de
+ * cobertura sobre uma protecao que foi removida de proposito.
+ *
+ * O que sobrou de defesa e o que continua testado aqui: o limite de tentativas
+ * (que agora conta codigo inexistente), a indistinguibilidade entre codigos que
+ * existem e que nao existem, e o 409 de tag com dono.
  */
 class ReivindicacaoIT extends TesteIntegracao {
 
@@ -32,7 +39,6 @@ class ReivindicacaoIT extends TesteIntegracao {
     private UsuarioAutenticado ana;
     private UsuarioAutenticado bruno;
     private Tag tag;
-    private String codigoAtivacao;
 
     @BeforeEach
     void preparar() {
@@ -44,13 +50,12 @@ class ReivindicacaoIT extends TesteIntegracao {
 
         Lote lote = loteServico.gerar("Lote de teste", 3, ModeloTag.CLASSICA, null);
         tag = tags.findByLoteId(lote.getId()).get(0);
-        codigoAtivacao = tag.getCodigoAtivacaoClaro();
     }
 
     @Test
-    @DisplayName("1. codigo de ativacao correto reivindica a tag")
-    void codigoCorreto() {
-        Tag resultado = servico.reivindicar(tag.getCodigoPublico(), codigoAtivacao, ana, "ip-ana");
+    @DisplayName("1. o codigo da URL basta para assumir a tag")
+    void codigoDaUrlBasta() {
+        Tag resultado = servico.reivindicar(tag.getCodigoPublico(), ana, "ip-ana");
 
         assertThat(resultado.getStatus()).isEqualTo(StatusTag.REIVINDICADA);
         assertThat(resultado.getUsuarioId()).isEqualTo(ana.id());
@@ -58,39 +63,41 @@ class ReivindicacaoIT extends TesteIntegracao {
     }
 
     @Test
-    @DisplayName("1b. codigo de ativacao incorreto e recusado")
-    void codigoIncorreto() {
-        assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), "ZZZZZZZZ", ana, "ip-ana"))
+    @DisplayName("1b. codigo inexistente e recusado")
+    void codigoInexistente() {
+        assertThatThrownBy(() -> servico.reivindicar("ZZZZZZZZZZ", ana, "ip-ana"))
                 .isInstanceOf(ProblemaException.class)
                 .extracting(e -> ((ProblemaException) e).tipo())
                 .isEqualTo(TipoErro.CODIGO_INVALIDO);
-
-        assertThat(tags.findByCodigoPublico(tag.getCodigoPublico()).orElseThrow().getUsuarioId()).isNull();
     }
 
     @Test
     @DisplayName("2. tag ja reivindicada devolve 409, com orientacao sobre transferencia")
     void jaReivindicada() {
-        servico.reivindicar(tag.getCodigoPublico(), codigoAtivacao, ana, "ip-ana");
+        servico.reivindicar(tag.getCodigoPublico(), ana, "ip-ana");
 
-        assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), codigoAtivacao, bruno, "ip-bruno"))
+        assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), bruno, "ip-bruno"))
                 .isInstanceOf(ProblemaException.class)
                 .extracting(e -> ((ProblemaException) e).tipo())
                 .isEqualTo(TipoErro.TAG_JA_REIVINDICADA);
 
-        // continua da Ana
+        // Continua da Ana. Este 409 e a unica coisa que torna visivel um roubo
+        // de tag na cadeia de entrega: o cliente ve que ela ja tem dono.
         assertThat(tags.findByCodigoPublico(tag.getCodigoPublico()).orElseThrow().getUsuarioId())
                 .isEqualTo(ana.id());
     }
 
     @Test
-    @DisplayName("3. forca bruta e bloqueada depois do limite, por IP")
-    void forcaBrutaPorIp() {
+    @DisplayName("3. varredura de codigos e bloqueada depois do limite, por IP")
+    void varreduraPorIp() {
+        // Sem o codigo de ativacao, o ataque que resta e varrer o espaco de
+        // codigos publicos atras de uma tag ainda sem dono.
         for (int i = 0; i < 5; i++) {
-            assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), "ZZZZZZZZ", ana, "ip-atacante"))
+            String inexistente = "ZZZZZZZZZ" + (char) ('2' + i);
+            assertThatThrownBy(() -> servico.reivindicar(inexistente, ana, "ip-atacante"))
                     .isInstanceOf(ProblemaException.class);
         }
-        assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), codigoAtivacao, ana, "ip-atacante"))
+        assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), ana, "ip-atacante"))
                 .isInstanceOf(ProblemaException.class)
                 .extracting(e -> ((ProblemaException) e).tipo())
                 .isEqualTo(TipoErro.BLOQUEADO);
@@ -98,43 +105,45 @@ class ReivindicacaoIT extends TesteIntegracao {
 
     @Test
     @DisplayName("3b. o balde por codigo e GLOBAL: trocar de IP nao contorna o limite")
-    void forcaBrutaTrocandoDeIp() {
-        // Um atacante com muitos enderecos: se o balde por codigo tivesse IP na
-        // chave, cada IP novo daria 5 tentativas frescas no mesmo codigo.
+    void varreduraTrocandoDeIp() {
+        // Um atacante com muitos enderecos, insistindo no MESMO codigo. Se o
+        // balde por codigo tivesse IP na chave, cada IP novo daria 5 tentativas
+        // frescas contra a mesma tag.
+        tags.delete(tag);
         for (int i = 0; i < 5; i++) {
-            String ipDiferente = "ip-atacante-" + i;
-            assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), "ZZZZZZZZ", ana, ipDiferente))
+            String ip = "ip-atacante-" + i;
+            assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), ana, ip))
                     .isInstanceOf(ProblemaException.class);
         }
-        assertThatThrownBy(() ->
-                servico.reivindicar(tag.getCodigoPublico(), codigoAtivacao, ana, "ip-completamente-novo"))
+        assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), ana, "ip-completamente-novo"))
                 .isInstanceOf(ProblemaException.class)
                 .extracting(e -> ((ProblemaException) e).tipo())
                 .isEqualTo(TipoErro.BLOQUEADO);
     }
 
     @Test
-    @DisplayName("5. codigo inexistente e codigo errado sao indistinguiveis")
-    void indistinguivel() {
+    @DisplayName("5. a resposta a um codigo inexistente nao diz mais do que \"invalido\"")
+    void codigoInexistenteNaoRevelaNada() {
+        // Sem o codigo de ativacao, esta rota passou a distinguir codigo que
+        // existe (409, ja tem dono) de codigo que nao existe (400, invalido).
+        // Nao e vazamento novo: /p/{codigo} ja mostra o perfil de uma tag ativa
+        // a qualquer um. O que continua travado aqui e o outro lado — o codigo
+        // inexistente nao pode devolver nada especifico, senao a varredura
+        // ganharia um sinal melhor do que o limite de tentativas consegue conter.
+        servico.reivindicar(tag.getCodigoPublico(), ana, "ip-a");
+
         ProblemaException naoExiste = catchThrowableOfType(ProblemaException.class,
-                () -> servico.reivindicar("ZZZZZZZZZZ", "ZZZZZZZZ", ana, "ip-a"));
+                () -> servico.reivindicar("ZZZZZZZZZZ", bruno, "ip-b"));
 
-        ProblemaException existeMasErrado = catchThrowableOfType(ProblemaException.class,
-                () -> servico.reivindicar(tag.getCodigoPublico(), "YYYYYYYY", ana, "ip-b"));
-
-        // Mesmo tipo, mesmo status, mesmo titulo, mesmo detalhe. Se diferissem,
-        // criar uma conta bastaria para enumerar todos os codigos por esta rota.
-        assertThat(naoExiste.tipo()).isEqualTo(existeMasErrado.tipo());
-        assertThat(naoExiste.tipo().status()).isEqualTo(existeMasErrado.tipo().status());
-        assertThat(naoExiste.detalhe()).isEqualTo(existeMasErrado.detalhe());
+        assertThat(naoExiste.tipo()).isEqualTo(TipoErro.CODIGO_INVALIDO);
+        assertThat(naoExiste.detalhe()).isNull();
     }
 
     @Test
     @DisplayName("erro de digitacao na forma nao consome tentativa do limite")
     void formaInvalidaNaoGastaTentativa() {
-        // "0" e "L" nao existem no alfabeto: e erro de leitura do cartao,
-        // nao tentativa de adivinhacao.
-        assertThatThrownBy(() -> servico.reivindicar(tag.getCodigoPublico(), "0LLLLLLL", ana, "ip-ana"))
+        // "0" e "L" nao existem no alfabeto: e erro de leitura, nao adivinhacao.
+        assertThatThrownBy(() -> servico.reivindicar("0LLLLLLLLL", ana, "ip-ana"))
                 .isInstanceOf(ProblemaException.class);
 
         assertThat(tentativas.count()).isZero();
@@ -147,7 +156,7 @@ class ReivindicacaoIT extends TesteIntegracao {
         // trancado por isso.
         Lote lote = loteServico.gerar("Kit", 5, ModeloTag.SLIM, null);
         for (Tag t : tags.findByLoteId(lote.getId())) {
-            servico.reivindicar(t.getCodigoPublico(), t.getCodigoAtivacaoClaro(), ana, "ip-ana");
+            servico.reivindicar(t.getCodigoPublico(), ana, "ip-ana");
         }
         assertThat(tags.findByUsuarioIdOrderByCriadoEmDesc(ana.id())).hasSize(5);
     }

@@ -55,7 +55,7 @@ class PerfilPublicoIT extends TesteIntegracao {
         ana = criarUsuario();
         Lote lote = loteServico.gerar("Lote", 1, ModeloTag.CLASSICA, null);
         Tag bruta = tags.findByLoteId(lote.getId()).get(0);
-        tag = reivindicacao.reivindicar(bruta.getCodigoPublico(), bruta.getCodigoAtivacaoClaro(), ana, "ip");
+        tag = reivindicacao.reivindicar(bruta.getCodigoPublico(), ana, "ip");
 
         Pet p = new Pet();
         p.setNome("Nina");

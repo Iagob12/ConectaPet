@@ -42,6 +42,12 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
+    <!-- SMTP. O provedor (SES, Resend, qualquer um) entra por configuracao. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+
     <!-- Migrations versionadas. ddl-auto fica em "validate" em todos os perfis. -->
     <dependency>
       <groupId>org.flywaydb</groupId>

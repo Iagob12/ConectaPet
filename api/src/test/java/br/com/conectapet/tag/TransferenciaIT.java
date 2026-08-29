@@ -277,7 +277,7 @@ class TransferenciaIT extends TesteIntegracao {
     private Tag reivindicarNova(UsuarioAutenticado dono) {
         Lote lote = loteServico.gerar("Lote", 1, ModeloTag.CLASSICA, null);
         Tag bruta = tags.findByLoteId(lote.getId()).get(0);
-        return reivindicacao.reivindicar(bruta.getCodigoPublico(), bruta.getCodigoAtivacaoClaro(),
+        return reivindicacao.reivindicar(bruta.getCodigoPublico(),
                 dono, "ip-" + dono.id());
     }
 

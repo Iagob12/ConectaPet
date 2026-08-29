@@ -2,6 +2,22 @@ spring:
   application:
     name: conectapet-api
 
+  # Só é usado quando conectapet.email.provedor=smtp. Sem isso definido, o
+  # starter-mail fica no classpath sem fazer nada.
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORTA:587}
+    username: ${SMTP_USUARIO:}
+    password: ${SMTP_SENHA:}
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      # Falha rápido: a fila reprocessa com espera crescente, e uma conexão
+      # pendurada travaria o lote inteiro de notificações.
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
   datasource:
     url: ${BANCO_URL:jdbc:mysql://localhost:3306/conectapet}
     username: ${MYSQL_USER:conectapet}
@@ -51,6 +67,14 @@ conectapet:
     # Base dos links que saem por e-mail. Errado aqui, o link de redefinir
     # senha chega ao cliente apontando para lugar nenhum.
     url: ${URL_SITE:https://conectapet.com.br}
+  email:
+    # "log" registra no console; "smtp" envia de verdade. O padrao e log de
+    # proposito: um ambiente que herdasse SMTP por engano mandaria "alguem
+    # leu a tag do seu pet" para cliente de verdade.
+    provedor: ${EMAIL_PROVEDOR:log}
+    remetente: ${EMAIL_REMETENTE:ConectaPet <nao-responda@conectapet.com.br>}
+    # Para onde vai a resposta de quem apertar "responder". Vazio desliga.
+    responder-para: ${EMAIL_RESPONDER_PARA:}
   reset-senha:
     # Curto: e um passe de entrada na conta viajando por e-mail.
     validade: PT1H
