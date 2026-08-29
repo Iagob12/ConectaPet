@@ -52,12 +52,29 @@ services:
 
       # ---- Endereços ----
       # A aplicação recusa subir se qualquer um apontar para localhost.
+      #
+      # Estes três ficam versionados, com valor, e não `sync: false`. Não são
+      # segredos — são endereços públicos — e versioná-los tem duas vantagens
+      # concretas:
+      #
+      #   1. O painel do Render mascara TODOS os valores ao editar. Corrigir um
+      #      endereço por lá significa salvar um formulário onde MYSQL_PASSWORD,
+      #      JWT_SEGREDO e IP_PIMENTA aparecem vazios — e salvar apaga os três.
+      #      Pelo blueprint, só as chaves declaradas aqui são tocadas.
+      #   2. CORS_ORIGENS errado não gera erro em lugar nenhum: o navegador
+      #      bloqueia a confirmação de leitura e o tutor nunca é avisado. Uma
+      #      linha revisável no repositório é melhor do que um campo de painel
+      #      que ninguém relê.
+      #
+      # Domínio provisório da Vercel. Ao migrar para domínio próprio, troque os
+      # três aqui — e lembre que URL_PUBLICA_TAG já gravada em chip não volta
+      # atrás: tag em campo continua apontando para o endereço antigo.
       - key: URL_PUBLICA_TAG
-        sync: false
+        value: https://conecta-pet-inky.vercel.app/p/
       - key: URL_SITE
-        sync: false
+        value: https://conecta-pet-inky.vercel.app
       - key: CORS_ORIGENS
-        sync: false
+        value: https://conecta-pet-inky.vercel.app
 
       # ---- Primeiro administrador ----
       # Cadastre-se pelo site, ponha o e-mail aqui e reinicie o serviço.

@@ -65,13 +65,15 @@ sem isso o site sobe, as páginas abrem e todo formulário responde 403.
 
 ### 4. Ligar as pontas
 
-De volta ao Render, ajuste três variáveis com o domínio final da Vercel:
-
-- `URL_SITE` e `CORS_ORIGENS` → o domínio do site
-- `URL_PUBLICA_TAG` → `https://seu-dominio/p/`
+As três variáveis de endereço da API ficam **no `render.yaml`, com valor** —
+não são segredos, e o painel do Render mascara todos os campos ao editar: salvar
+aquele formulário para corrigir uma URL apagaria `MYSQL_PASSWORD`, `JWT_SEGREDO`
+e `IP_PIMENTA` junto. Troque o domínio no arquivo, faça o commit, e sincronize o
+blueprint — só as chaves declaradas nele são tocadas.
 
 `CORS_ORIGENS` errado é a falha que não aparece: o navegador bloqueia a
-confirmação de leitura, nada registra erro, e o tutor nunca é avisado.
+confirmação de leitura, nada registra erro, e o tutor nunca é avisado. É a razão
+de ela ser uma linha revisável no repositório e não um campo de painel.
 
 ### O que essa rota custa
 
