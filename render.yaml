@@ -22,11 +22,15 @@ services:
     # caminho e mover a API para um provedor com regiao brasileira — o
     # Dockerfile e o mesmo, e nada no codigo prende ao Render.
     region: ohio
-    # O gratuito hiberna após 15 min sem tráfego e leva ~50 s para acordar.
-    # Nesse tempo, quem encosta o celular na tag vê "nossos servidores não
-    # responderam". Para um produto de resgate isso não é aceitável: o plano
-    # pago é o mínimo viável aqui.
-    plan: starter
+    # ATENÇÃO: gratuito, e isto é TEMPORÁRIO.
+    #
+    # Serve para validar a pilha inteira sem custo. Ele hiberna após 15 min sem
+    # tráfego e leva ~50 s para acordar — e nesse tempo quem encostou o celular
+    # na tag lê "nossos servidores não responderam".
+    #
+    # TROQUE PARA `starter` ANTES DE ENTREGAR A PRIMEIRA TAG. Vender um produto
+    # de resgate cuja página demora 50 s para abrir é pior do que não vender.
+    plan: free
     healthCheckPath: /actuator/health
 
     envVars:
