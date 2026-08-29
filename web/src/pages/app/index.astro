@@ -32,6 +32,7 @@ const q = Astro.url.searchParams;
 const feito = q.has('recebida') ? 'Tag recebida. O perfil dela já está aqui.'
   : q.has('tag-desativada') ? 'Tag desativada. Ela não mostra mais nada a quem encostar o celular.'
   : q.has('migrado') ? 'Perfil movido para a tag nova.'
+  : q.has('pet-excluido') ? 'Perfil excluído.'
   : null;
 ---
 

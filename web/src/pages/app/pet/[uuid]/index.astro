@@ -27,6 +27,13 @@ if (Astro.request.method === 'POST') {
     return verDepois(`${Astro.url.pathname}?${r.ok ? (acao === 'perdido-ligar' ? 'perdido=1' : 'achado=1') : 'falhou=1'}`);
   }
 
+  if (acao === 'excluir') {
+    const r = await Astro.locals.api(`/api/pets/${uuid}`, { metodo: 'DELETE' });
+    if (r.status === 401) return paraLogin(Astro);
+    if (r.ok) return verDepois('/app?pet-excluido=1');
+    aviso = r.erro;
+  }
+
   if (acao === 'foto-remover') {
     const r = await Astro.locals.api(`/api/pets/${uuid}/foto`, { metodo: 'DELETE' });
     if (r.status === 401) return paraLogin(Astro);
@@ -140,6 +147,26 @@ if (q.has('falhou') && !aviso) aviso = 'Não consegui concluir. Tente de novo.';
       <li class="item"><a class="link" href={`/app/pet/${uuid}/leituras`}>Quem leu a tag</a>
         <p class="item__quando">Histórico de cada vez que a tag foi aberta.</p></li>
     </ul>
+  </section>
+
+  <section class="cartao perigo">
+    <h2 class="cartao__titulo" style="color:#fff">Excluir {pet.nome}</h2>
+    <p class="cartao__nota" style="color:#fff">
+      Apaga o perfil, a foto, a saúde e os contatos de emergência.
+      {tag
+        ? ' A tag continua sua e volta a ficar em branco, pronta para outro pet.'
+        : ' A tag já não está ligada a este perfil.'}
+    </p>
+    <p class="cartao__nota" style="color:#fff">
+      Se {pet.nome} faleceu e você quer guardar o histórico, baixe seus dados
+      em <a class="link" style="color:#fff" href="/app/conta">Minha conta</a> antes.
+    </p>
+    <form method="POST">
+      <input type="hidden" name="acao" value="excluir" />
+      <button class="btn btn--secundario" style="margin-top:0" type="submit">
+        Excluir este perfil
+      </button>
+    </form>
   </section>
 
   {tag && (

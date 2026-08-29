@@ -8,6 +8,7 @@ import { verDepois } from '../../../../lib/api';
 const uuid = Astro.params.uuid!;
 let erro: string | null = null;
 let campos: Record<string, string> = {};
+let editando: string | null = null;
 
 if (Astro.request.method === 'POST') {
   let d: FormData;
@@ -19,6 +20,24 @@ if (Astro.request.method === 'POST') {
     return new Response('Requisicao invalida.', { status: 400 });
   }
   const acao = String(d.get('acao') ?? '');
+
+  if (acao === 'editar') {
+    const alvo = String(d.get('uuidContato') ?? '');
+    const r = await Astro.locals.api(`/api/pets/${uuid}/contatos/${alvo}`, {
+      metodo: 'PUT',
+      corpo: {
+        nome: texto(d, 'nome'),
+        telefone: texto(d, 'telefone'),
+        parentesco: texto(d, 'parentesco'),
+        ordem: Number(d.get('ordem') ?? 0) || 0,
+      },
+    });
+    if (r.status === 401) return paraLogin(Astro);
+    if (r.ok) return verDepois(Astro.url.pathname + '?editado=1');
+    erro = r.erro;
+    campos = r.campos;
+    editando = alvo;
+  }
 
   if (acao === 'remover') {
     const alvo = String(d.get('uuidContato') ?? '');
@@ -62,7 +81,11 @@ const palavra = limite === 1 ? 'contato' : 'contatos';
 const q = Astro.url.searchParams;
 const feito = q.has('adicionado') ? 'Contato adicionado.'
   : q.has('removido') ? 'Contato removido.'
+  : q.has('editado') ? 'Contato atualizado.'
   : null;
+// Abre já aberto o formulário do contato que falhou ao salvar, senão a pessoa
+// clica em "editar" de novo e reencontra a tela em branco.
+if (!editando) editando = q.get('editar');
 if (q.has('falhou') && !erro) erro = 'Não consegui remover. Tente de novo.';
 ---
 
@@ -83,17 +106,52 @@ if (q.has('falhou') && !erro) erro = 'Não consegui remover. Tente de novo.';
       : (
         <ul class="lista-limpa">
           {contatos.map((c) => (
-            <li class="item linha linha--entre">
-              <div class="cresce">
-                <p class="item__oque"><strong>{c.nome}</strong>{c.parentesco ? ` · ${c.parentesco}` : ''}</p>
-                <p class="item__quando">{c.telefone}</p>
-              </div>
-              <form method="POST">
-                <input type="hidden" name="acao" value="remover" />
-                <input type="hidden" name="uuidContato" value={c.uuid} />
-                <button class="btn btn--secundario" style="margin-top:0;min-height:44px;padding:8px 16px"
-                        type="submit" aria-label={`Remover ${c.nome}`}>Remover</button>
-              </form>
+            <li class="item">
+              {editando === c.uuid ? (
+                <form method="POST">
+                  <input type="hidden" name="acao" value="editar" />
+                  <input type="hidden" name="uuidContato" value={c.uuid} />
+                  <div class="campo">
+                    <label for={`n-${c.uuid}`}>Nome</label>
+                    <input id={`n-${c.uuid}`} name="nome" required minlength="2" maxlength="120"
+                           value={c.nome} aria-invalid={campos.nome ? 'true' : undefined} />
+                    {campos.nome && <p class="erro-campo">{campos.nome}</p>}
+                  </div>
+                  <div class="dupla">
+                    <div class="campo">
+                      <label for={`t-${c.uuid}`}>Telefone</label>
+                      <input id={`t-${c.uuid}`} name="telefone" type="tel" inputmode="tel" required
+                             value={c.telefone} aria-invalid={campos.telefone ? 'true' : undefined} />
+                      {campos.telefone && <p class="erro-campo">{campos.telefone}</p>}
+                    </div>
+                    <div class="campo">
+                      <label for={`p-${c.uuid}`}>Relação</label>
+                      <input id={`p-${c.uuid}`} name="parentesco" maxlength="40" value={c.parentesco ?? ''} />
+                    </div>
+                  </div>
+                  <input type="hidden" name="ordem" value={String(c.ordem)} />
+                  <div class="acoes">
+                    <button class="btn btn--principal" type="submit">Salvar</button>
+                    <a class="btn btn--secundario" style="margin-top:0" href={Astro.url.pathname}>Cancelar</a>
+                  </div>
+                </form>
+              ) : (
+                <div class="linha linha--entre">
+                  <div class="cresce">
+                    <p class="item__oque"><strong>{c.nome}</strong>{c.parentesco ? ` · ${c.parentesco}` : ''}</p>
+                    <p class="item__quando">{c.telefone}</p>
+                  </div>
+                  <div class="linha" style="gap:8px">
+                    <a class="copiar" href={`${Astro.url.pathname}?editar=${c.uuid}`}
+                       aria-label={`Editar ${c.nome}`}>Editar</a>
+                    <form method="POST">
+                      <input type="hidden" name="acao" value="remover" />
+                      <input type="hidden" name="uuidContato" value={c.uuid} />
+                      <button class="copiar" type="submit" aria-label={`Remover ${c.nome}`}>Remover</button>
+                    </form>
+                  </div>
+                </div>
+              )}
             </li>
           ))}
         </ul>

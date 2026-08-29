@@ -254,7 +254,9 @@ public class PetControlador {
         }
 
         static ContatoDto de(ContatoEmergencia c) {
-            return new ContatoDto(c.getUuid(), c.getNome(), c.getTelefone(), c.getParentesco(), c.getOrdem());
+            return new ContatoDto(c.getUuid(), c.getNome(),
+                    br.com.conectapet.comum.util.Telefone.paraExibicao(c.getTelefone()),
+                    c.getParentesco(), c.getOrdem());
         }
     }
 }

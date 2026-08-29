@@ -149,3 +149,6 @@ table.dados td.url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-
   background:var(--white);color:var(--navy-900);border:2px solid var(--navy-900);border-radius:999px;
 }
 .copiar[data-feito="1"]{background:var(--teal-100)}
+
+a.copiar{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:44px}
+.copiar{min-height:44px}
