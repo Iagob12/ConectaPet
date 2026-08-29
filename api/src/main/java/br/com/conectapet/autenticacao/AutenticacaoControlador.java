@@ -28,15 +28,18 @@ public class AutenticacaoControlador {
     private final PropriedadesJwt props;
     private final UsuarioRepositorio usuarios;
     private final UsuarioAtual usuarioAtual;
+    private final RecuperacaoSenhaServico recuperacao;
 
     public AutenticacaoControlador(AutenticacaoServico servico, JwtServico jwt, CookieServico cookies,
-                                   PropriedadesJwt props, UsuarioRepositorio usuarios, UsuarioAtual usuarioAtual) {
+                                   PropriedadesJwt props, UsuarioRepositorio usuarios, UsuarioAtual usuarioAtual,
+                                   RecuperacaoSenhaServico recuperacao) {
         this.servico = servico;
         this.jwt = jwt;
         this.cookies = cookies;
         this.props = props;
         this.usuarios = usuarios;
         this.usuarioAtual = usuarioAtual;
+        this.recuperacao = recuperacao;
     }
 
     /**
@@ -88,8 +91,22 @@ public class AutenticacaoControlador {
     /** Sempre 202, exista o e-mail ou nao — nao revela quem e cliente. */
     @PostMapping("/esqueci-senha")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void esqueciSenha(@Valid @RequestBody EmailEntrada dto, HttpServletRequest req) {
-        // Enfileiramento na outbox entra na fase de notificacoes.
+    public void esqueciSenha(@Valid @RequestBody EmailEntrada dto) {
+        recuperacao.solicitar(dto.email());
+    }
+
+    /**
+     * Nao devolve sessao de proposito.
+     *
+     * Quem redefiniu a senha volta para o login e digita a senha nova: e a
+     * unica prova de que ela foi mesmo memorizada, e nao so digitada duas vezes
+     * num campo. Alem disso, a redefinicao revoga todas as sessoes — emitir uma
+     * nova aqui contradiria isso.
+     */
+    @PostMapping("/redefinir-senha")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void redefinirSenha(@Valid @RequestBody ResetEntrada dto) {
+        recuperacao.redefinir(dto.token(), dto.senha());
     }
 
     private HttpHeaders comSessao(Usuario u) {
@@ -111,6 +128,10 @@ public class AutenticacaoControlador {
     public record LoginEntrada(@NotBlank @Email String email, @NotBlank String senha) {}
 
     public record EmailEntrada(@NotBlank @Email String email) {}
+
+    public record ResetEntrada(
+            @NotBlank String token,
+            @NotBlank @Size(min = 10, max = 100, message = "A senha precisa de ao menos 10 caracteres") String senha) {}
 
     public record UsuarioResposta(UUID uuid, String email, String nome, boolean emailVerificado, String papel) {
         static UsuarioResposta de(Usuario u) {

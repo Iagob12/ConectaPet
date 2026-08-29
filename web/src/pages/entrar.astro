@@ -35,6 +35,12 @@ if (Astro.request.method === 'POST') {
 
 <Base titulo="Entrar">
   <h1>Entrar</h1>
+
+  {Astro.url.searchParams.has('senha-trocada') && (
+    <p class="sucesso" role="status">
+      <span>Senha alterada. Entre com ela para continuar.</span>
+    </p>
+  )}
   <p class="sub">Use o e-mail e a senha da sua conta ConectaPet.</p>
 
   {erro && <p class="aviso" role="alert">{erro}</p>}
@@ -53,6 +59,9 @@ if (Astro.request.method === 'POST') {
   </form>
 
   <p class="rodape-link">
+    <a class="link" href="/esqueci-senha">Esqueci minha senha</a>
+  </p>
+  <p class="rodape-link" style="margin-top:8px">
     Não tem conta? <a class="link" href={`/criar-conta?next=${encodeURIComponent(next)}`}>Criar agora</a>
   </p>
 </Base>

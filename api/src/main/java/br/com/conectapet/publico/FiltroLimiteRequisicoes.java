@@ -38,21 +38,28 @@ public class FiltroLimiteRequisicoes extends OncePerRequestFilter {
     private final int limiteLeitura;
     private final int limiteRegistro;
     private final int limiteListaEspera;
+    private final int limiteResetSenha;
 
     public FiltroLimiteRequisicoes(
             @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
             @Value("${conectapet.limites.leitura-publica-por-minuto:30}") int limiteLeitura,
             @Value("${conectapet.limites.registro-leitura-por-minuto:10}") int limiteRegistro,
-            @Value("${conectapet.limites.lista-espera-por-hora:5}") int limiteListaEspera) {
+            @Value("${conectapet.limites.lista-espera-por-hora:5}") int limiteListaEspera,
+            @Value("${conectapet.limites.reset-senha-por-hora:5}") int limiteResetSenha) {
         this.ipPimenta = ipPimenta;
         this.limiteLeitura = limiteLeitura;
         this.limiteRegistro = limiteRegistro;
         this.limiteListaEspera = limiteListaEspera;
+        this.limiteResetSenha = limiteResetSenha;
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest req) {
-        return !req.getRequestURI().startsWith("/api/public/");
+        String uri = req.getRequestURI();
+        // O esqueci-senha entra aqui mesmo nao sendo /api/public/: ele dispara
+        // e-mail para terceiro sem exigir sessao, que e exatamente a forma de
+        // usar o servidor para incomodar quem nem pediu nada.
+        return !uri.startsWith("/api/public/") && !uri.equals("/api/auth/esqueci-senha");
     }
 
     @Override
@@ -63,7 +70,9 @@ public class FiltroLimiteRequisicoes extends OncePerRequestFilter {
         String ip = Hashes.ipPseudonimo(req.getRemoteAddr(), ipPimenta);
         Bucket balde;
 
-        if (uri.startsWith("/api/public/lista-espera")) {
+        if (uri.equals("/api/auth/esqueci-senha")) {
+            balde = obter("reset:" + ip, limiteResetSenha, Duration.ofHours(1));
+        } else if (uri.startsWith("/api/public/lista-espera")) {
             balde = obter("espera:" + ip, limiteListaEspera, Duration.ofHours(1));
         } else if (uri.endsWith("/leituras")) {
             balde = obter("registro:" + ip + ":" + codigoDaUri(uri), limiteRegistro, Duration.ofMinutes(1));

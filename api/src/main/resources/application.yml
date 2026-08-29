@@ -47,6 +47,13 @@ conectapet:
     tolerancia-rotacao: PT10S
   privacidade:
     ip-pimenta: ${IP_PIMENTA}
+  site:
+    # Base dos links que saem por e-mail. Errado aqui, o link de redefinir
+    # senha chega ao cliente apontando para lugar nenhum.
+    url: ${URL_SITE:https://conectapet.com.br}
+  reset-senha:
+    # Curto: e um passe de entrada na conta viajando por e-mail.
+    validade: PT1H
   tag:
     url-publica: ${URL_PUBLICA_TAG:https://conectapet.com.br/p/}
   cors:
@@ -122,6 +129,14 @@ conectapet:
   cookie:
     # http://localhost nao aceita cookie Secure em alguns navegadores
     seguro: false
+  site:
+    # Em dev o link precisa abrir no servidor local; com o dominio de producao
+    # o e-mail de teste manda a pessoa para fora da maquina.
+    url: ${URL_SITE:http://localhost:4321}
+  notificacao:
+    # Sem provedor de e-mail, o link de redefinir senha nao chega a lugar
+    # nenhum. Aqui ele sai no console. So no perfil dev.
+    log-conteudo: true
   seed:
     # Gera um lote de 10 tags e imprime os codigos de ativacao no console.
     # So no perfil dev: em qualquer outro isso seria vazamento.

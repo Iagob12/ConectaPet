@@ -1,0 +1,84 @@
+---
+export const prerender = false;
+
+import Base from '../layouts/Base.astro';
+import { chamar, verDepois } from '../lib/api';
+
+const token = Astro.url.searchParams.get('token') ?? '';
+let erro: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  const senha = String(d.get('senha') ?? '');
+  const repetida = String(d.get('repetida') ?? '');
+
+  if (senha !== repetida) {
+    erro = 'As duas senhas estão diferentes.';
+  } else if (senha.length < 10) {
+    erro = 'A senha precisa de ao menos 10 caracteres.';
+  } else {
+    const r = await chamar('/api/auth/redefinir-senha', {
+      metodo: 'POST',
+      corpo: { token: String(d.get('token') ?? ''), senha },
+    });
+    // Vai para o login, não para o painel: a redefinição derruba todas as
+    // sessões, e digitar a senha nova é o que confirma que ela foi memorizada.
+    if (r.ok) return verDepois('/entrar?senha-trocada=1');
+    erro = r.erro;
+  }
+}
+---
+
+<Base titulo="Criar nova senha">
+  <h1>Criar nova senha</h1>
+  <p class="sub">
+    Ao salvar, todos os aparelhos conectados à sua conta são desconectados.
+  </p>
+
+  {!token ? (
+    <div class="cartao">
+      <p style="margin-top:0">
+        <strong>Este endereço veio sem o código do link.</strong><br />
+        Abra o link do e-mail inteiro, ou peça outro.
+      </p>
+      <a class="btn btn--principal" href="/esqueci-senha">Pedir um link novo</a>
+    </div>
+  ) : (
+    <>
+      {erro && (
+        <p class="aviso" role="alert">
+          <span>
+            <strong>{erro}</strong>
+            {erro.includes('expirou') && (
+              <><br /><a class="link" href="/esqueci-senha">Pedir um link novo</a></>
+            )}
+          </span>
+        </p>
+      )}
+
+      <form class="cartao" method="POST">
+        <input type="hidden" name="token" value={token} />
+
+        <div class="campo">
+          <label for="senha">Senha nova</label>
+          <input id="senha" name="senha" type="password" required minlength="10"
+                 autocomplete="new-password" autofocus />
+          <p class="ajuda">Ao menos 10 caracteres.</p>
+        </div>
+
+        <div class="campo">
+          <label for="repetida">Repita a senha</label>
+          <input id="repetida" name="repetida" type="password" required minlength="10"
+                 autocomplete="new-password" />
+        </div>
+
+        <button class="btn btn--principal" type="submit">Salvar e entrar de novo</button>
+      </form>
+    </>
+  )}
+</Base>

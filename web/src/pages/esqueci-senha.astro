@@ -1,0 +1,77 @@
+---
+export const prerender = false;
+
+import Base from '../layouts/Base.astro';
+import { chamar } from '../lib/api';
+
+let enviado = false;
+let email = '';
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  email = String(d.get('email') ?? '').trim();
+
+  const r = await chamar('/api/auth/esqueci-senha', { metodo: 'POST', corpo: { email } });
+
+  // A tela não distingue e-mail cadastrado de desconhecido, nem quando a API
+  // recusa: dizer "não existe conta com esse e-mail" transformaria esta página
+  // num verificador de quem é cliente. Só o excesso de tentativas aparece,
+  // porque aí a pessoa precisa saber que deve esperar.
+  enviado = r.ok || r.status !== 429;
+  if (r.status === 429) enviado = false;
+}
+
+const excedeu = Astro.request.method === 'POST' && !enviado;
+---
+
+<Base titulo="Esqueci minha senha">
+  {enviado ? (
+    <>
+      <h1>Confira seu e-mail</h1>
+      <p class="sub">
+        Se existe uma conta com <strong>{email}</strong>, o link para criar uma
+        senha nova chegou lá. Ele vale por uma hora.
+      </p>
+      <div class="cartao">
+        <p style="margin-top:0">
+          Não chegou? Veja o lixo eletrônico. Se ainda assim não aparecer, pode
+          ser que a conta esteja em outro endereço de e-mail.
+        </p>
+        <a class="btn btn--principal" href="/entrar">Voltar para o login</a>
+      </div>
+    </>
+  ) : (
+    <>
+      <h1>Esqueci minha senha</h1>
+      <p class="sub">
+        Mandamos um link para você criar outra. Sua tag continua funcionando
+        normalmente enquanto isso.
+      </p>
+
+      {excedeu && (
+        <p class="aviso" role="alert">
+          <span>
+            <strong>Muitos pedidos seguidos.</strong><br />
+            Aguarde alguns minutos antes de tentar de novo.
+          </span>
+        </p>
+      )}
+
+      <form class="cartao" method="POST">
+        <div class="campo">
+          <label for="email">Seu e-mail</label>
+          <input id="email" name="email" type="email" required autocomplete="email"
+                 inputmode="email" value={email} autofocus />
+        </div>
+        <button class="btn btn--principal" type="submit">Enviar o link</button>
+      </form>
+
+      <p class="rodape-link">Lembrou? <a class="link" href="/entrar">Entrar</a></p>
+    </>
+  )}
+</Base>
