@@ -24,6 +24,14 @@ WORKDIR /app
 # Usuário sem privilégio: se algum dia houver execução de código pela aplicação,
 # ela não começa como root dentro do container.
 RUN addgroup -S conectapet && adduser -S conectapet -G conectapet
+
+# O diretório de fotos precisa existir e pertencer a esse usuário ANTES de
+# trocar de dono do processo. Sem isto a aplicação sobe, tenta criar
+# /app/dados/fotos, esbarra em AccessDeniedException — porque /app é do root —
+# e morre na inicialização. Só acontece com armazenamento local; com object
+# storage este diretório nem é tocado.
+RUN mkdir -p /app/dados/fotos && chown -R conectapet:conectapet /app
+
 USER conectapet
 
 COPY --from=compilacao --chown=conectapet:conectapet /construcao/target/*.jar app.jar
