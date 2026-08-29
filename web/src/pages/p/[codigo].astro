@@ -44,6 +44,20 @@ for (let tentativa = 0; tentativa < 2 && !perfil; tentativa++) {
 }
 
 const ativo = perfil?.estado === 'ATIVO';
+
+/**
+ * Tag sem perfil vai direto para o cadastro.
+ *
+ * O codigo ja veio na URL, entao a pagina nao precisa perguntar nada para
+ * saber o que fazer: se ha perfil, mostra; se nao ha, comeca o cadastro.
+ *
+ * A indistinguibilidade continua de pe — codigo inexistente e codigo nao
+ * ativado seguem para o mesmo lugar, entao a tela nao vira um verificador de
+ * quais codigos existem.
+ */
+if (!falhou && !ativo) {
+  return Astro.redirect(`/ativar?codigo=${codigo}`, 302);
+}
 const pet = perfil?.pet;
 const tutor = perfil?.tutor;
 const saude = perfil?.saude;
@@ -285,17 +299,7 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
         </p>
         <a href={`/p/${codigo}`}>Tentar de novo</a>
       </div>
-    ) : (
-      /* Estado B. A resposta da API e deliberadamente indistinguivel entre
-         "nao existe" e "nao ativada" — a interface respeita isso e nao inventa
-         duas mensagens, senao recria no frontend o vazamento de enumeracao que
-         o backend evita. */
-      <div class="aviso">
-        <h1>Esta tag ainda não tem perfil</h1>
-        <p>Se ela é sua, ative agora com o código impresso no cartão que veio na embalagem.</p>
-        <a href={`/ativar?codigo=${codigo}`}>Sou o dono, quero ativar</a>
-      </div>
-    )}
+    ) : null}
 
     <p class="rodape">ConectaPet · Aproxima e Protege</p>
   </main>
