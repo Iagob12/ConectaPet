@@ -57,9 +57,18 @@ vazamento do segredo que impede quem manuseia a encomenda de se cadastrar como d
 ## Testes
 
 ```bash
-./mvnw test                  # tudo, exige Docker para os de integração
-./mvnw -Psem-docker test     # só os unitários
+./mvnw test                    # 48 unitários, em segundos, sem Docker
+./mvnw verify                  # acrescenta os de integração (exige Docker)
+./mvnw verify -Psem-docker     # o ciclo completo, pulando os de integração
 ```
+
+Os de integração ficam no `verify`, e não no `test`, para o ciclo curto continuar curto.
+
+Eles são classes `*IT`, que o surefire não enxerga — por isso existe o failsafe. **Sem o
+failsafe eles não rodavam em comando nenhum**: estavam escritos, marcados com
+`@Tag("integracao")` e inalcançáveis, e o "precisa de Docker" escondia que faltava também
+o executor. Hoje `./mvnw verify` os alcança e eles falham por falta de Docker, que é o
+comportamento certo.
 
 Os testes de integração usam **MySQL real via Testcontainers**, não H2. Collation e índice
 único se comportam diferente, e a collation binária de `codigo_publico` é justamente o que

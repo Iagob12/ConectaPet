@@ -175,6 +175,32 @@
           <excludedGroups>${testes.excluidos}</excludedGroups>
         </configuration>
       </plugin>
+
+      <!--
+        Sem este plugin as classes *IT nao rodavam em comando nenhum: o surefire
+        so casa com *Test, *Tests e Test*, e nao havia failsafe. Os testes de
+        integracao estavam escritos, tagueados e inalcancaveis — "precisa de
+        Docker" escondia que faltava tambem o executor.
+
+        Ficam no verify, e nao no test, para o ciclo curto continuar curto:
+        "mvn test" roda os unitarios em segundos; "mvn verify" sobe o MySQL de
+        verdade via Testcontainers.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <excludedGroups>${testes.excluidos}</excludedGroups>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
