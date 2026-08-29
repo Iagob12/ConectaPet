@@ -10,12 +10,21 @@
 export const prerender = false;
 
 const { codigo } = Astro.params;
-// process.env antes de import.meta.env: o segundo e congelado no build. Aqui
-// o endereco tambem vai para o navegador (foto e confirmacao de leitura),
-// entao em producao ele precisa ser publicamente alcancavel.
-const API = (typeof process !== 'undefined' ? process.env.API_URL : undefined)
-  ?? import.meta.env.API_URL
-  ?? 'http://localhost:8080';
+// Dois enderecos para a mesma API, e a diferenca importa em producao.
+//
+// API_URL e usado por ESTE servidor: em producao aponta para o nome interno do
+// container, sem sair para a internet. Dar a volta pelo dominio publico faria
+// a pagina depender de DNS externo e do proprio proxy para falar com um
+// servico que esta na maquina ao lado.
+//
+// API_URL_PUBLICA e o que vai para o NAVEGADOR — a foto e a confirmacao de
+// leitura sao buscadas por ele, nao por aqui. Precisa ser alcancavel de fora.
+// Em desenvolvimento os dois sao o mesmo, e basta definir API_URL.
+//
+// process.env antes de import.meta.env: o segundo e congelado no build.
+const ambiente = typeof process !== 'undefined' ? process.env : ({} as Record<string, string>);
+const API = ambiente.API_URL ?? import.meta.env.API_URL ?? 'http://localhost:8080';
+const API_PUBLICA = ambiente.API_URL_PUBLICA ?? API;
 
 let perfil = null;
 let falhou = false;
@@ -75,7 +84,7 @@ const msgWhats = encodeURIComponent(`Ola! Encontrei ${pet?.nome ?? 'seu pet'}.`)
 
 // A API devolve caminho relativo; ela e quem serve a foto, sob a mesma regra de
 // visibilidade do perfil.
-const foto = pet?.foto?.media ? `${API}${pet.foto.media}` : null;
+const foto = pet?.foto?.media ? `${API_PUBLICA}${pet.foto.media}` : null;
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
@@ -309,7 +318,9 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     <p class="rodape">ConectaPet · Aproxima e Protege</p>
   </main>
 
-  <script define:vars={{ codigo, API }}>
+  {/* API_PUBLICA, nao API: este script roda no NAVEGADOR de quem achou o pet,
+      e o nome interno do container nao existe para ele. */}
+  <script define:vars={{ codigo, API: API_PUBLICA }}>
     // A unica coisa nesta pagina que depende de JavaScript.
     //
     // Dois papeis: confirmar que quem abriu e gente (o beacon e a UNICA entrada

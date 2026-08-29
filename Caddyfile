@@ -1,0 +1,43 @@
+# Proxy à frente dos dois serviços, com HTTPS automático.
+#
+# O Caddy pede e renova o certificado no Let's Encrypt sozinho, desde que as
+# portas 80 e 443 estejam abertas e o DNS dos dois nomes aponte para esta
+# máquina. Não há passo manual de certificado.
+#
+# Os nomes vêm do .env — troque conectapet.com.br pelo seu domínio nos dois
+# lugares, aqui e lá.
+
+{$DOMINIO_SITE:conectapet.com.br} {
+	encode gzip zstd
+	reverse_proxy site:4321
+
+	# O site já manda no-store nas páginas com dado pessoal; estes cabeçalhos
+	# valem para tudo o que sai daqui.
+	header {
+		# Um ano, e só depois de ter certeza de que o HTTPS está estável:
+		# ativar cedo tranca visitantes fora se algo der errado no certificado.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		# A página de resgate não pode ser embutida em iframe de terceiro:
+		# seria a moldura de um site qualquer em volta dos dados do tutor.
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+{$DOMINIO_API:api.conectapet.com.br} {
+	encode gzip zstd
+	reverse_proxy api:8080
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	# A sonda não precisa estar aberta para a internet: ela diz se a aplicação
+	# está de pé, que é informação para quem opera, não para quem visita.
+	@sonda path /actuator/*
+	respond @sonda 404
+}

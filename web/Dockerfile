@@ -19,6 +19,16 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+# Dependências de execução, sem as de desenvolvimento.
+#
+# Numa etapa própria porque o `npm ci` acima instala tudo — inclusive o
+# runner de testes e a árvore dele — e nada disso precisa viajar para dentro
+# da imagem que roda em produção.
+FROM node:22-alpine AS dependencias
+WORKDIR /dependencias
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
 FROM node:22-alpine
 WORKDIR /app
 
@@ -27,7 +37,7 @@ RUN addgroup -S conectapet && adduser -S conectapet -G conectapet
 # Só o que o servidor precisa: o build e as dependências de produção.
 COPY --from=compilacao --chown=conectapet:conectapet /construcao/dist ./dist
 COPY --from=compilacao --chown=conectapet:conectapet /construcao/package.json ./
-COPY --from=compilacao --chown=conectapet:conectapet /construcao/node_modules ./node_modules
+COPY --from=dependencias --chown=conectapet:conectapet /dependencias/node_modules ./node_modules
 
 USER conectapet
 

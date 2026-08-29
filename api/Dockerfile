@@ -10,9 +10,13 @@ COPY pom.xml .
 RUN mvn -B dependency:go-offline
 
 COPY src ./src
+# Sem "-o" de propósito. `go-offline` não resolve tudo o que o `package`
+# precisa — o plugin de repackage do Spring Boot e o surefire buscam artefato
+# na hora — e o build offline falharia logo depois de baixar as dependências.
+#
 # Os testes ficam para a esteira de integração contínua, que tem banco.
 # Rodá-los aqui exigiria MySQL dentro do build da imagem.
-RUN mvn -B -o package -DskipTests
+RUN mvn -B package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

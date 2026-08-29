@@ -74,10 +74,10 @@ services:
       # Só serve enquanto FOTO_ARMAZENAMENTO=local. Com S3 configurado, este
       # volume fica vazio e pode sair.
       - dados-fotos:/app/dados/fotos
-    ports:
-      # O navegador fala com a API direto para buscar a foto e confirmar a
-      # leitura da tag, então ela precisa estar publicamente alcançável.
-      - "${PORTA_API:-8080}:8080"
+    expose:
+      # Sem publicar porta na maquina: quem alcanca a internet e o proxy.
+      # O navegador chega ate a API pelo dominio, atraves dele.
+      - "8080"
 
   site:
     build:
@@ -89,12 +89,39 @@ services:
     depends_on:
       - api
     environment:
-      # Esta, sim, é de execução: o endereço público da API, o mesmo que o
-      # navegador usa.
-      API_URL: ${URL_API_PUBLICA:?o endereco publico da API}
+      # Dois endereços para a mesma API, e a diferença importa.
+      #
+      # Este servidor fala com ela pelo nome interno, sem sair para a internet:
+      # dar a volta pelo domínio público faria o site depender de DNS externo e
+      # do próprio proxy para alcançar um container ao lado.
+      API_URL: http://api:8080
+      # E este é o que vai para o NAVEGADOR — ele busca a foto e confirma a
+      # leitura da tag direto na API, então precisa ser alcançável de fora.
+      API_URL_PUBLICA: ${URL_API_PUBLICA:?o endereco publico da API}
+    expose:
+      - "4321"
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - site
+      - api
+    environment:
+      DOMINIO_SITE: ${DOMINIO_SITE:?o dominio do site}
+      DOMINIO_API: ${DOMINIO_API:?o dominio da API}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # O certificado vive aqui. Sem o volume, cada redeploy pede um
+      # certificado novo e o Let's Encrypt limita quantos por semana.
+      - dados-caddy:/data
+      - config-caddy:/config
     ports:
-      - "${PORTA_SITE:-4321}:4321"
+      - "80:80"
+      - "443:443"
 
 volumes:
   dados-mysql:
   dados-fotos:
+  dados-caddy:
+  config-caddy:

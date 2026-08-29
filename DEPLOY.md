@@ -46,18 +46,29 @@ openssl rand -base64 32   # IP_PIMENTA
 openssl rand -base64 24   # MYSQL_PASSWORD e MYSQL_ROOT_PASSWORD
 ```
 
-## O proxy na frente
+## O proxy
 
-O compose expõe a API em `8080` e o site em `4321`, **sem TLS**. Quem publica na
-internet é um proxy à frente, e é ele que resolve o certificado:
+Já vem na pilha: o Caddy termina o TLS e encaminha os dois nomes. Ele pede e
+renova o certificado no Let's Encrypt sozinho — não há passo manual.
 
 ```
-conectapet.com.br      → site  (4321)
-api.conectapet.com.br  → api   (8080)
+conectapet.com.br      → site
+api.conectapet.com.br  → api
 ```
 
-A API precisa estar publicamente alcançável: o navegador busca a foto do pet e
-confirma a leitura da tag direto nela. Não é só o site que fala com a API.
+**Antes de subir**, o DNS dos dois nomes precisa apontar para o IP desta
+máquina, e as portas 80 e 443 precisam estar abertas. É assim que o Let's
+Encrypt confirma que o domínio é seu; sem isso o Caddy fica tentando em laço.
+
+Só o proxy publica porta. Banco, API e site conversam pela rede interna do
+compose e não ficam acessíveis de fora por outro caminho.
+
+**A API precisa de nome público mesmo assim.** O navegador de quem achou o pet
+busca a foto e confirma a leitura direto nela — não é só o site que fala com a
+API. Por isso o site recebe dois endereços: `API_URL` interno, para as chamadas
+que ele mesmo faz, e `API_URL_PUBLICA` para o que vai ao navegador. Dar a volta
+pelo domínio público nas duas faria o site depender de DNS externo e do próprio
+proxy para alcançar um container ao lado.
 
 ## Depois de subir
 
