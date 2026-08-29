@@ -27,3 +27,5 @@ conectapet:
     intervalo-ms: 600000
   transferencia:
     validade: PT15M
+  admin:
+    validade-reautenticacao: PT5M

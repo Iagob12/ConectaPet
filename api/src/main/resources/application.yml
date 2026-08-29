@@ -80,6 +80,10 @@ conectapet:
     dados-de-terceiro: P90D
     leitura: P365D
     cron: "0 30 3 * * *"
+  admin:
+    # Elevacao curta: sessao aberta em computador destravado nao pode virar
+    # acesso ao segredo de um lote inteiro.
+    validade-reautenticacao: PT5M
   transferencia:
     # Curta de proposito: o codigo e um portador, quem o tem vira dono.
     validade: PT15M

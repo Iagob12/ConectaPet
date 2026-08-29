@@ -23,6 +23,26 @@ public class SeedDesenvolvimento {
 
     private static final Logger log = LoggerFactory.getLogger(SeedDesenvolvimento.class);
 
+    /** Admin de desenvolvimento, para exercitar as rotas administrativas. */
+    @Bean
+    ApplicationRunner semearAdmin(br.com.conectapet.usuario.UsuarioRepositorio usuarios,
+                                  org.springframework.security.crypto.password.PasswordEncoder encoder) {
+        return args -> {
+            String email = "admin@conectapet.local";
+            if (usuarios.findByEmailAndExcluidoEmIsNull(email).isPresent()) {
+                return;
+            }
+            var u = new br.com.conectapet.usuario.Usuario();
+            u.setEmail(email);
+            u.setNome("Admin de desenvolvimento");
+            u.setSenhaHash(encoder.encode("admin-de-desenvolvimento"));
+            u.setPapel(br.com.conectapet.usuario.Papel.ADMIN);
+            u.setEmailVerificadoEm(java.time.Instant.now());
+            usuarios.save(u);
+            log.info("Admin de desenvolvimento criado: {} / admin-de-desenvolvimento", email);
+        };
+    }
+
     @Bean
     ApplicationRunner semearTags(LoteServico loteServico, LoteRepositorio lotes, TagRepositorio tags,
                                  @Value("${conectapet.seed.quantidade:10}") int quantidade,

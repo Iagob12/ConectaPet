@@ -43,4 +43,15 @@ public interface LeituraRepositorio extends JpaRepository<Leitura, Long> {
     @Modifying
     @Query("delete from Leitura l where l.ocorridaEm < :limite")
     int expurgarAntigas(@Param("limite") Instant limite);
+
+    /**
+     * So origem CLIENTE. Contar ROBO encheria a metrica com preview de link
+     * compartilhado, e SERVIDOR duplicaria a mesma visita ja contada pelo beacon.
+     */
+    @Query("""
+           select count(l) from Leitura l
+            where l.origem = br.com.conectapet.leitura.OrigemLeitura.CLIENTE
+              and l.ocorridaEm between :de and :ate
+           """)
+    long contarPorClienteNoPeriodo(@Param("de") Instant de, @Param("ate") Instant ate);
 }

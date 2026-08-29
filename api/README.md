@@ -154,6 +154,19 @@ telefone — assim a trilha sobrevive à anonimização da conta sem virar dado 
 registro participa da transação de quem chamou: auditoria de algo que foi desfeito é pior
 que auditoria nenhuma.
 
+**Reautenticação para operação sensível.** Baixar os códigos de um lote ou confirmá-lo
+exige digitar a senha de novo, mesmo com a sessão de admin aberta: um computador destravado
+não pode virar acesso ao segredo que protege um lote inteiro. O token de elevação vale 5
+minutos, vive em memória e é vinculado ao usuário que o criou.
+
+**Marcar tag como enviada exige lote confirmado.** Enviar tag cujo CSV não foi conferido
+significa mandar ao cliente um chaveiro cujo código de ativação talvez não esteja impresso
+em lugar nenhum — e ele só descobre com a caixa na mão.
+
+**A taxa de ativação usa as tags ENVIADAS como base**, não as produzidas: tag parada em
+estoque não teve chance de ser ativada, e contá-la no denominador faria a métrica parecer
+pior do que é. As leituras contam só origem `CLIENTE`.
+
 ## Estado atual
 
 Implementado: fundação, autenticação, máquina de estados da tag, reivindicação, perfil do
@@ -161,7 +174,14 @@ pet, saúde, contatos, visibilidade, modo perdido, endpoints públicos, leituras
 notificações por outbox, lista de espera, expurgo por retenção, transferência de
 titularidade, migração de perfil e trilha de auditoria.
 
-Pendente: administrativo (lotes, CSV com reautenticação, métricas).
+O passo 2 do plano está completo. Verificado subindo a aplicação contra um MySQL 8.4
+gerenciado: migrations aplicadas, fluxo de reivindicação, perfil, visibilidade, modo
+perdido e ciclo do lote exercitados de ponta a ponta.
 
-Ainda não existe em código, mas já está no contrato: upload de foto e rotas de conta. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
+Ainda não existe em código, mas já está no contrato: upload de foto (`POST
+/api/pets/{uuid}/foto`) e as rotas de conta (`/api/me`, exportação e exclusão). O envio
+de e-mail é um stub em log.
+
+**Perfil `dev`:** cria `admin@conectapet.local` / `admin-de-desenvolvimento` e um lote
+de 10 tags com os códigos no console. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
 não toca nenhum outro arquivo.
