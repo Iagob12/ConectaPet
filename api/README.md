@@ -5,13 +5,47 @@ API de identificação por tag NFC para cães e gatos. Java 21 + Spring Boot 3.4
 O contrato é `../contrato/openapi.yaml`. Ele é a fonte única: divergência entre código e
 contrato é bug, não interpretação.
 
+## Onde ficam as credenciais do banco
+
+Tudo em **`api/.env`** — um arquivo só, lido pelos dois lados: o Docker Compose usa para
+subir o MySQL, e a aplicação usa para se conectar nele. Ele está no `.gitignore` e nunca
+é versionado.
+
+```bash
+cp .env.example .env
+```
+
+As variáveis que importam:
+
+| Variável | Para que serve |
+|---|---|
+| `BANCO_URL` | Endereço JDBC. Trocar aqui aponta para outro banco |
+| `MYSQL_USER` / `MYSQL_PASSWORD` | Usuário e senha da aplicação |
+| `MYSQL_ROOT_PASSWORD` / `MYSQL_DATABASE` / `MYSQL_PORT` | Só o Compose usa, ao criar o container |
+| `JWT_SEGREDO` | Assinatura do token. Mínimo 32 bytes |
+| `IP_PIMENTA` | HMAC que pseudonimiza o IP de quem lê a tag |
+
+`JWT_SEGREDO` e `IP_PIMENTA` **não têm valor padrão** de propósito: sem eles a aplicação
+se recusa a subir, em vez de rodar com um segredo previsível.
+
+**Já usa um MySQL seu, fora do Docker?** Mexa só em `BANCO_URL`, `MYSQL_USER` e
+`MYSQL_PASSWORD`, e pule o `docker compose up`. O banco precisa existir; as tabelas o
+Flyway cria sozinho na primeira subida.
+
+**Em produção**, não existe `.env`: as mesmas variáveis entram como variáveis de ambiente
+do serviço de hospedagem. O nome é idêntico, então nada no código muda.
+
 ## Subir local
 
 ```bash
-cp .env.example .env      # preencha JWT_SEGREDO e IP_PIMENTA
+cp .env.example .env      # os segredos já vêm gerados
 docker compose up -d      # MySQL 8.4 na porta 3306
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
+
+Se aparecer `Communications link failure`, o `.env` foi lido e o problema é o banco:
+confira se o container está de pé com `docker compose ps`. Se aparecer
+`Could not resolve placeholder`, é o contrário — o `.env` não foi encontrado.
 
 No perfil `dev` a aplicação gera um lote de 10 tags de teste e **imprime os códigos de
 ativação no console**. Isso só acontece em `dev`: em qualquer outro ambiente seria

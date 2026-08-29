@@ -93,6 +93,14 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- Faz o Spring ler o .env, que ate agora so o docker-compose lia.
+         Sem isto, JWT_SEGREDO e IP_PIMENTA nao resolvem e a aplicacao nem sobe. -->
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+
     <!-- Testes: MySQL real via Testcontainers. H2 nao serve porque collation e
          indice unico se comportam diferente, e a collation e justamente o que
          impede dois codigos publicos de colidirem. -->
