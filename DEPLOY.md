@@ -1,5 +1,84 @@
 # Colocar o ConectaPet no ar
 
+Duas rotas, e o repositório serve as duas.
+
+| Rota | Como | Quando escolher |
+|---|---|---|
+| **Vercel + Render** | `vercel.json` e `render.yaml` | é a escolhida. Menos servidor para cuidar |
+| **Um servidor só** | `docker-compose.yml` + `deploy/provisionar.sh` | tudo numa VPS, inclusive o banco |
+
+A segunda está descrita mais abaixo. Esta seção é a primeira.
+
+## Vercel (site) + Render (API) + MySQL gerenciado
+
+São três contratos, não dois: **o Render não oferece MySQL**, só PostgreSQL.
+O banco precisa vir de outro lugar — Aiven, Railway ou TiDB Cloud servem, e o
+`BANCO_URL` aponta para lá.
+
+### 1. O banco
+
+Crie um MySQL 8 e guarde a URL JDBC, o usuário e a senha. Exija SSL:
+
+```
+jdbc:mysql://SEU-HOST:PORTA/conectapet?sslMode=REQUIRED
+```
+
+O Flyway cria as 18 tabelas sozinho na primeira subida da API.
+
+### 2. A API, no Render
+
+New → Blueprint → aponte para este repositório. Ele lê o `render.yaml`, cria o
+serviço a partir do `api/Dockerfile` e pergunta as variáveis marcadas
+`sync: false`. `JWT_SEGREDO` e `IP_PIMENTA` ele sorteia — melhor do que colar
+um segredo que já passou por um chat.
+
+**O plano gratuito não serve.** Ele hiberna após 15 minutos sem tráfego e leva
+uns 50 segundos para acordar. Nesse tempo, quem encostou o celular na tag vê
+"nossos servidores não responderam". Para um produto de resgate, o plano pago é
+o mínimo viável.
+
+**As fotos precisam de bucket aqui.** No Render o disco do container é efêmero:
+`FOTO_ARMAZENAMENTO=local` perderia as fotos a cada deploy. Por isso o
+`render.yaml` já vem com `s3`.
+
+### 3. O site, na Vercel
+
+Importe o repositório e aponte o diretório raiz para `web/`. O `vercel.json`
+já fixa a região em `gru1` (São Paulo) e o comando de build.
+
+Variáveis a definir no painel:
+
+| Variável | Valor | Quando é lida |
+|---|---|---|
+| `URL_SITE` | `https://seu-dominio` | **build** — ver o aviso abaixo |
+| `API_URL` | `https://conectapet-api.onrender.com` | execução |
+| `API_URL_PUBLICA` | o mesmo | vai ao navegador |
+
+`URL_SITE` é lida em tempo de build. Se você trocar depois, **refaça o deploy** —
+sem isso o site sobe, as páginas abrem e todo formulário responde 403.
+
+### 4. Ligar as pontas
+
+De volta ao Render, ajuste três variáveis com o domínio final da Vercel:
+
+- `URL_SITE` e `CORS_ORIGENS` → o domínio do site
+- `URL_PUBLICA_TAG` → `https://seu-dominio/p/`
+
+`CORS_ORIGENS` errado é a falha que não aparece: o navegador bloqueia a
+confirmação de leitura, nada registra erro, e o tutor nunca é avisado.
+
+### O que essa rota custa
+
+O Render não tem região na América do Sul. Ohio, a menos ruim, fica a uns
+120 ms de São Paulo — então a página de resgate renderiza no Brasil mas
+consulta a API do outro hemisfério antes de responder. Se isso incomodar em
+campo, o caminho é mover a API para um provedor com região brasileira: o
+`api/Dockerfile` é o mesmo e nada no código prende ao Render.
+
+---
+
+# Alternativa: tudo num servidor só
+
 Três serviços: banco, API e site. O `docker-compose.yml` sobe os três e os liga
 entre si.
 

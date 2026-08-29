@@ -1,0 +1,89 @@
+# API no Render, a partir do Dockerfile.
+#
+# Render → New → Blueprint → aponte para este repositório. Ele lê este arquivo
+# e cria o serviço; as variáveis marcadas `sync: false` ele pergunta na hora,
+# para nenhum segredo ficar versionado.
+#
+# O banco NÃO está aqui: o Render só oferece PostgreSQL gerenciado, e este
+# projeto é MySQL. Aponte BANCO_URL para o MySQL de onde ele estiver.
+
+services:
+  - type: web
+    name: conectapet-api
+    runtime: docker
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    # O Render nao tem regiao na America do Sul. Ohio e a menos ruim: fica a
+    # uns 120 ms de Sao Paulo, contra ~180 ms de Oregon.
+    #
+    # Isso enfraquece em parte a escolha de por o site em gru1: a pagina de
+    # resgate renderiza no Brasil, mas faz uma chamada a API do outro
+    # hemisferio antes de responder. Se a lentidao incomodar em campo, o
+    # caminho e mover a API para um provedor com regiao brasileira — o
+    # Dockerfile e o mesmo, e nada no codigo prende ao Render.
+    region: ohio
+    # O gratuito hiberna após 15 min sem tráfego e leva ~50 s para acordar.
+    # Nesse tempo, quem encosta o celular na tag vê "nossos servidores não
+    # responderam". Para um produto de resgate isso não é aceitável: o plano
+    # pago é o mínimo viável aqui.
+    plan: starter
+    healthCheckPath: /actuator/health
+
+    envVars:
+      # ---- Banco (externo ao Render) ----
+      - key: BANCO_URL
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+
+      # ---- Segredos ----
+      # generateValue faz o Render sortear um valor forte na criação e guardá-lo.
+      # Melhor do que colar um segredo que já passou por um chat ou um e-mail.
+      - key: JWT_SEGREDO
+        generateValue: true
+      - key: IP_PIMENTA
+        generateValue: true
+
+      # ---- Endereços ----
+      # A aplicação recusa subir se qualquer um apontar para localhost.
+      - key: URL_PUBLICA_TAG
+        sync: false
+      - key: URL_SITE
+        sync: false
+      - key: CORS_ORIGENS
+        sync: false
+
+      # ---- Primeiro administrador ----
+      # Cadastre-se pelo site, ponha o e-mail aqui e reinicie o serviço.
+      - key: ADMIN_EMAIL
+        sync: false
+
+      # ---- E-mail ----
+      - key: EMAIL_PROVEDOR
+        value: log
+      - key: EMAIL_REMETENTE
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USUARIO
+        sync: false
+      - key: SMTP_SENHA
+        sync: false
+
+      # ---- Fotos ----
+      # "local" no Render é enganoso: o disco do container é efêmero e some a
+      # cada deploy. Aqui object storage não é melhoria, é requisito.
+      - key: FOTO_ARMAZENAMENTO
+        value: s3
+      - key: FOTO_S3_BUCKET
+        sync: false
+      - key: FOTO_S3_ENDPOINT
+        sync: false
+      - key: FOTO_S3_REGIAO
+        value: auto
+      - key: FOTO_S3_CHAVE
+        sync: false
+      - key: FOTO_S3_SEGREDO
+        sync: false

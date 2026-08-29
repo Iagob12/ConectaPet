@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "ALVO_DEPLOY=vercel npm run build",
+  "framework": "astro",
+  "regions": ["gru1"]
+}

@@ -44,8 +44,11 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 6MB
+      # Acompanha conectapet.foto.max-bytes, com folga para o envelope do
+      # multipart. Se o Tomcat cortar antes, quem recusa e o container e a
+      # mensagem que chega ao tutor deixa de ser a nossa.
+      max-file-size: ${FOTO_MAX_BYTES:4194304}
+      max-request-size: 5MB
 
 server:
   error:
@@ -150,7 +153,12 @@ conectapet:
     # voltam para a API, que os serve sob a regra de visibilidade do perfil.
     armazenamento: ${FOTO_ARMAZENAMENTO:local}
     diretorio: ${FOTO_DIRETORIO:./dados/fotos}
-    max-bytes: 5242880     # 5 MB
+    # 4 MB, e nao 5. O upload passa pelo servidor do site, e a funcao da Vercel
+    # recusa corpo acima de ~4,5 MB — a foto seria barrada ANTES de chegar aqui,
+    # com um erro que a tela nao controla e nao sabe explicar. Melhor recusar no
+    # nosso limite, com mensagem nossa. A API reduz para 1200 px de qualquer
+    # forma, entao 4 MB continua sobrando para foto de celular.
+    max-bytes: ${FOTO_MAX_BYTES:4194304}
     max-pixels: 40000000   # trava contra bomba de descompressao
     s3:
       bucket: ${FOTO_S3_BUCKET:}

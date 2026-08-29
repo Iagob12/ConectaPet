@@ -1,5 +1,20 @@
 import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
+
+/**
+ * O adaptador vem do ambiente.
+ *
+ * Vercel em producao; Node em desenvolvimento e nos testes, que sobem
+ * dist/server/entry.mjs como um processo comum. Fixar o adaptador da Vercel
+ * aqui tiraria a suite inteira do ar, e ela e o que garante que a pagina de
+ * resgate continua de pe.
+ */
+function adaptador() {
+  return process.env.ALVO_DEPLOY === 'vercel'
+    ? vercel()
+    : node({ mode: 'standalone' });
+}
 
 /**
  * Converte URL_SITE no formato que o Astro espera, e acrescenta o localhost do
@@ -44,7 +59,7 @@ export default defineConfig({
     allowedDomains: dominiosPermitidos(),
   },
   output: 'server',
-  adapter: node({ mode: 'standalone' }),
+  adapter: adaptador(),
   server: { port: 4321 },
   devToolbar: { enabled: false },
 });
