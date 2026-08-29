@@ -27,7 +27,7 @@ public class CodigoTransferencia {
     @Column(name = "tag_id", nullable = false)
     private Long tagId;
 
-    @Column(name = "codigo_hash", nullable = false, unique = true)
+    @Column(name = "codigo_hash", nullable = false, unique = true, columnDefinition = "CHAR(64)")
     private String codigoHash;
 
     @Column(name = "criado_por", nullable = false)

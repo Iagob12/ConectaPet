@@ -8,7 +8,10 @@ import br.com.conectapet.comum.util.Hashes;
 import br.com.conectapet.notificacao.Notificacao;
 import br.com.conectapet.notificacao.NotificacaoServico;
 import br.com.conectapet.pet.Pet;
-import br.com.conectapet.pet.PetRepositorios;
+import br.com.conectapet.pet.PetRepositorio;
+import br.com.conectapet.pet.PetSaudeRepositorio;
+import br.com.conectapet.pet.VisibilidadeRepositorio;
+import br.com.conectapet.pet.ContatoRepositorio;
 import br.com.conectapet.seguranca.UsuarioAutenticado;
 import br.com.conectapet.usuario.UsuarioRepositorio;
 import org.slf4j.Logger;
@@ -41,7 +44,7 @@ public class TransferenciaServico {
 
     private final TagRepositorio tags;
     private final CodigoTransferenciaRepositorio codigos;
-    private final PetRepositorios.Pets pets;
+    private final PetRepositorio pets;
     private final UsuarioRepositorio usuarios;
     private final AuditoriaServico auditoria;
     private final NotificacaoServico notificacoes;
@@ -49,7 +52,7 @@ public class TransferenciaServico {
     private final Duration validade;
 
     public TransferenciaServico(TagRepositorio tags, CodigoTransferenciaRepositorio codigos,
-                                PetRepositorios.Pets pets, UsuarioRepositorio usuarios,
+                                PetRepositorio pets, UsuarioRepositorio usuarios,
                                 AuditoriaServico auditoria, NotificacaoServico notificacoes,
                                 GeradorCodigo gerador,
                                 @Value("${conectapet.transferencia.validade}") Duration validade) {

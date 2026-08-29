@@ -28,8 +28,8 @@ class TransferenciaIT extends TesteIntegracao {
     @Autowired PetServico petServico;
     @Autowired TagRepositorio tags;
     @Autowired CodigoTransferenciaRepositorio codigos;
-    @Autowired PetRepositorios.Pets pets;
-    @Autowired PetRepositorios.Contatos contatos;
+    @Autowired PetRepositorio pets;
+    @Autowired ContatoRepositorio contatos;
     @Autowired UsuarioRepositorio usuarios;
     @Autowired TentativaRepositorio tentativas;
     @Autowired AuditoriaRepositorio auditoria;

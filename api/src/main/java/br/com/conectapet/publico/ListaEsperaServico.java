@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +13,9 @@ import java.util.Locale;
 @Service
 public class ListaEsperaServico {
 
-    private final Repositorio repo;
+    private final ListaEsperaRepositorio repo;
 
-    public ListaEsperaServico(Repositorio repo) {
+    public ListaEsperaServico(ListaEsperaRepositorio repo) {
         this.repo = repo;
     }
 
@@ -32,10 +31,6 @@ public class ListaEsperaServico {
         i.setTipoPet(tipoPet);
         i.setIpHash(ipHash);
         repo.save(i);
-    }
-
-    public interface Repositorio extends JpaRepository<Inscricao, Long> {
-        boolean existsByEmail(String email);
     }
 
     @Entity
@@ -56,7 +51,7 @@ public class ListaEsperaServico {
         private String tipoPet;
 
         /** Consentimento registrado com hash do IP, nunca o IP em claro. */
-        @Column(name = "ip_hash", length = 32)
+        @Column(name = "ip_hash", columnDefinition = "CHAR(32)")
         private String ipHash;
 
         @Column(name = "criado_em", nullable = false, updatable = false)

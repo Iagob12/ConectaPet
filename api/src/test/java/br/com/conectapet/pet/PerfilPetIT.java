@@ -23,8 +23,8 @@ class PerfilPetIT extends TesteIntegracao {
     @Autowired PetServico petServico;
     @Autowired ReivindicacaoServico reivindicacao;
     @Autowired LoteServico loteServico;
-    @Autowired PetRepositorios.Pets pets;
-    @Autowired PetRepositorios.Contatos contatos;
+    @Autowired PetRepositorio pets;
+    @Autowired ContatoRepositorio contatos;
     @Autowired TagRepositorio tags;
     @Autowired TentativaRepositorio tentativas;
     @Autowired UsuarioRepositorio usuarios;

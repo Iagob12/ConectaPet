@@ -21,10 +21,10 @@ import java.util.UUID;
 @Service
 public class PetServico {
 
-    private final PetRepositorios.Pets pets;
-    private final PetRepositorios.Saudes saudes;
-    private final PetRepositorios.Visibilidades visibilidades;
-    private final PetRepositorios.Contatos contatos;
+    private final PetRepositorio pets;
+    private final PetSaudeRepositorio saudes;
+    private final VisibilidadeRepositorio visibilidades;
+    private final ContatoRepositorio contatos;
     private final TagRepositorio tags;
     private final UsuarioRepositorio usuarios;
     private final AssinaturaRepositorio assinaturas;
@@ -32,8 +32,8 @@ public class PetServico {
     private final int tetoContatosFree;
     private final int tetoContatosPlus;
 
-    public PetServico(PetRepositorios.Pets pets, PetRepositorios.Saudes saudes,
-                      PetRepositorios.Visibilidades visibilidades, PetRepositorios.Contatos contatos,
+    public PetServico(PetRepositorio pets, PetSaudeRepositorio saudes,
+                      VisibilidadeRepositorio visibilidades, ContatoRepositorio contatos,
                       TagRepositorio tags, UsuarioRepositorio usuarios, AssinaturaRepositorio assinaturas,
                       br.com.conectapet.auditoria.AuditoriaServico auditoria,
                       @Value("${conectapet.planos.free.teto-contatos}") int tetoContatosFree,

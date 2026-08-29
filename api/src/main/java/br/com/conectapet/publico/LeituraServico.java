@@ -6,7 +6,10 @@ import br.com.conectapet.leitura.OrigemLeitura;
 import br.com.conectapet.notificacao.Notificacao;
 import br.com.conectapet.notificacao.NotificacaoServico;
 import br.com.conectapet.pet.Pet;
-import br.com.conectapet.pet.PetRepositorios;
+import br.com.conectapet.pet.PetRepositorio;
+import br.com.conectapet.pet.PetSaudeRepositorio;
+import br.com.conectapet.pet.VisibilidadeRepositorio;
+import br.com.conectapet.pet.ContatoRepositorio;
 import br.com.conectapet.tag.Tag;
 import br.com.conectapet.usuario.Usuario;
 import br.com.conectapet.usuario.UsuarioRepositorio;
@@ -45,12 +48,12 @@ public class LeituraServico {
     private static final Logger log = LoggerFactory.getLogger(LeituraServico.class);
 
     private final LeituraRepositorio leituras;
-    private final PetRepositorios.Pets pets;
+    private final PetRepositorio pets;
     private final UsuarioRepositorio usuarios;
     private final NotificacaoServico notificacoes;
     private final Duration janelaDedup;
 
-    public LeituraServico(LeituraRepositorio leituras, PetRepositorios.Pets pets,
+    public LeituraServico(LeituraRepositorio leituras, PetRepositorio pets,
                           UsuarioRepositorio usuarios, NotificacaoServico notificacoes,
                           @Value("${conectapet.leitura.janela-dedup}") Duration janelaDedup) {
         this.leituras = leituras;

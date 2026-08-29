@@ -27,15 +27,15 @@ import java.util.Optional;
 @Service
 public class PerfilPublicoServico {
 
-    private final PetRepositorios.Pets pets;
-    private final PetRepositorios.Saudes saudes;
-    private final PetRepositorios.Visibilidades visibilidades;
-    private final PetRepositorios.Contatos contatos;
+    private final PetRepositorio pets;
+    private final PetSaudeRepositorio saudes;
+    private final VisibilidadeRepositorio visibilidades;
+    private final ContatoRepositorio contatos;
     private final UsuarioRepositorio usuarios;
 
-    public PerfilPublicoServico(PetRepositorios.Pets pets, PetRepositorios.Saudes saudes,
-                                PetRepositorios.Visibilidades visibilidades,
-                                PetRepositorios.Contatos contatos, UsuarioRepositorio usuarios) {
+    public PerfilPublicoServico(PetRepositorio pets, PetSaudeRepositorio saudes,
+                                VisibilidadeRepositorio visibilidades,
+                                ContatoRepositorio contatos, UsuarioRepositorio usuarios) {
         this.pets = pets;
         this.saudes = saudes;
         this.visibilidades = visibilidades;

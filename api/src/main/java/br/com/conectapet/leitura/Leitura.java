@@ -39,7 +39,7 @@ public class Leitura {
     @Column(nullable = false)
     private OrigemLeitura origem;
 
-    @Column(name = "ip_hash", length = 32)
+    @Column(name = "ip_hash", columnDefinition = "CHAR(32)")
     private String ipHash;
 
     @Column(name = "user_agent", length = 300)

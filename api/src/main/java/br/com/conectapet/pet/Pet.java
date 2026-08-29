@@ -61,7 +61,7 @@ public class Pet {
 
     private String cidade;
 
-    @Column(length = 2)
+    @Column(columnDefinition = "CHAR(2)")
     private String estado;
 
     @Column(length = 500)

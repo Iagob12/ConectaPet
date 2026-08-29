@@ -25,7 +25,7 @@ public class RefreshToken {
     private Long usuarioId;
 
     /** SHA-256 do token. O valor em claro so existe no cookie do navegador. */
-    @Column(name = "token_hash", nullable = false, unique = true)
+    @Column(name = "token_hash", nullable = false, unique = true, columnDefinition = "CHAR(64)")
     private String tokenHash;
 
     /**

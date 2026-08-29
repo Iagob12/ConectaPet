@@ -44,7 +44,7 @@ public class LogAuditoria {
     @Column(columnDefinition = "JSON")
     private String detalhe;
 
-    @Column(name = "ip_hash", length = 32)
+    @Column(name = "ip_hash", columnDefinition = "CHAR(32)")
     private String ipHash;
 
     @Column(name = "ocorrida_em", nullable = false)

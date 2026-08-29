@@ -28,7 +28,7 @@ public class TentativaReivindicacao {
     @Column(name = "codigo_publico", nullable = false, length = 10)
     private String codigoPublico;
 
-    @Column(name = "ip_hash", nullable = false, length = 32)
+    @Column(name = "ip_hash", nullable = false, columnDefinition = "CHAR(32)")
     private String ipHash;
 
     @Column(nullable = false)

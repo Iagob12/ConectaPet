@@ -29,9 +29,9 @@ class PerfilPublicoIT extends TesteIntegracao {
     @Autowired ReivindicacaoServico reivindicacao;
     @Autowired LoteServico loteServico;
     @Autowired TagRepositorio tags;
-    @Autowired PetRepositorios.Pets pets;
-    @Autowired PetRepositorios.Saudes saudes;
-    @Autowired PetRepositorios.Contatos contatos;
+    @Autowired PetRepositorio pets;
+    @Autowired PetSaudeRepositorio saudes;
+    @Autowired ContatoRepositorio contatos;
     @Autowired LeituraRepositorio leituras;
     @Autowired NotificacaoRepositorio notificacoes;
     @Autowired UsuarioRepositorio usuarios;
