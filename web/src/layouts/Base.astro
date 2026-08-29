@@ -5,6 +5,8 @@ interface Props {
   passo?: { atual: number; total: number };
 }
 const { titulo, passo } = Astro.props;
+
+import '../styles/base.css';
 ---
 
 <!doctype html>
@@ -14,65 +16,7 @@ const { titulo, passo } = Astro.props;
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <title>{titulo} — ConectaPet</title>
-  <style is:global>
-    :root {
-      --teal-500:#2FA8A5; --teal-600:#248785; --teal-700:#1D6B69; --teal-100:#D9F0EF;
-      --orange-500:#F0A02E; --orange-100:#FCEBD2;
-      --navy-900:#22313A; --navy-700:#3B4E59;
-      --white:#fff; --sand-100:#FAF3E7; --gray-300:#D6D2C9;
-      --alert-600:#D92D20; --alert-50:#FEF0EF;
-    }
-    *,*::before,*::after{box-sizing:border-box}
-    body{
-      margin:0;background:var(--orange-100);color:var(--navy-700);
-      font:400 17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    }
-    .topo{background:var(--teal-700);color:#fff;padding:14px 20px;font-weight:700;letter-spacing:-.01em}
-    .folha{max-width:520px;margin:0 auto;padding:24px 20px 48px}
-    h1{font-size:28px;line-height:1.2;color:var(--navy-900);margin:0 0 8px;letter-spacing:-.02em}
-    .sub{margin:0 0 24px;max-width:44ch}
-
-    .passos{display:flex;gap:6px;margin-bottom:20px}
-    .passos i{flex:1;height:6px;border-radius:99px;background:var(--gray-300)}
-    .passos i.feito{background:var(--teal-500)}
-
-    .cartao{
-      background:var(--white);border:2px solid var(--navy-900);
-      border-radius:24px;padding:20px;box-shadow:4px 4px 0 var(--navy-900);
-    }
-    .campo{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
-    .campo label{font-size:15px;font-weight:600;color:var(--navy-900)}
-    .campo .ajuda{font-size:14px;color:var(--navy-700);margin:0}
-    input,select{
-      width:100%;min-height:52px;padding:12px 16px;
-      /* 16px ou mais: abaixo disso o iOS dá zoom sozinho e desalinha a tela */
-      font:400 17px/1.4 inherit;color:var(--navy-900);
-      background:var(--white);border:2px solid var(--navy-900);border-radius:12px;
-    }
-    input:focus,select:focus{outline:3px solid var(--teal-500);outline-offset:2px}
-    input[aria-invalid="true"]{border-color:var(--alert-600)}
-    .erro-campo{color:var(--alert-600);font-size:14px;font-weight:600;margin:0}
-
-    .btn{
-      display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
-      min-height:56px;padding:12px 24px;border-radius:9999px;cursor:pointer;
-      border:2px solid var(--navy-900);box-shadow:3px 3px 0 var(--navy-900);
-      font:600 17px/1.2 inherit;text-decoration:none;
-    }
-    .btn:active{transform:translate(3px,3px);box-shadow:none}
-    .btn--principal{background:var(--teal-500);color:var(--navy-900)}
-    .btn--secundario{background:var(--white);color:var(--navy-900);margin-top:12px}
-    .btn[disabled]{opacity:.6;cursor:default}
-
-    .aviso{
-      display:flex;gap:10px;align-items:flex-start;margin-bottom:20px;padding:14px 16px;
-      background:var(--alert-50);border:2px solid var(--alert-600);border-radius:16px;
-      color:var(--navy-900);font-size:16px;
-    }
-    .aviso--calmo{background:var(--teal-100);border-color:var(--navy-900)}
-    .link{color:var(--teal-700);font-weight:600}
-    .rodape-link{margin-top:24px;text-align:center;font-size:16px}
-  </style>
+  
 </head>
 <body>
   <p class="topo">ConectaPet</p>

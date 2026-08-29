@@ -2,10 +2,9 @@
 export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
-import { chamar, normalizarCodigo, caractereInvalido } from '../../lib/api';
+import { normalizarCodigo, caractereInvalido } from '../../lib/api';
 
-const cookie = Astro.request.headers.get('cookie');
-const sessao = await chamar<{ nome: string }>('/api/me', { cookie });
+const sessao = await Astro.locals.api<{ nome: string }>('/api/me');
 if (!sessao.ok) return Astro.redirect('/ativar');
 
 const guardado = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
@@ -20,9 +19,9 @@ if (Astro.request.method === 'POST') {
   try {
     d = await Astro.request.formData();
   } catch {
-    // POST sem corpo de formulario: trata como requisicao invalida, nao como
-    // erro de servidor.
-    return new Response(null, { status: 303, headers: { Location: Astro.url.pathname } });
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
   }
   codigoPublico = normalizarCodigo(String(d.get('codigoPublico') ?? ''));
   codigoAtivacao = normalizarCodigo(String(d.get('codigoAtivacao') ?? ''));
@@ -47,9 +46,8 @@ if (Astro.request.method === 'POST') {
   } else if (codigoPublico.length !== 10 || codigoAtivacao.length !== 8) {
     erro = 'O código da tag tem 10 caracteres e o de ativação tem 8.';
   } else {
-    const r = await chamar('/api/tags/reivindicar', {
+    const r = await Astro.locals.api('/api/tags/reivindicar', {
       metodo: 'POST',
-      cookie,
       corpo: { codigoPublico, codigoAtivacao },
     });
 

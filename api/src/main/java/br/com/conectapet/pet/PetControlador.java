@@ -59,6 +59,17 @@ public class PetControlador {
 
     // ---- Saude -------------------------------------------------------------
 
+    /**
+     * Sem esta leitura a ficha so podia ser escrita, nunca relida: o painel
+     * abria o formulario em branco e um novo salvamento apagava a alergia que
+     * ja estava la.
+     */
+    @GetMapping("/{uuid}/saude")
+    public SaudeDto saude(@PathVariable UUID uuid) {
+        UsuarioAutenticado u = usuarioAtual.obrigatorio();
+        return SaudeDto.de(servico.saude(servico.meuPet(uuid, u)));
+    }
+
     @PutMapping("/{uuid}/saude")
     public SaudeDto salvarSaude(@PathVariable UUID uuid, @Valid @RequestBody SaudeDto dto) {
         UsuarioAutenticado u = usuarioAtual.obrigatorio();
@@ -124,13 +135,15 @@ public class PetControlador {
     // ---- Montagem ----------------------------------------------------------
 
     private PetResposta montar(Pet p, UsuarioAutenticado u) {
+        // Uma chamada so: motivoNaoPronto le tutor e visibilidade do banco, e
+        // chama-lo duas vezes dobrava as consultas de cada pet da lista.
+        String falta = servico.motivoNaoPronto(p, u.id());
         return new PetResposta(
                 p.getUuid(), p.getNome(), p.getEspecie().name(),
                 p.getRaca(), p.getSexo() == null ? null : p.getSexo().name(),
                 p.getDataNascimento(), p.getPesoKg(), p.getCor(), p.getCastrado(),
                 p.getNumeroMicrochip(), p.getCidade(), p.getEstado(), p.getObservacoes(),
-                servico.motivoNaoPronto(p, u.id()) == null,
-                servico.motivoNaoPronto(p, u.id()));
+                p.getFotoChave() != null, falta == null, falta);
     }
 
     // ---- DTOs. Nenhuma entidade JPA cruza a fronteira do controlador. -------
@@ -172,7 +185,7 @@ public class PetControlador {
     public record PetResposta(UUID uuid, String nome, String especie, String raca, String sexo,
                               LocalDate dataNascimento, BigDecimal pesoKg, String cor, Boolean castrado,
                               String numeroMicrochip, String cidade, String estado, String observacoes,
-                              boolean pronto, String oQueFalta) {}
+                              boolean temFoto, boolean pronto, String oQueFalta) {}
 
     public record SaudeDto(
             @Size(max = 300) String alergias,

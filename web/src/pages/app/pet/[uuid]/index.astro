@@ -1,0 +1,152 @@
+---
+export const prerender = false;
+
+import Painel from '../../../../layouts/Painel.astro';
+import { paraLogin, ESPECIES, quando, type Pet, type Tag } from '../../../../lib/painel';
+import { verDepois } from '../../../../lib/api';
+
+const uuid = Astro.params.uuid!;
+let aviso: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  const acao = String(d.get('acao') ?? '');
+
+  if (acao === 'perdido-ligar' || acao === 'perdido-desligar') {
+    const r = await Astro.locals.api(`/api/pets/${uuid}/modo-perdido`, {
+      metodo: acao === 'perdido-ligar' ? 'POST' : 'DELETE',
+    });
+    if (r.status === 401) return paraLogin(Astro);
+    return verDepois(`${Astro.url.pathname}?${r.ok ? (acao === 'perdido-ligar' ? 'perdido=1' : 'achado=1') : 'falhou=1'}`);
+  }
+
+  if (acao === 'foto-remover') {
+    const r = await Astro.locals.api(`/api/pets/${uuid}/foto`, { metodo: 'DELETE' });
+    if (r.status === 401) return paraLogin(Astro);
+    return verDepois(`${Astro.url.pathname}?${r.ok ? 'foto=removida' : 'falhou=1'}`);
+  }
+
+  if (acao === 'foto-enviar') {
+    const arquivo = d.get('arquivo');
+    if (!(arquivo instanceof File) || arquivo.size === 0) {
+      aviso = 'Escolha uma imagem antes de enviar.';
+    } else {
+      const envio = new FormData();
+      envio.append('arquivo', arquivo, arquivo.name || 'foto.jpg');
+      const r = await Astro.locals.api(`/api/pets/${uuid}/foto`, { metodo: 'POST', corpo: envio });
+      if (r.status === 401) return paraLogin(Astro);
+      if (r.ok) return verDepois(`${Astro.url.pathname}?foto=1`);
+      aviso = r.erro;
+    }
+  }
+}
+
+const [rp, rt] = await Promise.all([
+  Astro.locals.api<Pet>(`/api/pets/${uuid}`),
+  Astro.locals.api<Tag[]>('/api/tags'),
+]);
+if (rp.status === 401) return paraLogin(Astro);
+if (rp.status === 404 || rp.status === 403) return Astro.redirect('/app');
+
+const pet = rp.dados!;
+const tag = (rt.dados ?? []).find((t) => t.petUuid === uuid) ?? null;
+
+const q = Astro.url.searchParams;
+const feito = q.has('perdido') ? 'Modo perdido ligado. A página pública agora mostra o alerta.'
+  : q.has('achado') ? 'Modo perdido desligado. Que bom que ele voltou.'
+  : q.get('foto') === 'removida' ? 'Foto removida.'
+  : q.has('foto') ? 'Foto atualizada.'
+  : q.has('salvo') ? 'Alterações salvas.'
+  : null;
+if (q.has('falhou') && !aviso) aviso = 'Não consegui concluir. Tente de novo.';
+---
+
+<Painel titulo={pet.nome} voltar={{ href: '/app', texto: 'Meus pets' }} aba="pets">
+  <h1>{pet.nome}</h1>
+  <p class="sub">{[ESPECIES[pet.especie] ?? pet.especie, pet.raca, [pet.cidade, pet.estado].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</p>
+
+  {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
+  {aviso && <p class="aviso" role="alert"><span>{aviso}</span></p>}
+
+  {!pet.pronto && pet.oQueFalta && (
+    <p class="aviso" role="status">
+      <span><strong>A tag ainda não mostra como te encontrar.</strong><br />{pet.oQueFalta}</span>
+    </p>
+  )}
+
+  <!-- Modo perdido em primeiro lugar: e a acao urgente, e quem chega aqui as
+       pressas nao pode ter que rolar a tela atras dela. -->
+  <section class="cartao">
+    <h2 class="cartao__titulo">{tag?.modoPerdido ? 'Modo perdido ligado' : 'Modo perdido'}</h2>
+    <p class="cartao__nota">
+      {tag?.modoPerdido
+        ? 'A página pública mostra o alerta de pet perdido e você é avisado a cada leitura da tag.'
+        : 'Liga um alerta na página pública e avisa você sempre que alguém ler a tag.'}
+    </p>
+    <form method="POST">
+      <input type="hidden" name="acao" value={tag?.modoPerdido ? 'perdido-desligar' : 'perdido-ligar'} />
+      <button class="btn btn--principal" type="submit" disabled={!tag}>
+        {tag?.modoPerdido ? 'Ele voltou, desligar' : 'Meu pet sumiu'}
+      </button>
+    </form>
+    {!tag && <p class="cartao__nota" style="margin:12px 0 0">Este perfil ainda não está ligado a uma tag.</p>}
+  </section>
+
+  <section class="cartao">
+    <h2 class="cartao__titulo">Foto</h2>
+    <p class="cartao__nota">É o que mais ajuda quem encontrou a confirmar que é o pet certo.</p>
+    <div class="linha" style="margin-bottom:16px">
+      {pet.temFoto
+        ? <img class="retrato" style="width:96px;height:96px" src={`/app/foto/${uuid}`} alt={`Foto de ${pet.nome}`} />
+        : <span class="retrato retrato--vazio" style="width:96px;height:96px" aria-hidden="true">🐾</span>}
+      <p class="cartao__nota cresce" style="margin:0">
+        A localização gravada pela câmera é apagada no envio — a foto não entrega onde vocês moram.
+      </p>
+    </div>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="acao" value="foto-enviar" />
+      <div class="campo">
+        <label for="arquivo">Escolher imagem</label>
+        <input id="arquivo" type="file" name="arquivo" accept="image/jpeg,image/png,image/webp" required />
+      </div>
+      <button class="btn btn--principal" type="submit">Enviar foto</button>
+    </form>
+    {pet.temFoto && (
+      <form method="POST">
+        <input type="hidden" name="acao" value="foto-remover" />
+        <button class="btn btn--secundario" type="submit">Remover foto</button>
+      </form>
+    )}
+  </section>
+
+  <section class="cartao">
+    <h2 class="cartao__titulo">O perfil</h2>
+    <ul class="lista-limpa">
+      <li class="item"><a class="link" href={`/app/pet/${uuid}/dados`}>Dados do pet</a>
+        <p class="item__quando">Nome, raça, cidade, microchip.</p></li>
+      <li class="item"><a class="link" href={`/app/pet/${uuid}/saude`}>Saúde</a>
+        <p class="item__quando">Alergias, medicação e o veterinário.</p></li>
+      <li class="item"><a class="link" href={`/app/pet/${uuid}/contatos`}>Contatos de emergência</a>
+        <p class="item__quando">Quem chamar se não conseguirem falar com você.</p></li>
+      <li class="item"><a class="link" href={`/app/pet/${uuid}/visibilidade`}>O que aparece na página pública</a>
+        <p class="item__quando">Você decide o que um estranho pode ver.</p></li>
+      <li class="item"><a class="link" href={`/app/pet/${uuid}/leituras`}>Quem leu a tag</a>
+        <p class="item__quando">Histórico de cada vez que a tag foi aberta.</p></li>
+    </ul>
+  </section>
+
+  {tag && (
+    <section class="cartao">
+      <h2 class="cartao__titulo">A tag</h2>
+      <p class="cartao__nota" style="margin-bottom:8px">Código {tag.codigoPublico} · ativada em {quando(tag.reivindicadaEm)}</p>
+      <a class="btn btn--secundario" style="margin-top:0" href={`/p/${tag.codigoPublico}`}>Ver o que os outros veem</a>
+    </section>
+  )}
+</Painel>

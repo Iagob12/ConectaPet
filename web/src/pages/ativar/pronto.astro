@@ -4,8 +4,7 @@ export const prerender = false;
 import Base from '../../layouts/Base.astro';
 import { chamar, normalizarCodigo } from '../../lib/api';
 
-const cookie = Astro.request.headers.get('cookie');
-const sessao = await chamar('/api/me', { cookie });
+const sessao = await Astro.locals.api('/api/me');
 if (!sessao.ok) return Astro.redirect('/ativar');
 
 const codigo = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
@@ -16,6 +15,9 @@ if (!codigo) return Astro.redirect('/app');
 // cadastrou, nao o que o mundo enxerga — que e justamente a duvida dele.
 const perfil = await chamar<any>(`/api/public/tags/${codigo}`);
 const p = perfil.dados;
+
+const tags = await Astro.locals.api<any[]>('/api/tags');
+const petUuid = tags.dados?.find((t) => t.codigoPublico === codigo)?.petUuid ?? null;
 const ativo = p?.estado === 'ATIVO';
 
 Astro.cookies.delete('cp_ativando', { path: '/' });
@@ -46,7 +48,7 @@ Astro.cookies.delete('cp_ativando', { path: '/' });
 
       <div class="cartao" style="margin-top:20px">
         <a class="btn btn--principal" href={`/p/${codigo}`}>Ver a página de verdade</a>
-        <a class="btn btn--secundario" href="/app">Adicionar foto e saúde</a>
+        <a class="btn btn--secundario" href={petUuid ? `/app/pet/${petUuid}` : '/app'}>Adicionar foto e saúde</a>
       </div>
     </>
   ) : (

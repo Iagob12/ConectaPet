@@ -78,10 +78,20 @@ public class ManipuladorGlobalErros {
                 .body(montar(TipoErro.NAO_ENCONTRADO, null, req));
     }
 
-    /** Metodo HTTP errado na rota certa tambem nao e erro de servidor. */
+    /**
+     * Metodo HTTP errado na rota certa tambem nao e erro de servidor.
+     *
+     * O corpo precisa dizer 405 igual ao cabecalho: reaproveitar o problema de
+     * "nao encontrado" fazia a resposta se contradizer, e quem depura o cliente
+     * via 405 no header e 404 no JSON.
+     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ProblemDetail> metodoInvalido(HttpServletRequest req) {
-        return ResponseEntity.status(405).body(montar(TipoErro.NAO_ENCONTRADO, null, req));
+        ProblemDetail pd = ProblemDetail.forStatus(405);
+        pd.setType(URI.create(BASE_TIPO + "metodo-nao-permitido"));
+        pd.setTitle("Metodo nao permitido");
+        pd.setInstance(URI.create(req.getRequestURI()));
+        return ResponseEntity.status(405).body(pd);
     }
 
     /**

@@ -1,0 +1,96 @@
+---
+export const prerender = false;
+
+import Painel from '../../../../layouts/Painel.astro';
+import { paraLogin, quando, ORIGENS, type Pet, type Leitura } from '../../../../lib/painel';
+
+const uuid = Astro.params.uuid!;
+const pagina = Math.max(0, Number(Astro.url.searchParams.get('pagina') ?? 0) || 0);
+
+type Pagina = { conteudo: Leitura[]; pagina: number; tamanho: number; total: number };
+
+const [rp, rl] = await Promise.all([
+  Astro.locals.api<Pet>(`/api/pets/${uuid}`),
+  Astro.locals.api<Pagina>(`/api/pets/${uuid}/leituras?pagina=${pagina}&tamanho=20`),
+]);
+if (rp.status === 401) return paraLogin(Astro);
+if (!rp.ok) return Astro.redirect('/app');
+
+const dados = rl.dados ?? { conteudo: [], pagina: 0, tamanho: 20, total: 0 };
+const leituras = dados.conteudo;
+const ultimaPagina = Math.max(0, Math.ceil(dados.total / dados.tamanho) - 1);
+
+// O plano não esconde que o recurso existe: mostra o que ele entrega e o que
+// falta para destravá-lo.
+const bloqueado = leituras.length > 0 && !leituras[0].disponivelNoPlano;
+---
+
+<Painel titulo={`Leituras de ${rp.dados!.nome}`} voltar={{ href: `/app/pet/${uuid}`, texto: rp.dados!.nome }} aba="pets">
+  <h1>Quem leu a tag</h1>
+  <p class="sub">
+    Cada vez que alguém abre a página do {rp.dados!.nome} fica registrado aqui.
+  </p>
+
+  {rl.erro && <p class="aviso" role="alert"><span>{rl.erro}</span></p>}
+
+  {leituras.length === 0 ? (
+    <div class="cartao vazio">
+      <p><strong>Nenhuma leitura ainda.</strong></p>
+      <p>Encoste seu próprio celular na tag para ver como funciona.</p>
+    </div>
+  ) : (
+    <section class="cartao">
+      <ul class="lista-limpa">
+        {leituras.map((l) => (
+          <li class="item">
+            <p class="item__quando">{quando(l.ocorridaEm)}</p>
+            <p class="item__oque">{ORIGENS[l.origem] ?? 'Abriu a página'}</p>
+            {l.origem === 'ROBO' && (
+              <p class="item__quando">Não é uma pessoa: é o robô que monta a prévia de um link compartilhado.</p>
+            )}
+            {l.cidade && <p class="item__quando">Perto de {[l.cidade, l.regiao].filter(Boolean).join(', ')}</p>}
+            {l.localizacaoCompartilhada && l.latitude && (
+              <p class="item__oque">
+                <a class="link" rel="noreferrer noopener" target="_blank"
+                   href={`https://www.google.com/maps?q=${l.latitude},${l.longitude}`}>
+                  Ver no mapa o ponto que a pessoa enviou
+                </a>
+              </p>
+            )}
+            {l.mensagemDeQuemEncontrou && (
+              <p class="item__oque">“{l.mensagemDeQuemEncontrou}”</p>
+            )}
+            {l.telefoneDeQuemEncontrou && (
+              <p class="item__oque">
+                <a class="link" href={`tel:${l.telefoneDeQuemEncontrou}`}>{l.telefoneDeQuemEncontrou}</a>
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {bloqueado && (
+        <div class="bloqueado">
+          <p style="margin:0 0 4px"><strong>A cidade de cada leitura fica no plano Plus.</strong></p>
+          <p style="margin:0">
+            O histórico continua completo aqui; o que o Plus acrescenta é onde,
+            aproximadamente, cada leitura aconteceu.
+          </p>
+        </div>
+      )}
+    </section>
+  )}
+
+  {ultimaPagina > 0 && (
+    <div class="acoes">
+      {pagina > 0 && (
+        <a class="btn btn--secundario" style="margin-top:0"
+           href={`?pagina=${pagina - 1}`}>Mais recentes</a>
+      )}
+      {pagina < ultimaPagina && (
+        <a class="btn btn--secundario" style="margin-top:0"
+           href={`?pagina=${pagina + 1}`}>Mais antigas</a>
+      )}
+    </div>
+  )}
+</Painel>

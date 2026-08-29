@@ -31,12 +31,18 @@ public class ContaControlador {
     private final UsuarioRepositorio usuarios;
     private final AssinaturaRepositorio assinaturas;
     private final UsuarioAtual usuarioAtual;
+    private final int tetoContatosFree;
+    private final int tetoContatosPlus;
 
     public ContaControlador(UsuarioRepositorio usuarios, AssinaturaRepositorio assinaturas,
-                            UsuarioAtual usuarioAtual) {
+                            UsuarioAtual usuarioAtual,
+                            @org.springframework.beans.factory.annotation.Value("${conectapet.planos.free.teto-contatos}") int tetoContatosFree,
+                            @org.springframework.beans.factory.annotation.Value("${conectapet.planos.plus.teto-contatos}") int tetoContatosPlus) {
         this.usuarios = usuarios;
         this.assinaturas = assinaturas;
         this.usuarioAtual = usuarioAtual;
+        this.tetoContatosFree = tetoContatosFree;
+        this.tetoContatosPlus = tetoContatosPlus;
     }
 
     @GetMapping
@@ -68,14 +74,18 @@ public class ContaControlador {
     }
 
     private ContaResposta montar(Usuario u) {
-        String plano = assinaturas.findFirstByUsuarioIdOrderByIdDesc(u.getId())
-                .filter(Assinatura::plusVigente).map(a -> "PLUS").orElse("FREE");
+        boolean plus = assinaturas.findFirstByUsuarioIdOrderByIdDesc(u.getId())
+                .filter(Assinatura::plusVigente).isPresent();
+        String plano = plus ? "PLUS" : "FREE";
+        // O teto sai daqui para o painel poder avisar ANTES do preenchimento.
+        // Descobrir o limite so ao salvar e perder o que a pessoa digitou.
+        int limiteContatos = plus ? tetoContatosPlus : tetoContatosFree;
 
         return new ContaResposta(u.getUuid(), u.getEmail(), u.getNome(),
                 Telefone.paraExibicao(u.getTelefonePrincipal()), u.getTelefonePrincipal(),
                 Telefone.paraExibicao(u.getTelefoneSecundario()), u.getTelefoneSecundario(),
                 Telefone.paraExibicao(u.getWhatsapp()), u.getWhatsapp(),
-                u.emailVerificado(), u.getPapel().name(), plano);
+                u.emailVerificado(), u.getPapel().name(), plano, limiteContatos);
     }
 
     public record ContaEntrada(@Size(min = 2, max = 120) String nome,
@@ -85,5 +95,6 @@ public class ContaControlador {
                                 String telefonePrincipalExibicao, String telefonePrincipalE164,
                                 String telefoneSecundarioExibicao, String telefoneSecundarioE164,
                                 String whatsappExibicao, String whatsappE164,
-                                boolean emailVerificado, String papel, String plano) {}
+                                boolean emailVerificado, String papel, String plano,
+                                int limiteContatos) {}
 }

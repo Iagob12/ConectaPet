@@ -81,7 +81,7 @@ public class AutenticacaoControlador {
         }
         HttpHeaders h = new HttpHeaders();
         h.add(HttpHeaders.SET_COOKIE, cookies.limpar(CookieServico.COOKIE_SESSAO, "/").toString());
-        h.add(HttpHeaders.SET_COOKIE, cookies.limpar(CookieServico.COOKIE_REFRESH, "/api/auth").toString());
+        h.add(HttpHeaders.SET_COOKIE, cookies.limparRefresh().toString());
         return ResponseEntity.noContent().headers(h).build();
     }
 

@@ -8,7 +8,7 @@
 export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
-import { chamar, normalizarCodigo, caractereInvalido } from '../../lib/api';
+import { normalizarCodigo, caractereInvalido } from '../../lib/api';
 
 const codigoUrl = normalizarCodigo(Astro.url.searchParams.get('codigo'));
 const codigoCookie = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
@@ -21,9 +21,7 @@ if (codigo && !caractereInvalido(codigo)) {
   });
 }
 
-const sessao = await chamar<{ nome: string }>('/api/me', {
-  cookie: Astro.request.headers.get('cookie'),
-});
+const sessao = await Astro.locals.api<{ nome: string }>('/api/me');
 
 // Ja logado: pula direto para o codigo de ativacao.
 if (sessao.ok) return Astro.redirect('/ativar/codigo');

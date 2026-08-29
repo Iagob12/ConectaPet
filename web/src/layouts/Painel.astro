@@ -1,0 +1,36 @@
+---
+interface Props {
+  titulo: string;
+  /** Quando presente, vira o link "voltar" no topo do conteudo. */
+  voltar?: { href: string; texto: string };
+  aba?: 'pets' | 'conta';
+}
+const { titulo, voltar, aba } = Astro.props;
+
+import '../styles/base.css';
+---
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Painel e dado pessoal: nao entra em indice de busca. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{titulo} — ConectaPet</title>
+</head>
+<body>
+  <header class="barra">
+    <a class="barra__marca" href="/app">ConectaPet</a>
+    <nav class="barra__menu" aria-label="Painel">
+      <a href="/app" aria-current={aba === 'pets' ? 'page' : undefined}>Meus pets</a>
+      <a href="/app/conta" aria-current={aba === 'conta' ? 'page' : undefined}>Conta</a>
+      <a href="/sair">Sair</a>
+    </nav>
+  </header>
+  <main class="folha">
+    {voltar && <a class="voltar" href={voltar.href}>&larr; {voltar.texto}</a>}
+    <slot />
+  </main>
+</body>
+</html>

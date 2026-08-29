@@ -1,0 +1,99 @@
+---
+export const prerender = false;
+
+import Painel from '../../layouts/Painel.astro';
+import { paraLogin, ESPECIES, type Pet, type Tag } from '../../lib/painel';
+
+// As duas listas vem juntas: a tag sabe o status e o modo perdido, o pet sabe
+// o nome e o que falta. Uma sozinha nao monta o cartao.
+const [rp, rt] = await Promise.all([
+  Astro.locals.api<Pet[]>('/api/pets'),
+  Astro.locals.api<Tag[]>('/api/tags'),
+]);
+
+if (rp.status === 401 || rt.status === 401) return paraLogin(Astro);
+
+const pets = rp.dados ?? [];
+const tags = rt.dados ?? [];
+const erro = rp.erro ?? rt.erro;
+
+const tagDoPet = new Map<string, Tag>();
+for (const t of tags) {
+  if (t.petUuid) tagDoPet.set(t.petUuid, t);
+}
+
+// Tag ativada cujo perfil ficou pela metade: aparece separada, com o caminho
+// de volta. Sem isso ela some do painel e a pessoa acha que perdeu a tag.
+const semPerfil = tags.filter((t) => !t.petUuid && t.status !== 'DESATIVADA');
+const perdidos = pets.filter((p) => tagDoPet.get(p.uuid)?.modoPerdido);
+---
+
+<Painel titulo="Meus pets" aba="pets">
+  <h1>Meus pets</h1>
+
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  {perdidos.length > 0 && (
+    <p class="aviso" role="status">
+      <span>
+        <strong>{perdidos.length === 1 ? `${perdidos[0].nome} está em modo perdido.` : `${perdidos.length} pets estão em modo perdido.`}</strong><br />
+        A página pública mostra o alerta e você recebe aviso a cada leitura.
+      </span>
+    </p>
+  )}
+
+  {pets.length === 0 && semPerfil.length === 0 && (
+    <div class="cartao vazio">
+      <p><strong>Nenhum pet por aqui ainda.</strong></p>
+      <p>Quando ativar sua primeira tag, o perfil dele aparece nesta tela.</p>
+      <a class="btn btn--principal" href="/ativar">Ativar uma tag</a>
+    </div>
+  )}
+
+  <div class="pilha">
+    {pets.map((p) => {
+      const t = tagDoPet.get(p.uuid);
+      return (
+        <article class="cartao">
+          <div class="linha">
+            {p.temFoto
+              ? <img class="retrato" src={`/app/foto/${p.uuid}`} alt={`Foto de ${p.nome}`} />
+              : <span class="retrato retrato--vazio" aria-hidden="true">🐾</span>}
+            <div class="cresce">
+              <h2 class="cartao__titulo">{p.nome}</h2>
+              <p class="cartao__nota" style="margin-bottom:8px">
+                {[ESPECIES[p.especie] ?? p.especie, p.raca].filter(Boolean).join(' · ')}
+              </p>
+              {t?.modoPerdido
+                ? <span class="etiqueta etiqueta--perdido">Modo perdido</span>
+                : p.pronto
+                  ? <span class="etiqueta etiqueta--ativa">Tag ativa</span>
+                  : <span class="etiqueta etiqueta--alerta">Falta um passo</span>}
+            </div>
+          </div>
+
+          {!p.pronto && p.oQueFalta && (
+            <p class="cartao__nota" style="margin:16px 0 0"><strong>Para a tag funcionar:</strong> {p.oQueFalta}</p>
+          )}
+
+          <div class="acoes">
+            <a class="btn btn--principal" href={`/app/pet/${p.uuid}`}>Abrir perfil</a>
+            {t && <a class="btn btn--secundario" style="margin-top:0" href={`/p/${t.codigoPublico}`}>Ver página pública</a>}
+          </div>
+        </article>
+      );
+    })}
+
+    {semPerfil.map((t) => (
+      <article class="cartao">
+        <h2 class="cartao__titulo">Tag {t.codigoPublico}</h2>
+        <p class="cartao__nota">Ativada, mas ainda sem perfil. Quem encontrar o pet não vê nada.</p>
+        <a class="btn btn--principal" href="/ativar/pet">Cadastrar o pet</a>
+      </article>
+    ))}
+  </div>
+
+  {(pets.length > 0 || semPerfil.length > 0) && (
+    <p class="rodape-link"><a class="link" href="/ativar">Ativar outra tag</a></p>
+  )}
+</Painel>

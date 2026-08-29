@@ -1,0 +1,98 @@
+---
+export const prerender = false;
+
+import Painel from '../../../../layouts/Painel.astro';
+import { paraLogin, texto, type Pet, type Saude } from '../../../../lib/painel';
+import { verDepois } from '../../../../lib/api';
+
+const uuid = Astro.params.uuid!;
+let erro: string | null = null;
+let campos: Record<string, string> = {};
+let form: any = null;
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  form = {
+    alergias: texto(d, 'alergias'),
+    medicacaoContinua: texto(d, 'medicacaoContinua'),
+    condicoes: texto(d, 'condicoes'),
+    cuidadosEspeciais: texto(d, 'cuidadosEspeciais'),
+    veterinarioNome: texto(d, 'veterinarioNome'),
+    veterinarioTelefone: texto(d, 'veterinarioTelefone'),
+    clinica: texto(d, 'clinica'),
+  };
+  const r = await Astro.locals.api(`/api/pets/${uuid}/saude`, { metodo: 'PUT', corpo: form });
+  if (r.status === 401) return paraLogin(Astro);
+  if (r.ok) return verDepois(`/app/pet/${uuid}?salvo=1`);
+  erro = r.erro;
+  campos = r.campos;
+}
+
+const rp = await Astro.locals.api<Pet>(`/api/pets/${uuid}`);
+if (rp.status === 401) return paraLogin(Astro);
+if (!rp.ok) return Astro.redirect('/app');
+
+// A saúde vem do próprio detalhe do pet quando existe; se o pet ainda não tem
+// ficha, a API responde 404 e o formulário abre vazio, que é o certo aqui.
+const rs = await Astro.locals.api<Saude>(`/api/pets/${uuid}/saude`);
+const base = (rs.ok ? rs.dados : null) ?? ({} as Saude);
+const s = { ...base, ...(form ?? {}) };
+---
+
+<Painel titulo={`Saúde de ${rp.dados!.nome}`} voltar={{ href: `/app/pet/${uuid}`, texto: rp.dados!.nome }} aba="pets">
+  <h1>Saúde</h1>
+  <p class="sub">
+    Nada disto aparece na página pública sem você liberar. Vale a pena para quem
+    encontrou saber de uma medicação que não pode faltar.
+  </p>
+
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="alergias">Alergias</label>
+      <textarea id="alergias" name="alergias" maxlength="300">{s.alergias ?? ''}</textarea>
+    </div>
+    <div class="campo">
+      <label for="medicacaoContinua">Medicação contínua</label>
+      <textarea id="medicacaoContinua" name="medicacaoContinua" maxlength="300">{s.medicacaoContinua ?? ''}</textarea>
+    </div>
+    <div class="campo">
+      <label for="condicoes">Condições de saúde</label>
+      <textarea id="condicoes" name="condicoes" maxlength="300">{s.condicoes ?? ''}</textarea>
+    </div>
+    <div class="campo">
+      <label for="cuidadosEspeciais">Cuidados especiais</label>
+      <textarea id="cuidadosEspeciais" name="cuidadosEspeciais" maxlength="300"
+                placeholder="Não pode subir escada, precisa de coleira peitoral…">{s.cuidadosEspeciais ?? ''}</textarea>
+    </div>
+
+    <div class="campo">
+      <label for="veterinarioNome">Veterinário</label>
+      <input id="veterinarioNome" name="veterinarioNome" maxlength="120" value={s.veterinarioNome ?? ''} />
+    </div>
+
+    <div class="dupla">
+      <div class="campo">
+        <label for="veterinarioTelefone">Telefone do veterinário</label>
+        <input id="veterinarioTelefone" name="veterinarioTelefone" type="tel" inputmode="tel"
+               placeholder="(11) 3333-0000" value={s.veterinarioTelefone ?? ''}
+               aria-invalid={campos.veterinarioTelefone ? 'true' : undefined} />
+        {campos.veterinarioTelefone && <p class="erro-campo">{campos.veterinarioTelefone}</p>}
+      </div>
+      <div class="campo">
+        <label for="clinica">Clínica</label>
+        <input id="clinica" name="clinica" maxlength="120" value={s.clinica ?? ''} />
+      </div>
+    </div>
+
+    <button class="btn btn--principal" type="submit">Salvar</button>
+  </form>
+</Painel>

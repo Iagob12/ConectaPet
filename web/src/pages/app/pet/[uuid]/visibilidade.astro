@@ -1,0 +1,130 @@
+---
+export const prerender = false;
+
+import Painel from '../../../../layouts/Painel.astro';
+import { paraLogin, marcado, texto, type Pet, type Visibilidade, type Conta } from '../../../../lib/painel';
+import { verDepois } from '../../../../lib/api';
+
+const uuid = Astro.params.uuid!;
+let erro: string | null = null;
+let form: any = null;
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  form = {
+    mostrarTelefone: marcado(d, 'mostrarTelefone'),
+    mostrarWhatsapp: marcado(d, 'mostrarWhatsapp'),
+    mostrarContatosEmergencia: marcado(d, 'mostrarContatosEmergencia'),
+    mostrarSaude: marcado(d, 'mostrarSaude'),
+    mostrarCidade: marcado(d, 'mostrarCidade'),
+    mostrarMicrochip: marcado(d, 'mostrarMicrochip'),
+    mensagemPersonalizada: texto(d, 'mensagemPersonalizada'),
+  };
+  const r = await Astro.locals.api(`/api/pets/${uuid}/visibilidade`, { metodo: 'PUT', corpo: form });
+  if (r.status === 401) return paraLogin(Astro);
+  if (r.ok) return verDepois(`/app/pet/${uuid}?salvo=1`);
+  erro = r.erro;
+}
+
+const [rp, rv, rc] = await Promise.all([
+  Astro.locals.api<Pet>(`/api/pets/${uuid}`),
+  Astro.locals.api<Visibilidade>(`/api/pets/${uuid}/visibilidade`),
+  Astro.locals.api<Conta>('/api/me'),
+]);
+if (rp.status === 401) return paraLogin(Astro);
+if (!rp.ok) return Astro.redirect('/app');
+
+const v = { ...(rv.dados ?? ({} as Visibilidade)), ...(form ?? {}) };
+const conta = rc.dados;
+
+// Desligar os dois deixa a tag bonita e inútil: ninguém consegue avisar que
+// achou o pet. O alerta é preventivo, mas quem manda é o tutor.
+const semContato = !(v.mostrarTelefone && conta?.telefonePrincipalE164)
+  && !(v.mostrarWhatsapp && conta?.whatsappE164);
+---
+
+<Painel titulo={`Visibilidade de ${rp.dados!.nome}`} voltar={{ href: `/app/pet/${uuid}`, texto: rp.dados!.nome }} aba="pets">
+  <h1>O que aparece na página pública</h1>
+  <p class="sub">
+    Quem lê a tag é um estranho. Aqui você escolhe exatamente o que ele vê.
+  </p>
+
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  {semContato && (
+    <p class="aviso" role="status">
+      <span>
+        <strong>Do jeito que está, ninguém consegue falar com você.</strong><br />
+        Ligue o telefone ou o WhatsApp — e confira se o número está preenchido
+        na <a class="link" href="/app/conta">sua conta</a>.
+      </span>
+    </p>
+  )}
+
+  <form class="cartao" method="POST">
+    <div class="opcao">
+      <input type="checkbox" id="mostrarTelefone" name="mostrarTelefone" checked={v.mostrarTelefone} />
+      <div>
+        <label for="mostrarTelefone">Meu telefone</label>
+        <p>{conta?.telefonePrincipalExibicao ?? 'Nenhum número cadastrado ainda.'}</p>
+      </div>
+    </div>
+
+    <div class="opcao">
+      <input type="checkbox" id="mostrarWhatsapp" name="mostrarWhatsapp" checked={v.mostrarWhatsapp} />
+      <div>
+        <label for="mostrarWhatsapp">Meu WhatsApp</label>
+        <p>{conta?.whatsappExibicao ?? 'Nenhum número cadastrado ainda.'}</p>
+      </div>
+    </div>
+
+    <div class="opcao">
+      <input type="checkbox" id="mostrarContatosEmergencia" name="mostrarContatosEmergencia"
+             checked={v.mostrarContatosEmergencia} />
+      <div>
+        <label for="mostrarContatosEmergencia">Contatos de emergência</label>
+        <p>Quem chamar se você não atender.</p>
+      </div>
+    </div>
+
+    <div class="opcao">
+      <input type="checkbox" id="mostrarSaude" name="mostrarSaude" checked={v.mostrarSaude} />
+      <div>
+        <label for="mostrarSaude">Informações de saúde</label>
+        <p>Alergias, medicação e cuidados especiais.</p>
+      </div>
+    </div>
+
+    <div class="opcao">
+      <input type="checkbox" id="mostrarCidade" name="mostrarCidade" checked={v.mostrarCidade} />
+      <div>
+        <label for="mostrarCidade">Cidade</label>
+        <p>Ajuda a perceber que o pet está longe de casa. O endereço completo nunca aparece.</p>
+      </div>
+    </div>
+
+    <div class="opcao">
+      <input type="checkbox" id="mostrarMicrochip" name="mostrarMicrochip" checked={v.mostrarMicrochip} />
+      <div>
+        <label for="mostrarMicrochip">Número do microchip</label>
+        <p>Útil numa clínica; para um estranho, é um dado a mais sobre você.</p>
+      </div>
+    </div>
+
+    <div class="campo" style="margin-top:20px">
+      <label for="mensagemPersonalizada">Recado para quem encontrar</label>
+      <textarea id="mensagemPersonalizada" name="mensagemPersonalizada" maxlength="200"
+                placeholder="Ele é medroso, chame com calma e ofereça água.">{v.mensagemPersonalizada ?? ''}</textarea>
+      <p class="ajuda">Até 200 caracteres, no topo da página pública.</p>
+    </div>
+
+    <button class="btn btn--principal" type="submit">Salvar</button>
+  </form>
+</Painel>

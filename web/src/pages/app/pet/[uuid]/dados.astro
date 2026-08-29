@@ -1,0 +1,143 @@
+---
+export const prerender = false;
+
+import Painel from '../../../../layouts/Painel.astro';
+import { paraLogin, texto, type Pet } from '../../../../lib/painel';
+import { verDepois } from '../../../../lib/api';
+
+const uuid = Astro.params.uuid!;
+let erro: string | null = null;
+let campos: Record<string, string> = {};
+let form: any = null;
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  form = {
+    nome: texto(d, 'nome'),
+    especie: texto(d, 'especie'),
+    raca: texto(d, 'raca'),
+    sexo: texto(d, 'sexo'),
+    dataNascimento: texto(d, 'dataNascimento'),
+    pesoKg: texto(d, 'pesoKg'),
+    cor: texto(d, 'cor'),
+    castrado: texto(d, 'castrado') === null ? null : texto(d, 'castrado') === 'true',
+    numeroMicrochip: texto(d, 'numeroMicrochip'),
+    cidade: texto(d, 'cidade'),
+    estado: texto(d, 'estado')?.toUpperCase() ?? null,
+    observacoes: texto(d, 'observacoes'),
+  };
+  const r = await Astro.locals.api(`/api/pets/${uuid}`, { metodo: 'PUT', corpo: form });
+  if (r.status === 401) return paraLogin(Astro);
+  if (r.ok) return verDepois(`/app/pet/${uuid}?salvo=1`);
+  erro = r.erro;
+  campos = r.campos;
+}
+
+const rp = await Astro.locals.api<Pet>(`/api/pets/${uuid}`);
+if (rp.status === 401) return paraLogin(Astro);
+if (!rp.ok) return Astro.redirect('/app');
+
+// O que a pessoa acabou de digitar tem precedência sobre o que veio do banco:
+// recarregar o formulário com os valores antigos apagaria o trabalho dela.
+const p = { ...rp.dados!, ...(form ?? {}) };
+---
+
+<Painel titulo={`Dados de ${rp.dados!.nome}`} voltar={{ href: `/app/pet/${uuid}`, texto: rp.dados!.nome }} aba="pets">
+  <h1>Dados do pet</h1>
+  <p class="sub">Só o nome é obrigatório. O resto ajuda quem encontrou a ter certeza de que é ele.</p>
+
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="nome">Nome</label>
+      <input id="nome" name="nome" required maxlength="60" value={p.nome ?? ''}
+             aria-invalid={campos.nome ? 'true' : undefined} />
+      {campos.nome && <p class="erro-campo">{campos.nome}</p>}
+    </div>
+
+    <div class="dupla">
+      <div class="campo">
+        <label for="especie">Espécie</label>
+        <select id="especie" name="especie" required>
+          <option value="CACHORRO" selected={p.especie === 'CACHORRO'}>Cachorro</option>
+          <option value="GATO" selected={p.especie === 'GATO'}>Gato</option>
+          <option value="OUTRO" selected={p.especie === 'OUTRO'}>Outro</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="sexo">Sexo</label>
+        <select id="sexo" name="sexo">
+          <option value="" selected={!p.sexo}>Não informar</option>
+          <option value="MACHO" selected={p.sexo === 'MACHO'}>Macho</option>
+          <option value="FEMEA" selected={p.sexo === 'FEMEA'}>Fêmea</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="raca">Raça</label>
+      <input id="raca" name="raca" maxlength="60" value={p.raca ?? ''} placeholder="Vira-lata, Beagle…" />
+    </div>
+
+    <div class="dupla">
+      <div class="campo">
+        <label for="cor">Cor</label>
+        <input id="cor" name="cor" maxlength="40" value={p.cor ?? ''} placeholder="Caramelo, preto…" />
+      </div>
+      <div class="campo">
+        <label for="pesoKg">Peso (kg)</label>
+        <input id="pesoKg" name="pesoKg" type="number" step="0.1" min="0" max="200" value={p.pesoKg ?? ''} />
+      </div>
+    </div>
+
+    <div class="dupla">
+      <div class="campo">
+        <label for="dataNascimento">Nascimento</label>
+        <input id="dataNascimento" name="dataNascimento" type="date" value={p.dataNascimento ?? ''} />
+      </div>
+      <div class="campo">
+        <label for="castrado">Castrado</label>
+        <select id="castrado" name="castrado">
+          <option value="" selected={p.castrado == null}>Não informar</option>
+          <option value="true" selected={p.castrado === true}>Sim</option>
+          <option value="false" selected={p.castrado === false}>Não</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="dupla">
+      <div class="campo">
+        <label for="cidade">Cidade</label>
+        <input id="cidade" name="cidade" maxlength="80" value={p.cidade ?? ''} />
+        <p class="ajuda">Mostra se o pet está longe de casa. O endereço nunca aparece.</p>
+      </div>
+      <div class="campo">
+        <label for="estado">Estado</label>
+        <input id="estado" name="estado" maxlength="2" value={p.estado ?? ''} placeholder="SP"
+               style="text-transform:uppercase" />
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="numeroMicrochip">Número do microchip</label>
+      <input id="numeroMicrochip" name="numeroMicrochip" maxlength="20" value={p.numeroMicrochip ?? ''} />
+      <p class="ajuda">Fica oculto na página pública, a menos que você libere em “o que aparece”.</p>
+    </div>
+
+    <div class="campo">
+      <label for="observacoes">Observações</label>
+      <textarea id="observacoes" name="observacoes" maxlength="500"
+                placeholder="Assustado com barulho, não gosta de colo…">{p.observacoes ?? ''}</textarea>
+    </div>
+
+    <button class="btn btn--principal" type="submit">Salvar</button>
+  </form>
+</Painel>

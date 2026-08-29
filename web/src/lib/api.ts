@@ -19,23 +19,35 @@ export type Resposta<T> = {
   cookies: string[];
 };
 
-export async function chamar<T>(
-  caminho: string,
-  opcoes: { metodo?: string; corpo?: unknown; cookie?: string | null } = {}
-): Promise<Resposta<T>> {
-  const { metodo = 'GET', corpo, cookie } = opcoes;
+export type Opcoes = {
+  metodo?: string;
+  /** Objeto vira JSON; FormData vai como multipart, sem tocar no boundary. */
+  corpo?: unknown;
+  cookie?: string | null;
+};
 
+/** A resposta crua, para quando o corpo nao e JSON (imagem, CSV). */
+export async function chamarBruto(caminho: string, opcoes: Opcoes = {}): Promise<Response> {
+  const { metodo = 'GET', corpo, cookie } = opcoes;
+  const multipart = typeof FormData !== 'undefined' && corpo instanceof FormData;
+
+  return fetch(`${BASE}${caminho}`, {
+    method: metodo,
+    headers: {
+      // Em multipart o Content-Type precisa vir do fetch: ele carrega o
+      // boundary, e escrever o cabecalho a mao quebraria o parse do outro lado.
+      ...(corpo && !multipart ? { 'Content-Type': 'application/json' } : {}),
+      ...(cookie ? { Cookie: cookie } : {}),
+    },
+    body: corpo == null ? undefined : (multipart ? (corpo as FormData) : JSON.stringify(corpo)),
+    redirect: 'manual',
+  });
+}
+
+export async function chamar<T>(caminho: string, opcoes: Opcoes = {}): Promise<Resposta<T>> {
   let r: Response;
   try {
-    r = await fetch(`${BASE}${caminho}`, {
-      method: metodo,
-      headers: {
-        ...(corpo ? { 'Content-Type': 'application/json' } : {}),
-        ...(cookie ? { Cookie: cookie } : {}),
-      },
-      body: corpo ? JSON.stringify(corpo) : undefined,
-      redirect: 'manual',
-    });
+    r = await chamarBruto(caminho, opcoes);
   } catch {
     return {
       ok: false, status: 0, dados: null, campos: {}, cookies: [],
@@ -43,9 +55,7 @@ export async function chamar<T>(
     };
   }
 
-  const cookies = typeof (r.headers as any).getSetCookie === 'function'
-    ? (r.headers as any).getSetCookie()
-    : [];
+  const cookies = lerSetCookie(r.headers);
 
   let corpoResposta: any = null;
   const texto = await r.text();
@@ -74,9 +84,38 @@ export async function chamar<T>(
   };
 }
 
+export function lerSetCookie(headers: Headers): string[] {
+  return typeof (headers as any).getSetCookie === 'function' ? (headers as any).getSetCookie() : [];
+}
+
 /** Repassa ao navegador os cookies que a API emitiu. */
 export function repassarCookies(headers: Headers, cookies: string[]) {
   for (const c of cookies) headers.append('Set-Cookie', c);
+}
+
+/**
+ * Aplica Set-Cookie sobre um cabecalho Cookie ja existente.
+ *
+ * Depois de renovar a sessao no meio de um render, as chamadas seguintes
+ * precisam usar o token novo — senao a primeira renova e as outras continuam
+ * levando o token velho e tomando 401 em sequencia.
+ */
+export function mesclarCookies(cookie: string | null, setCookie: string[]): string {
+  const mapa = new Map<string, string>();
+  for (const par of (cookie ?? '').split(';')) {
+    const i = par.indexOf('=');
+    if (i > 0) mapa.set(par.slice(0, i).trim(), par.slice(i + 1).trim());
+  }
+  for (const bruto of setCookie) {
+    const primeiro = bruto.split(';')[0];
+    const i = primeiro.indexOf('=');
+    if (i > 0) mapa.set(primeiro.slice(0, i).trim(), primeiro.slice(i + 1).trim());
+  }
+  return [...mapa].map(([k, v]) => `${k}=${v}`).join('; ');
+}
+
+export function temCookie(cookie: string | null, nome: string): boolean {
+  return new RegExp(`(^|;\s*)${nome}=[^;]`).test(cookie ?? '');
 }
 
 /** Normaliza o que a pessoa digitou no campo de codigo. */
@@ -111,4 +150,9 @@ export function redirecionarCom(destino: string, cookies: string[]): Response {
   const headers = new Headers({ Location: destino });
   for (const c of cookies) headers.append('Set-Cookie', c);
   return new Response(null, { status: 303, headers });
+}
+
+/** 303 apos POST: tira o formulario do historico e um F5 nao reenvia. */
+export function verDepois(destino: string): Response {
+  return new Response(null, { status: 303, headers: { Location: destino } });
 }

@@ -22,20 +22,41 @@ public class CookieServico {
 
     private final String dominio;
     private final boolean seguro;
+    private final String caminhoRefresh;
 
     public CookieServico(@Value("${conectapet.cookie.dominio:}") String dominio,
-                         @Value("${conectapet.cookie.seguro:true}") boolean seguro) {
+                         @Value("${conectapet.cookie.seguro:true}") boolean seguro,
+                         @Value("${conectapet.cookie.caminho-refresh:/}") String caminhoRefresh) {
         this.dominio = dominio;
         this.seguro = seguro;
+        this.caminhoRefresh = caminhoRefresh;
     }
 
     public ResponseCookie sessao(String token, Duration duracao) {
         return montar(COOKIE_SESSAO, token, duracao, "/");
     }
 
-    /** Escopo restrito: o refresh so e enviado para a rota que o consome. */
+    /**
+     * Escopo do refresh.
+     *
+     * Era "/api/auth", para o token longo so trafegar na rota que o consome.
+     * Com o site servido por um BFF isso quebra a sessao sem proteger nada:
+     * quem renova e o servidor do site, durante o render de uma pagina em /app,
+     * e o navegador nunca manda um cookie escopado em /api/auth para la. O
+     * efeito era a sessao morrer junto com o access token, em 15 minutos, sem
+     * chance de renovar.
+     *
+     * O que de fato protege o token segue de pe nos dois casos: HttpOnly,
+     * Secure e SameSite=Lax. Fica configuravel para um deploy sem BFF poder
+     * voltar ao escopo estreito.
+     */
     public ResponseCookie refresh(String token, Duration duracao) {
-        return montar(COOKIE_REFRESH, token, duracao, "/api/auth");
+        return montar(COOKIE_REFRESH, token, duracao, caminhoRefresh);
+    }
+
+    /** O logout precisa apagar o cookie no mesmo caminho em que ele foi posto. */
+    public ResponseCookie limparRefresh() {
+        return montar(COOKIE_REFRESH, "", Duration.ZERO, caminhoRefresh);
     }
 
     public ResponseCookie limpar(String nome, String caminho) {

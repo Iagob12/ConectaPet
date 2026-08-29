@@ -21,6 +21,7 @@ import java.util.UUID;
 public class TagControlador {
 
     private final TagRepositorio tags;
+    private final br.com.conectapet.pet.PetRepositorio pets;
     private final ReivindicacaoServico reivindicacao;
     private final TransferenciaServico transferencia;
     private final br.com.conectapet.auditoria.AuditoriaServico auditoria;
@@ -29,13 +30,15 @@ public class TagControlador {
     private final String ipPimenta;
     private final java.time.Duration validadeTransferencia;
 
-    public TagControlador(TagRepositorio tags, ReivindicacaoServico reivindicacao,
+    public TagControlador(TagRepositorio tags, br.com.conectapet.pet.PetRepositorio pets,
+                          ReivindicacaoServico reivindicacao,
                           TransferenciaServico transferencia,
                           br.com.conectapet.auditoria.AuditoriaServico auditoria, UsuarioAtual usuarioAtual,
                           @Value("${conectapet.tag.url-publica}") String urlPublica,
                           @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
                           @Value("${conectapet.transferencia.validade}") java.time.Duration validadeTransferencia) {
         this.tags = tags;
+        this.pets = pets;
         this.reivindicacao = reivindicacao;
         this.transferencia = transferencia;
         this.auditoria = auditoria;
@@ -49,20 +52,33 @@ public class TagControlador {
     public List<TagResposta> minhasTags() {
         UsuarioAutenticado u = usuarioAtual.obrigatorio();
         return tags.findByUsuarioIdOrderByCriadoEmDesc(u.id()).stream()
-                .map(t -> TagResposta.de(t, urlPublica))
+                .map(this::montar)
                 .toList();
     }
 
     @GetMapping("/{uuid}")
     public TagResposta detalhe(@PathVariable UUID uuid) {
-        return TagResposta.de(minhaTag(uuid), urlPublica);
+        return montar(minhaTag(uuid));
+    }
+
+    /**
+     * Resolve o pet ligado a tag.
+     *
+     * O painel lista tags e pets em chamadas separadas e precisa junta-las; sem
+     * o uuid do pet aqui, a unica saida seria casar as duas listas pela ordem,
+     * que quebra assim que alguem tem dois pets.
+     */
+    private TagResposta montar(Tag t) {
+        UUID petUuid = t.getPetId() == null ? null
+                : pets.findById(t.getPetId()).map(br.com.conectapet.pet.Pet::getUuid).orElse(null);
+        return TagResposta.de(t, urlPublica, petUuid);
     }
 
     @PostMapping("/reivindicar")
     public TagResposta reivindicar(@Valid @RequestBody ReivindicarEntrada dto, HttpServletRequest req) {
         UsuarioAutenticado u = usuarioAtual.obrigatorio();
         Tag tag = reivindicacao.reivindicar(dto.codigoPublico(), dto.codigoAtivacao(), u, ipHash(req));
-        return TagResposta.de(tag, urlPublica);
+        return montar(tag);
     }
 
     @PostMapping("/{uuid}/desativar")
@@ -97,7 +113,7 @@ public class TagControlador {
     @PostMapping("/titularidade/aceitar")
     public TagResposta aceitarTransferencia(@Valid @RequestBody AceitarEntrada dto, HttpServletRequest req) {
         UsuarioAutenticado u = usuarioAtual.obrigatorio();
-        return TagResposta.de(transferencia.aceitar(dto.codigo(), u, ipHash(req)), urlPublica);
+        return montar(transferencia.aceitar(dto.codigo(), u, ipHash(req)));
     }
 
     // ---- Migrar perfil: mesmo tutor, tag nova -----------------------------
@@ -107,7 +123,7 @@ public class TagControlador {
                                     HttpServletRequest req) {
         UsuarioAutenticado u = usuarioAtual.obrigatorio();
         Tag t = transferencia.migrarPerfil(uuid, dto.petUuid(), dto.desativarTagAnterior(), u, ipHash(req));
-        return TagResposta.de(t, urlPublica);
+        return montar(t);
     }
 
     /**
@@ -157,12 +173,12 @@ public class TagControlador {
 
     /** O codigo de ativacao nunca sai daqui, em hipotese nenhuma. */
     public record TagResposta(UUID uuid, String codigoPublico, String modelo, String status,
-                              boolean modoPerdido, String urlPublica,
+                              boolean modoPerdido, String urlPublica, UUID petUuid,
                               Instant reivindicadaEm, Instant enviadaEm, Instant desativadaEm) {
 
-        static TagResposta de(Tag t, String base) {
+        static TagResposta de(Tag t, String base, UUID petUuid) {
             return new TagResposta(t.getUuid(), t.getCodigoPublico(), t.getModelo().name(),
-                    t.getStatus().name(), t.isModoPerdido(), base + t.getCodigoPublico(),
+                    t.getStatus().name(), t.isModoPerdido(), base + t.getCodigoPublico(), petUuid,
                     t.getReivindicadaEm(), t.getEnviadaEm(), t.getDesativadaEm());
         }
     }

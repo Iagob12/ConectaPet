@@ -2,14 +2,13 @@
 export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
-import { chamar, normalizarCodigo } from '../../lib/api';
+import { normalizarCodigo } from '../../lib/api';
 
-const cookie = Astro.request.headers.get('cookie');
-const sessao = await chamar('/api/me', { cookie });
+const sessao = await Astro.locals.api('/api/me');
 if (!sessao.ok) return Astro.redirect('/ativar');
 
 const codigo = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
-const tags = await chamar<any[]>('/api/tags', { cookie });
+const tags = await Astro.locals.api<any[]>('/api/tags');
 const tag = tags.dados?.find((t) => t.codigoPublico === codigo);
 if (!tag) return Astro.redirect('/ativar/codigo');
 
@@ -22,9 +21,9 @@ if (Astro.request.method === 'POST') {
   try {
     d = await Astro.request.formData();
   } catch {
-    // POST sem corpo de formulario: trata como requisicao invalida, nao como
-    // erro de servidor.
-    return new Response(null, { status: 303, headers: { Location: Astro.url.pathname } });
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
   }
   form = {
     nome: String(d.get('nome') ?? ''),
@@ -36,9 +35,8 @@ if (Astro.request.method === 'POST') {
 
   // Salva neste passo. Um formulário longo que perde tudo ao errar um campo é
   // onde o cadastro morre.
-  const r = await chamar<any>('/api/pets', {
+  const r = await Astro.locals.api<any>('/api/pets', {
     metodo: 'POST',
-    cookie,
     corpo: {
       nome: form.nome,
       especie: form.especie,

@@ -14,9 +14,9 @@ if (Astro.request.method === 'POST') {
   try {
     d = await Astro.request.formData();
   } catch {
-    // POST sem corpo de formulario: trata como requisicao invalida, nao como
-    // erro de servidor.
-    return new Response(null, { status: 303, headers: { Location: Astro.url.pathname } });
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
   }
   form = {
     nome: String(d.get('nome') ?? ''),

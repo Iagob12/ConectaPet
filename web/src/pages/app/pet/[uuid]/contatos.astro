@@ -1,0 +1,149 @@
+---
+export const prerender = false;
+
+import Painel from '../../../../layouts/Painel.astro';
+import { paraLogin, texto, type Pet, type Contato, type Conta } from '../../../../lib/painel';
+import { verDepois } from '../../../../lib/api';
+
+const uuid = Astro.params.uuid!;
+let erro: string | null = null;
+let campos: Record<string, string> = {};
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario. Responde 400 e para por aqui: redirecionar
+    // para a propria URL fazia um cliente que repete o POST girar sem fim.
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  const acao = String(d.get('acao') ?? '');
+
+  if (acao === 'remover') {
+    const alvo = String(d.get('uuidContato') ?? '');
+    const r = await Astro.locals.api(`/api/pets/${uuid}/contatos/${alvo}`, { metodo: 'DELETE' });
+    if (r.status === 401) return paraLogin(Astro);
+    return verDepois(Astro.url.pathname + (r.ok ? '?removido=1' : '?falhou=1'));
+  }
+
+  const r = await Astro.locals.api(`/api/pets/${uuid}/contatos`, {
+    metodo: 'POST',
+    corpo: {
+      nome: texto(d, 'nome'),
+      telefone: texto(d, 'telefone'),
+      parentesco: texto(d, 'parentesco'),
+      ordem: Number(d.get('ordem') ?? 0) || 0,
+    },
+  });
+  if (r.status === 401) return paraLogin(Astro);
+  if (r.ok) return verDepois(Astro.url.pathname + '?adicionado=1');
+  erro = r.erro;
+  campos = r.campos;
+}
+
+const [rp, rc, rme] = await Promise.all([
+  Astro.locals.api<Pet>(`/api/pets/${uuid}`),
+  Astro.locals.api<Contato[]>(`/api/pets/${uuid}/contatos`),
+  Astro.locals.api<Conta>('/api/me'),
+]);
+if (rp.status === 401) return paraLogin(Astro);
+if (!rp.ok) return Astro.redirect('/app');
+
+const contatos = (rc.dados ?? []).slice().sort((a, b) => a.ordem - b.ordem);
+
+// O limite vem do servidor, nao chumbado aqui. Mostrar so ao salvar fazia a
+// pessoa preencher o formulario inteiro para descobrir que nao cabia.
+const limite = rme.dados?.limiteContatos ?? 0;
+const plus = rme.dados?.plano === 'PLUS';
+const lotado = limite > 0 && contatos.length >= limite;
+const palavra = limite === 1 ? 'contato' : 'contatos';
+
+const q = Astro.url.searchParams;
+const feito = q.has('adicionado') ? 'Contato adicionado.'
+  : q.has('removido') ? 'Contato removido.'
+  : null;
+if (q.has('falhou') && !erro) erro = 'Não consegui remover. Tente de novo.';
+---
+
+<Painel titulo={`Contatos de ${rp.dados!.nome}`} voltar={{ href: `/app/pet/${uuid}`, texto: rp.dados!.nome }} aba="pets">
+  <h1>Contatos de emergência</h1>
+  <p class="sub">
+    Quem chamar quando não conseguirem falar com você. Só aparecem na página
+    pública se você liberar em <a class="link" href={`/app/pet/${uuid}/visibilidade`}>o que aparece</a>.
+  </p>
+
+  {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  <section class="cartao">
+    <h2 class="cartao__titulo">Quem já está na lista</h2>
+    {contatos.length === 0
+      ? <p class="cartao__nota" style="margin:8px 0 0">Nenhum contato ainda.</p>
+      : (
+        <ul class="lista-limpa">
+          {contatos.map((c) => (
+            <li class="item linha linha--entre">
+              <div class="cresce">
+                <p class="item__oque"><strong>{c.nome}</strong>{c.parentesco ? ` · ${c.parentesco}` : ''}</p>
+                <p class="item__quando">{c.telefone}</p>
+              </div>
+              <form method="POST">
+                <input type="hidden" name="acao" value="remover" />
+                <input type="hidden" name="uuidContato" value={c.uuid} />
+                <button class="btn btn--secundario" style="margin-top:0;min-height:44px;padding:8px 16px"
+                        type="submit" aria-label={`Remover ${c.nome}`}>Remover</button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+  </section>
+
+  {lotado ? (
+    <section class="cartao">
+      <h2 class="cartao__titulo">Você já usou seu limite de {limite} {palavra}</h2>
+      <p class="cartao__nota" style="margin-bottom:0">
+        {plus
+          ? 'Para colocar outra pessoa, remova um contato da lista acima.'
+          : 'O plano Free guarda um contato de emergência. Remova o atual para trocar, ou passe para o Plus se quiser mais de um.'}
+      </p>
+    </section>
+  ) : (
+  <form class="cartao" method="POST">
+    <h2 class="cartao__titulo">Adicionar contato</h2>
+    <p class="cartao__nota">
+      Alguém que costuma estar disponível e conhece o pet.
+      {limite > 0 && <> Seu plano guarda {limite} {palavra}.</>}
+    </p>
+
+    <div class="campo">
+      <label for="nome">Nome</label>
+      <input id="nome" name="nome" required minlength="2" maxlength="120"
+             aria-invalid={campos.nome ? 'true' : undefined} />
+      {campos.nome && <p class="erro-campo">{campos.nome}</p>}
+    </div>
+
+    <div class="dupla">
+      <div class="campo">
+        <label for="telefone">Telefone</label>
+        <input id="telefone" name="telefone" type="tel" inputmode="tel" required
+               placeholder="(11) 99999-0000" aria-invalid={campos.telefone ? 'true' : undefined} />
+        {campos.telefone && <p class="erro-campo">{campos.telefone}</p>}
+      </div>
+      <div class="campo">
+        <label for="parentesco">Relação</label>
+        <input id="parentesco" name="parentesco" maxlength="40" placeholder="Irmã, vizinho…" />
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="ordem">Ordem</label>
+      <input id="ordem" name="ordem" type="number" min="0" max="20" value={contatos.length} />
+      <p class="ajuda">Menor número aparece primeiro para quem encontrou o pet.</p>
+    </div>
+
+    <button class="btn btn--principal" type="submit">Adicionar</button>
+  </form>
+  )}
+</Painel>
