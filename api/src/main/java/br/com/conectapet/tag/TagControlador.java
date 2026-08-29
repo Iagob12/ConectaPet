@@ -22,18 +22,27 @@ public class TagControlador {
 
     private final TagRepositorio tags;
     private final ReivindicacaoServico reivindicacao;
+    private final TransferenciaServico transferencia;
+    private final br.com.conectapet.auditoria.AuditoriaServico auditoria;
     private final UsuarioAtual usuarioAtual;
     private final String urlPublica;
     private final String ipPimenta;
+    private final java.time.Duration validadeTransferencia;
 
-    public TagControlador(TagRepositorio tags, ReivindicacaoServico reivindicacao, UsuarioAtual usuarioAtual,
+    public TagControlador(TagRepositorio tags, ReivindicacaoServico reivindicacao,
+                          TransferenciaServico transferencia,
+                          br.com.conectapet.auditoria.AuditoriaServico auditoria, UsuarioAtual usuarioAtual,
                           @Value("${conectapet.tag.url-publica}") String urlPublica,
-                          @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta) {
+                          @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
+                          @Value("${conectapet.transferencia.validade}") java.time.Duration validadeTransferencia) {
         this.tags = tags;
         this.reivindicacao = reivindicacao;
+        this.transferencia = transferencia;
+        this.auditoria = auditoria;
         this.usuarioAtual = usuarioAtual;
         this.urlPublica = urlPublica;
         this.ipPimenta = ipPimenta;
+        this.validadeTransferencia = validadeTransferencia;
     }
 
     @GetMapping
@@ -58,10 +67,47 @@ public class TagControlador {
 
     @PostMapping("/{uuid}/desativar")
     @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
-    public void desativar(@PathVariable UUID uuid) {
+    public void desativar(@PathVariable UUID uuid, HttpServletRequest req) {
+        UsuarioAutenticado u = usuarioAtual.obrigatorio();
         Tag tag = minhaTag(uuid);
         tag.transitarPara(StatusTag.DESATIVADA);
         tags.save(tag);
+        auditoria.registrar(u.uuid(), br.com.conectapet.auditoria.AuditoriaServico.ACAO_TAG_DESATIVADA,
+                "TAG", tag.getUuid(), null, ipHash(req));
+    }
+
+    // ---- Transferir titularidade: a tag muda de dono ----------------------
+
+    /** O codigo e devolvido uma unica vez. Exige e-mail verificado. */
+    @PostMapping("/{uuid}/titularidade")
+    @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public CodigoTransferenciaResposta gerarTransferencia(@PathVariable UUID uuid, HttpServletRequest req) {
+        UsuarioAutenticado u = usuarioAtual.comEmailVerificado();
+        String codigo = transferencia.gerar(uuid, u, ipHash(req));
+        return new CodigoTransferenciaResposta(codigo,
+                java.time.Instant.now().plus(validadeTransferencia));
+    }
+
+    @DeleteMapping("/{uuid}/titularidade")
+    @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void cancelarTransferencia(@PathVariable UUID uuid, HttpServletRequest req) {
+        transferencia.cancelar(uuid, usuarioAtual.obrigatorio(), ipHash(req));
+    }
+
+    @PostMapping("/titularidade/aceitar")
+    public TagResposta aceitarTransferencia(@Valid @RequestBody AceitarEntrada dto, HttpServletRequest req) {
+        UsuarioAutenticado u = usuarioAtual.obrigatorio();
+        return TagResposta.de(transferencia.aceitar(dto.codigo(), u, ipHash(req)), urlPublica);
+    }
+
+    // ---- Migrar perfil: mesmo tutor, tag nova -----------------------------
+
+    @PostMapping("/{uuid}/migrar-perfil")
+    public TagResposta migrarPerfil(@PathVariable UUID uuid, @Valid @RequestBody MigrarEntrada dto,
+                                    HttpServletRequest req) {
+        UsuarioAutenticado u = usuarioAtual.obrigatorio();
+        Tag t = transferencia.migrarPerfil(uuid, dto.petUuid(), dto.desativarTagAnterior(), u, ipHash(req));
+        return TagResposta.de(t, urlPublica);
     }
 
     /**
@@ -96,6 +142,18 @@ public class TagControlador {
             @Pattern(regexp = "^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{8}$",
                      message = "O codigo de ativacao tem 8 caracteres e nao usa 0, O, I, 1, L nem U")
             String codigoAtivacao) {}
+
+    public record AceitarEntrada(
+            @NotBlank
+            @Pattern(regexp = "^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{8}$",
+                     message = "O codigo de transferencia tem 8 caracteres")
+            String codigo) {}
+
+    public record MigrarEntrada(@jakarta.validation.constraints.NotNull UUID petUuid,
+                                boolean desativarTagAnterior) {}
+
+    /** Devolvido uma unica vez; depois so existe como hash. */
+    public record CodigoTransferenciaResposta(String codigo, java.time.Instant expiraEm) {}
 
     /** O codigo de ativacao nunca sai daqui, em hipotese nenhuma. */
     public record TagResposta(UUID uuid, String codigoPublico, String modelo, String status,

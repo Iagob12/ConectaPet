@@ -80,6 +80,9 @@ conectapet:
     dados-de-terceiro: P90D
     leitura: P365D
     cron: "0 30 3 * * *"
+  transferencia:
+    # Curta de proposito: o codigo e um portador, quem o tem vira dono.
+    validade: PT15M
   outbox:
     intervalo-ms: 15000
 

@@ -28,12 +28,14 @@ public class PetServico {
     private final TagRepositorio tags;
     private final UsuarioRepositorio usuarios;
     private final AssinaturaRepositorio assinaturas;
+    private final br.com.conectapet.auditoria.AuditoriaServico auditoria;
     private final int tetoContatosFree;
     private final int tetoContatosPlus;
 
     public PetServico(PetRepositorios.Pets pets, PetRepositorios.Saudes saudes,
                       PetRepositorios.Visibilidades visibilidades, PetRepositorios.Contatos contatos,
                       TagRepositorio tags, UsuarioRepositorio usuarios, AssinaturaRepositorio assinaturas,
+                      br.com.conectapet.auditoria.AuditoriaServico auditoria,
                       @Value("${conectapet.planos.free.teto-contatos}") int tetoContatosFree,
                       @Value("${conectapet.planos.plus.teto-contatos}") int tetoContatosPlus) {
         this.pets = pets;
@@ -43,6 +45,7 @@ public class PetServico {
         this.tags = tags;
         this.usuarios = usuarios;
         this.assinaturas = assinaturas;
+        this.auditoria = auditoria;
         this.tetoContatosFree = tetoContatosFree;
         this.tetoContatosPlus = tetoContatosPlus;
     }
@@ -181,6 +184,19 @@ public class PetServico {
         v.setMostrarMicrochip(dados.isMostrarMicrochip());
         v.setMensagemPersonalizada(dados.getMensagemPersonalizada());
         visibilidades.save(v);
+
+        // Auditoria obrigatoria: alterar visibilidade muda o que um estranho na
+        // rua consegue ver do pet e do tutor.
+        auditoria.registrar(u.uuid(), br.com.conectapet.auditoria.AuditoriaServico.ACAO_VISIBILIDADE_ALTERADA,
+                "PET", pet.getUuid(),
+                java.util.Map.of(
+                        "telefone", v.isMostrarTelefone(),
+                        "whatsapp", v.isMostrarWhatsapp(),
+                        "saude", v.isMostrarSaude(),
+                        "contatos", v.isMostrarContatosEmergencia(),
+                        "microchip", v.isMostrarMicrochip(),
+                        "cidade", v.isMostrarCidade()),
+                null);
 
         reavaliarTags(pet, u);
         return v;

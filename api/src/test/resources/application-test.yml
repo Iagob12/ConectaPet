@@ -25,3 +25,5 @@ conectapet:
     cron: "0 0 4 * * *"
   outbox:
     intervalo-ms: 600000
+  transferencia:
+    validade: PT15M

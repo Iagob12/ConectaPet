@@ -137,14 +137,31 @@ diferente do pretendido, e a página de resgate ligaria para um estranho.
 **Retenção em duas etapas.** Coordenada, mensagem e telefone de quem encontrou saem em 90
 dias — são dados de um terceiro que só quis ajudar. O resto da leitura vive 12 meses.
 
+**Transferir titularidade ≠ migrar perfil.** A especificação original chamava os dois pelo
+mesmo nome, e eles são opostos. Transferir titularidade desvincula a tag do pet e do tutor
+anterior e entrega uma tag em branco ao novo dono — **sem apagar o registro do pet**, que
+pode ter outras tags. Migrar perfil é o que o FAQ do site promete: mesmo tutor, tag nova,
+tudo preservado, uma troca de ponteiro.
+
+**O código de transferência é um portador.** Guardado como SHA-256, validade de 15 minutos,
+um único ativo por tag, consumido por `UPDATE` condicional — ler-depois-gravar deixaria
+uma janela em que duas pessoas com o mesmo código passariam e a tag trocaria de dono duas
+vezes. Não vai por e-mail: e-mail é o canal mais provável de estar comprometido.
+
+**Auditoria com pseudônimo.** Reivindicação, transferência, migração, desativação e
+alteração de visibilidade deixam rastro. O ator é gravado como UUID, nunca e-mail ou
+telefone — assim a trilha sobrevive à anonimização da conta sem virar dado pessoal. O
+registro participa da transação de quem chamou: auditoria de algo que foi desfeito é pior
+que auditoria nenhuma.
+
 ## Estado atual
 
 Implementado: fundação, autenticação, máquina de estados da tag, reivindicação, perfil do
 pet, saúde, contatos, visibilidade, modo perdido, endpoints públicos, leituras,
-notificações por outbox, lista de espera e expurgo por retenção.
+notificações por outbox, lista de espera, expurgo por retenção, transferência de
+titularidade, migração de perfil e trilha de auditoria.
 
-Pendente, na ordem: transferência e migração → administrativo.
+Pendente: administrativo (lotes, CSV com reautenticação, métricas).
 
-Ainda não existe em código, mas já está no contrato: upload de foto, conta e
-administrativo. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
+Ainda não existe em código, mas já está no contrato: upload de foto e rotas de conta. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
 não toca nenhum outro arquivo.

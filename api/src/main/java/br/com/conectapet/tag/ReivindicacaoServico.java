@@ -41,19 +41,22 @@ public class ReivindicacaoServico {
     private final TagRepositorio tags;
     private final TentativaRepositorio tentativas;
     private final RegistroTentativas registro;
+    private final br.com.conectapet.auditoria.AuditoriaServico auditoria;
     private final PasswordEncoder encoder;
     private final int limitePorIp;
     private final int limitePorCodigo;
     private final Duration janela;
 
     public ReivindicacaoServico(TagRepositorio tags, TentativaRepositorio tentativas,
-                                RegistroTentativas registro, PasswordEncoder encoder,
+                                RegistroTentativas registro,
+                                br.com.conectapet.auditoria.AuditoriaServico auditoria, PasswordEncoder encoder,
                                 @Value("${conectapet.limites.reivindicacao-por-ip}") int limitePorIp,
                                 @Value("${conectapet.limites.reivindicacao-por-codigo}") int limitePorCodigo,
                                 @Value("${conectapet.limites.reivindicacao-janela}") Duration janela) {
         this.tags = tags;
         this.tentativas = tentativas;
         this.registro = registro;
+        this.auditoria = auditoria;
         this.encoder = encoder;
         this.limitePorIp = limitePorIp;
         this.limitePorCodigo = limitePorCodigo;
@@ -104,6 +107,8 @@ public class ReivindicacaoServico {
         tags.save(tag);
 
         registro.sucesso(codigoPublico, ipHash);
+        auditoria.registrar(usuario.uuid(), br.com.conectapet.auditoria.AuditoriaServico.ACAO_REIVINDICACAO,
+                "TAG", tag.getUuid(), null, ipHash);
         log.info("Tag reivindicada. tagUuid={} usuarioUuid={}", tag.getUuid(), usuario.uuid());
         return tag;
     }
