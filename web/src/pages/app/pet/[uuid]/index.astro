@@ -47,7 +47,8 @@ if (Astro.request.method === 'POST') {
     } else {
       const envio = new FormData();
       envio.append('arquivo', arquivo, arquivo.name || 'foto.jpg');
-      const r = await Astro.locals.api(`/api/pets/${uuid}/foto`, { metodo: 'POST', corpo: envio });
+      // Foto grande em rede ruim passa dos 8 segundos sem estar travada.
+      const r = await Astro.locals.api(`/api/pets/${uuid}/foto`, { metodo: 'POST', corpo: envio, tetoMs: 60000 });
       if (r.status === 401) return paraLogin(Astro);
       if (r.ok) return verDepois(`${Astro.url.pathname}?foto=1`);
       aviso = r.erro;

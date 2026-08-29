@@ -26,11 +26,23 @@ export type Opcoes = {
   cookie?: string | null;
   /** Cabecalhos extras. Usado pela reautenticacao do administrativo. */
   cabecalhos?: Record<string, string>;
+  /** Teto de tempo. Zero desliga, para quando a espera longa for legitima. */
+  tetoMs?: number;
 };
+
+/**
+ * Teto padrao de espera pela API.
+ *
+ * Sem teto, uma API que trava (em vez de recusar) deixa a pagina carregando
+ * para sempre: pior que falhar, porque nao da a quem esta do outro lado nem a
+ * informacao de que falhou. Oito segundos e mais do que qualquer resposta
+ * saudavel leva, e menos do que a paciencia de alguem no celular.
+ */
+const TETO_PADRAO_MS = 8000;
 
 /** A resposta crua, para quando o corpo nao e JSON (imagem, CSV). */
 export async function chamarBruto(caminho: string, opcoes: Opcoes = {}): Promise<Response> {
-  const { metodo = 'GET', corpo, cookie, cabecalhos } = opcoes;
+  const { metodo = 'GET', corpo, cookie, cabecalhos, tetoMs = TETO_PADRAO_MS } = opcoes;
   const multipart = typeof FormData !== 'undefined' && corpo instanceof FormData;
 
   return fetch(`${BASE}${caminho}`, {
@@ -44,6 +56,9 @@ export async function chamarBruto(caminho: string, opcoes: Opcoes = {}): Promise
     },
     body: corpo == null ? undefined : (multipart ? (corpo as FormData) : JSON.stringify(corpo)),
     redirect: 'manual',
+    // Upload de foto pode ser legitimamente lento: quem passa tetoMs: 0 assume
+    // a espera. O resto herda o teto.
+    signal: tetoMs > 0 ? AbortSignal.timeout(tetoMs) : undefined,
   });
 }
 
@@ -54,7 +69,9 @@ export async function chamar<T>(caminho: string, opcoes: Opcoes = {}): Promise<R
   } catch {
     return {
       ok: false, status: 0, dados: null, campos: {}, cookies: [],
-      erro: 'Não consegui falar com o servidor. Verifique sua conexão.',
+      // Nao culpa a conexao de quem esta lendo: a pagina so chegou a renderizar
+      // porque a conexao dela funciona. Quem nao respondeu fomos nos.
+      erro: 'Nossos servidores não responderam. Tente de novo em instantes.',
     };
   }
 

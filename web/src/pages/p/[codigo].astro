@@ -15,14 +15,32 @@ const API = import.meta.env.API_URL ?? 'http://localhost:8080';
 let perfil = null;
 let falhou = false;
 
-try {
-  const r = await fetch(`${API}/api/public/tags/${codigo}`, {
-    headers: { 'User-Agent': Astro.request.headers.get('user-agent') ?? '' },
-  });
-  if (r.ok) perfil = await r.json();
-  else falhou = true;
-} catch {
-  falhou = true;
+/**
+ * Duas tentativas, com teto de tempo em cada uma.
+ *
+ * O teto existe porque a falha que trava e pior que a falha que avisa: sem
+ * ele, uma API lenta (e nao recusada) deixa a pessoa olhando uma tela em
+ * branco por tempo indefinido, com o pet no colo, sem saber se vale esperar.
+ * Quatro segundos e mais do que qualquer resposta saudavel leva.
+ *
+ * A segunda tentativa cobre a queda de um instante, que e a mais comum. Duas e
+ * o limite: a terceira ja custa mais espera do que resolve.
+ */
+for (let tentativa = 0; tentativa < 2 && !perfil; tentativa++) {
+  try {
+    const r = await fetch(`${API}/api/public/tags/${codigo}`, {
+      headers: { 'User-Agent': Astro.request.headers.get('user-agent') ?? '' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (r.ok) {
+      perfil = await r.json();
+      falhou = false;
+    } else {
+      falhou = true;
+    }
+  } catch {
+    falhou = true;
+  }
 }
 
 const ativo = perfil?.estado === 'ATIVO';
@@ -135,6 +153,13 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
       border:2px solid var(--navy-900);box-shadow:3px 3px 0 var(--navy-900);
       font-weight:600;text-decoration:none}
     #status-local{margin-top:8px;font-size:15px;text-align:center;min-height:22px}
+
+  /* Grande e selecionavel: a pessoa pode precisar copiar isto a mao. */
+  .codigo-tag{display:block;margin:24px auto;padding:16px;background:var(--sand-100);
+    border:2px solid var(--navy-900);border-radius:20px}
+  .codigo-tag span{display:block;font-size:14px;color:var(--navy-700);margin-bottom:6px}
+  .codigo-tag strong{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:26px;letter-spacing:.16em;color:var(--navy-900);word-break:break-all}
     @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 </head>
@@ -237,9 +262,27 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
         {perfil.mensagemPersonalizada && <p class="recado">{perfil.mensagemPersonalizada}</p>}
       </>
     ) : falhou ? (
+      /* O problema e nosso, e a tela diz isso.
+         "Verifique sua conexao" era falso e caro: a pagina so chegou ate aqui
+         porque a conexao da pessoa funciona. Mandar conferir o proprio celular
+         faz quem esta na rua com um pet desconhecido concluir que o aparelho
+         falhou, tentar de novo no escuro e desistir.
+         O codigo aparece grande porque e a unica coisa que ainda serve: com ele
+         anotado, o resgate continua possivel mesmo que esta tela nunca carregue. */
       <div class="aviso">
-        <h1>Não consegui carregar</h1>
-        <p>Verifique sua conexão e tente de novo.</p>
+        <h1>Nossos servidores não responderam</h1>
+        <p>
+          O problema é do nosso lado, não do seu celular. Já tentamos duas
+          vezes automaticamente.
+        </p>
+        <p class="codigo-tag">
+          <span>Anote o código desta tag</span>
+          <strong>{codigo}</strong>
+        </p>
+        <p>
+          Com ele, dá para nos avisar depois e chegar ao dono do pet.
+          Tente recarregar em alguns minutos.
+        </p>
         <a href={`/p/${codigo}`}>Tentar de novo</a>
       </div>
     ) : (

@@ -26,12 +26,13 @@ if (codigo && !caractereInvalido(codigo)) {
 // que da errado na pratica: quem encosta o celular na tag de outra pessoa e
 // tenta ativar. Sem o aviso, ela cria uma conta e so descobre no passo 3, ja
 // tendo gasto uma das cinco tentativas por hora.
-const status = codigo && !caractereInvalido(codigo)
-  ? await chamar<{ estado: string }>(`/api/public/tags/${codigo}/status`)
-  : null;
+const [status, sessao] = await Promise.all([
+  codigo && !caractereInvalido(codigo)
+    ? chamar<{ estado: string }>(`/api/public/tags/${codigo}/status`)
+    : Promise.resolve(null),
+  Astro.locals.api<{ nome: string }>('/api/me'),
+]);
 const jaEmUso = status?.dados?.estado === 'ATIVO';
-
-const sessao = await Astro.locals.api<{ nome: string }>('/api/me');
 
 // Ja logado: pula direto para o codigo de ativacao. Se a tag ja esta em uso,
 // fica aqui para explicar em vez de deixar a pessoa errar no passo seguinte.
