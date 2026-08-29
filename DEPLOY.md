@@ -11,17 +11,40 @@ docker compose up -d --build
 
 ## Antes: o que só você pode obter
 
-| Item | Onde | Sem isso |
+| Item | Recomendado | Sem isso |
 |---|---|---|
-| Uma máquina | VPS, Fly, Railway, Render, Hetzner… | não há onde rodar |
-| Um domínio | registro.br para `.com.br` | as tags apontariam para um IP que muda |
-| Certificado TLS | Caddy ou Traefik na frente (Let's Encrypt) | o cookie de sessão trafega aberto |
-| Provedor de e-mail | SES, Resend, Postmark | o tutor não recebe aviso nem recupera a senha |
-| Bucket S3/R2 | Cloudflare R2, AWS S3 | as fotos não sobrevivem a trocar de máquina |
+| Uma máquina | VPS **em São Paulo**, 2 vCPU / 4 GB | não há onde rodar |
+| Um domínio | registro.br, para `.com.br` | as tags apontariam para um IP que muda |
+| Provedor de e-mail | Resend (grátis até 3 mil/mês) ou Amazon SES | o tutor não recebe aviso nem recupera a senha |
+| Bucket | Cloudflare R2 (10 GB grátis, sem taxa de saída) | as fotos não sobrevivem a trocar de máquina |
 
-Os três primeiros são obrigatórios. Os dois últimos podem esperar — a pilha sobe
-sem eles — mas cada um deixa um pedaço do produto sem funcionar, e a API avisa
-no log quando o e-mail está desligado.
+Os dois primeiros são obrigatórios. Os outros podem esperar — a pilha sobe sem
+eles — mas cada um deixa um pedaço do produto sem funcionar, e a API avisa no
+log quando o e-mail está desligado. O certificado não entra na lista: o Caddy,
+que já vem na pilha, resolve sozinho.
+
+**Por que São Paulo e não a Europa.** Um servidor alemão custa uns R$10 a menos
+por mês e acrescenta cerca de 200 ms a cada carregamento. A página de resgate é
+aberta por um estranho na rua, no 4G, com um cachorro desconhecido no colo —
+nesse contexto, latência é a diferença entre esperar e desistir. Para tudo o
+mais do produto a diferença seria irrelevante; para essa tela, não é.
+
+**4 GB, não 2.** A construção da imagem da API roda Maven, que pede muito mais
+memória do que a aplicação em si. Em 2 GB o build morre com um "Killed" que não
+explica nada. O `deploy/provisionar.sh` cria área de troca para cobrir o pico,
+mas com folga de memória você não precisa pensar nisso.
+
+## Preparar o servidor
+
+Num Ubuntu recém-criado, como root:
+
+```bash
+sudo bash deploy/provisionar.sh
+```
+
+Ele instala o Docker, cria área de troca, fecha o firewall deixando só SSH, 80
+e 443, e agenda um backup diário do banco. Não cria a máquina, não registra o
+domínio e não preenche o `.env` — isso é seu.
 
 ## Preencher o `.env`
 
@@ -83,8 +106,10 @@ proxy para alcançar um container ao lado.
 
 ## O que a pilha não resolve
 
-- **Backup do banco.** O volume sobrevive a redeploy, não a perder a máquina.
-  Um `mysqldump` diário para fora do servidor é o mínimo.
+- **Levar o backup para fora.** O `provisionar.sh` agenda um dump diário, mas
+  ele fica no próprio servidor — o que não ajuda no dia em que a máquina é o
+  problema. Copie `/var/backups/conectapet` para outro lugar (o mesmo bucket
+  das fotos serve).
 - **Migração dos dados de desenvolvimento.** Não existe: o banco de produção
   começa vazio, e o Flyway cria o esquema na primeira subida.
 - **Escala.** Um container de cada. Antes de precisar de mais, o gargalo será o
