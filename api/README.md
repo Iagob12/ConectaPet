@@ -233,6 +233,27 @@ motivo da reautenticação do administrativo.
 de 10 tags com os códigos no console. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
 não toca nenhum outro arquivo.
 
+## O que precisa estar definido em produção
+
+A aplicação **recusa subir** fora dos perfis `dev` e `test` se encontrar configuração de
+desenvolvimento, e lista tudo o que estiver errado de uma vez:
+
+| Variável | Por que impede a subida |
+|---|---|
+| `URL_PUBLICA_TAG` | vai gravada no chip. Errada, toda tag do lote nasce inútil — e isso não tem conserto por software |
+| `URL_SITE` | vai nos links de e-mail. Errada, quem esquece a senha recebe um link que não abre |
+| `CORS_ORIGENS` | a confirmação de leitura é um `fetch` do navegador para outra origem. Errada, o navegador bloqueia, o front engole o erro e **o tutor nunca é avisado** |
+| `EMAIL_PROVEDOR` | `log` não impede a subida, mas registra um aviso: nada é entregue |
+
+Também recusa cookie sem `Secure`, o seed de tags ligado, e o corpo dos e-mails indo para
+o log (ele carrega o link de redefinir senha).
+
+Esta guarda existe por causa de uma classe de defeito que já apareceu duas vezes aqui:
+coisas que funcionam em dev, falham em produção e falham **caladas**. Nenhuma dava erro na
+subida — o servidor ficava de pé, as telas abriam, e o que quebrava só aparecia com
+cliente na frente. Ficar de pé funcionando pela metade é pior do que não subir, porque
+ninguém investiga um serviço que responde 200.
+
 ## Ligar o envio de e-mail
 
 Por padrão o envio é um stub que registra no console (`conectapet.email.provedor=log`).
