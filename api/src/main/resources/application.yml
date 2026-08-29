@@ -80,6 +80,11 @@ conectapet:
     dados-de-terceiro: P90D
     leitura: P365D
     cron: "0 30 3 * * *"
+  foto:
+    armazenamento: local   # trocar por s3 quando houver credenciais
+    diretorio: ./dados/fotos
+    max-bytes: 5242880     # 5 MB
+    max-pixels: 40000000   # trava contra bomba de descompressao
   admin:
     # Elevacao curta: sessao aberta em computador destravado nao pode virar
     # acesso ao segredo de um lote inteiro.

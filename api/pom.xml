@@ -93,6 +93,15 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- ImageIO do JDK nao le WebP. Este leitor e Java puro, sem binario nativo.
+         Escrita continua em JPEG: escrever WebP exigiria dependencia com codigo
+         nativo, e a decisao de valer os ~30% de bytes fica para antes do lancamento. -->
+    <dependency>
+      <groupId>com.twelvemonkeys.imageio</groupId>
+      <artifactId>imageio-webp</artifactId>
+      <version>3.12.0</version>
+    </dependency>
+
     <!-- Faz o Spring ler o .env, que ate agora so o docker-compose lia.
          Sem isto, JWT_SEGREDO e IP_PIMENTA nao resolvem e a aplicacao nem sobe. -->
     <dependency>

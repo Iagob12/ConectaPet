@@ -106,8 +106,9 @@ public class PerfilPublicoServico {
      */
     private PerfilPublicoDto.FotoDto montarFoto(Pet p) {
         String base = "/api/public/fotos/" + p.getFotoChave();
+        // A saida e JPEG: escrever WebP exigiria dependencia com codigo nativo.
         // "original" nao vai para o publico: e do dono, no painel.
-        return new PerfilPublicoDto.FotoDto(base + "/p.webp", base + "/m.webp", null);
+        return new PerfilPublicoDto.FotoDto(base + "/p", base + "/m", null);
     }
 
     private PerfilPublicoDto.TutorDto montarTutor(Usuario u, VisibilidadePerfil v) {

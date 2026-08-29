@@ -167,6 +167,24 @@ em lugar nenhum — e ele só descobre com a caixa na mão.
 estoque não teve chance de ser ativada, e contá-la no denominador faria a métrica parecer
 pior do que é. As leituras contam só origem `CLIENTE`.
 
+**Foto: o EXIF sai porque a imagem é reencodada do zero.** Não há uma chamada "remover
+EXIF" — ao decodificar para `BufferedImage` e escrever de novo com `metadata` nulo, os
+metadados da origem simplesmente não são copiados. Isso importa muito: a foto do pet quase
+sempre carrega as coordenadas GPS da casa do tutor, e ela vai para uma página pública.
+
+**Formato validado pelos bytes, nunca pela extensão nem pelo `Content-Type`.** Os dois são
+escolhidos por quem envia; um `.jpg` que na verdade é HTML com script, servido do nosso
+domínio, seria XSS armazenado.
+
+**As dimensões são lidas do cabeçalho antes de decodificar.** Um PNG de 60 KB pode declarar
+30000×30000 e estourar a memória da aplicação inteira ao ser aberto — bomba de
+descompressão. Checar só o tamanho do arquivo não protege disso.
+
+**A foto é servida pela API, sob a mesma regra de visibilidade do perfil.** Tag desativada
+ou perfil oculto derrubam a foto junto. Bucket público não daria isso: a URL continuaria
+funcionando para sempre para quem a tivesse copiado. A chave é aleatória, não derivada do
+UUID do pet, senão vazar um id daria a URL da foto de graça.
+
 ## Estado atual
 
 Implementado: fundação, autenticação, máquina de estados da tag, reivindicação, perfil do
@@ -178,9 +196,10 @@ O passo 2 do plano está completo. Verificado subindo a aplicação contra um My
 gerenciado: migrations aplicadas, fluxo de reivindicação, perfil, visibilidade, modo
 perdido e ciclo do lote exercitados de ponta a ponta.
 
-Ainda não existe em código, mas já está no contrato: upload de foto (`POST
-/api/pets/{uuid}/foto`) e as rotas de conta (`/api/me`, exportação e exclusão). O envio
-de e-mail é um stub em log.
+Ainda não existe em código, mas já está no contrato: as rotas de conta (`/api/me`,
+exportação e exclusão). O envio de e-mail é um stub em log, e o armazenamento de fotos é
+em disco — serve para desenvolvimento, mas **não sobrevive a redeploy**: trocar por S3/R2
+antes de produção é uma classe nova implementando `ArmazenamentoFotos`.
 
 **Perfil `dev`:** cria `admin@conectapet.local` / `admin-de-desenvolvimento` e um lote
 de 10 tags com os códigos no console. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend

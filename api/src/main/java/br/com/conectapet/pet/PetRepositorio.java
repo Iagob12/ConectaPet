@@ -11,4 +11,6 @@ public interface PetRepositorio extends JpaRepository<Pet, Long> {
     Optional<Pet> findByUuidAndExcluidoEmIsNull(UUID uuid);
 
     List<Pet> findByUsuarioIdAndExcluidoEmIsNullOrderByCriadoEmDesc(Long usuarioId);
+
+    Optional<Pet> findByFotoChaveAndExcluidoEmIsNull(String fotoChave);
 }
