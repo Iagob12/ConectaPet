@@ -9,23 +9,47 @@ import { chamar, redirecionarCom } from '../lib/api';
  * Um link GET seria disparado por qualquer pre-carregamento de navegador ou
  * bot, derrubando a sessao de quem so passou o mouse por cima.
  */
+const encerrada = Astro.url.searchParams.has('encerrada');
+
 if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
   const r = await chamar('/api/auth/logout', {
     metodo: 'POST',
     cookie: Astro.request.headers.get('cookie'),
   });
-  return redirecionarCom('/entrar', r.cookies);
+  return redirecionarCom(d.get('encerrada') != null ? '/' : '/entrar', r.cookies);
 }
 
 import Base from '../layouts/Base.astro';
 ---
 
-<Base titulo="Sair">
-  <h1>Sair da sua conta</h1>
-  <p class="sub">Seus pets continuam ativos. Só esta sessão será encerrada.</p>
+<Base titulo={encerrada ? 'Conta encerrada' : 'Sair'}>
+  {encerrada ? (
+    <>
+      <h1>Conta encerrada</h1>
+      <p class="sub">
+        Seus dados foram apagados e suas tags, desativadas. Obrigado por ter
+        usado a ConectaPet.
+      </p>
+      <form class="cartao" method="POST">
+        <input type="hidden" name="encerrada" value="1" />
+        <button class="btn btn--principal" type="submit">Fechar a sessão</button>
+      </form>
+    </>
+  ) : (
+    <>
+      <h1>Sair da sua conta</h1>
+      <p class="sub">Seus pets continuam ativos. Só esta sessão será encerrada.</p>
 
-  <form class="cartao" method="POST">
-    <button class="btn btn--principal" type="submit">Sair agora</button>
-    <a class="btn btn--secundario" href="/app">Continuar no painel</a>
-  </form>
+      <form class="cartao" method="POST">
+        <button class="btn btn--principal" type="submit">Sair agora</button>
+        <a class="btn btn--secundario" href="/app">Continuar no painel</a>
+      </form>
+    </>
+  )}
 </Base>

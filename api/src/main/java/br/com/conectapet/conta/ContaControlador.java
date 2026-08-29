@@ -32,18 +32,24 @@ public class ContaControlador {
     private final AssinaturaRepositorio assinaturas;
     private final UsuarioAtual usuarioAtual;
     private final br.com.conectapet.autenticacao.VerificacaoEmailServico verificacao;
+    private final ContaServico contaServico;
+    private final org.springframework.security.crypto.password.PasswordEncoder encoder;
     private final int tetoContatosFree;
     private final int tetoContatosPlus;
 
     public ContaControlador(UsuarioRepositorio usuarios, AssinaturaRepositorio assinaturas,
                             UsuarioAtual usuarioAtual,
                             br.com.conectapet.autenticacao.VerificacaoEmailServico verificacao,
+                            ContaServico contaServico,
+                            org.springframework.security.crypto.password.PasswordEncoder encoder,
                             @org.springframework.beans.factory.annotation.Value("${conectapet.planos.free.teto-contatos}") int tetoContatosFree,
                             @org.springframework.beans.factory.annotation.Value("${conectapet.planos.plus.teto-contatos}") int tetoContatosPlus) {
         this.usuarios = usuarios;
         this.assinaturas = assinaturas;
         this.usuarioAtual = usuarioAtual;
         this.verificacao = verificacao;
+        this.contaServico = contaServico;
+        this.encoder = encoder;
         this.tetoContatosFree = tetoContatosFree;
         this.tetoContatosPlus = tetoContatosPlus;
     }
@@ -79,6 +85,40 @@ public class ContaControlador {
         verificacao.enviar(carregar());
     }
 
+    /**
+     * Portabilidade: tudo o que a conta guarda, num arquivo so.
+     *
+     * Vai como anexo, e nao como corpo de tela, porque o objetivo e a pessoa
+     * levar o arquivo embora — inclusive para outro servico.
+     */
+    @GetMapping("/exportar")
+    public org.springframework.http.ResponseEntity<java.util.Map<String, Object>> exportar() {
+        Usuario u = carregar();
+        var headers = new org.springframework.http.HttpHeaders();
+        headers.setContentDisposition(org.springframework.http.ContentDisposition
+                .attachment().filename("conectapet-meus-dados.json").build());
+        headers.add(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-store");
+        return org.springframework.http.ResponseEntity.ok().headers(headers)
+                .body(contaServico.exportar(u.getId()));
+    }
+
+    /**
+     * Encerrar exige a senha, mesmo com a sessao aberta.
+     *
+     * E irreversivel e derruba todas as tags do tutor. Um computador
+     * destravado nao pode virar isso com dois cliques — mesmo raciocinio da
+     * reautenticacao do administrativo.
+     */
+    @DeleteMapping
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void encerrar(@Valid @RequestBody SenhaEntrada dto) {
+        Usuario u = carregar();
+        if (!encoder.matches(dto.senha(), u.getSenhaHash())) {
+            throw new ProblemaException(TipoErro.SEM_PERMISSAO, "Senha incorreta.");
+        }
+        contaServico.encerrar(u.getId());
+    }
+
     private Usuario carregar() {
         UsuarioAutenticado a = usuarioAtual.obrigatorio();
         return usuarios.findById(a.id()).orElseThrow(() -> new ProblemaException(TipoErro.NAO_AUTENTICADO));
@@ -98,6 +138,8 @@ public class ContaControlador {
                 Telefone.paraExibicao(u.getWhatsapp()), u.getWhatsapp(),
                 u.emailVerificado(), u.getPapel().name(), plano, limiteContatos);
     }
+
+    public record SenhaEntrada(@jakarta.validation.constraints.NotBlank String senha) {}
 
     public record ContaEntrada(@Size(min = 2, max = 120) String nome,
                                String telefonePrincipal, String telefoneSecundario, String whatsapp) {}

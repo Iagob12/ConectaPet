@@ -6,6 +6,7 @@ import { paraLogin, texto, type Conta } from '../../lib/painel';
 import { verDepois } from '../../lib/api';
 
 let erro: string | null = null;
+let erroEncerrar: string | null = null;
 let campos: Record<string, string> = {};
 let form: any = null;
 
@@ -18,22 +19,36 @@ if (Astro.request.method === 'POST') {
     // para a propria URL fazia um cliente que repete o POST girar sem fim.
     return new Response('Requisicao invalida.', { status: 400 });
   }
-  if (d.get('acao') === 'reenviar-verificacao') {
+  const acao = String(d.get('acao') ?? 'salvar');
+
+  if (acao === 'encerrar') {
+    const r = await Astro.locals.api('/api/me', {
+      metodo: 'DELETE',
+      corpo: { senha: String(d.get('senha') ?? '') },
+    });
+    if (r.status === 401) return paraLogin(Astro);
+    // Sai pela porta da frente: a conta nao existe mais, e continuar no painel
+    // mostraria uma tela de alguem que acabou de deixar de existir.
+    if (r.ok) return verDepois('/sair?encerrada=1');
+    erroEncerrar = r.status === 403 ? 'Senha incorreta.' : r.erro;
+
+  } else if (acao === 'reenviar-verificacao') {
     await Astro.locals.api('/api/me/verificar-email', { metodo: 'POST' });
     return verDepois('/app/conta?verificacao=1');
-  }
 
-  form = {
-    nome: texto(d, 'nome'),
-    telefonePrincipal: texto(d, 'telefonePrincipal'),
-    telefoneSecundario: texto(d, 'telefoneSecundario'),
-    whatsapp: texto(d, 'whatsapp'),
-  };
-  const r = await Astro.locals.api('/api/me', { metodo: 'PUT', corpo: form });
-  if (r.status === 401) return paraLogin(Astro);
-  if (r.ok) return verDepois('/app/conta?salvo=1');
-  erro = r.erro;
-  campos = r.campos;
+  } else {
+    form = {
+      nome: texto(d, 'nome'),
+      telefonePrincipal: texto(d, 'telefonePrincipal'),
+      telefoneSecundario: texto(d, 'telefoneSecundario'),
+      whatsapp: texto(d, 'whatsapp'),
+    };
+    const r = await Astro.locals.api('/api/me', { metodo: 'PUT', corpo: form });
+    if (r.status === 401) return paraLogin(Astro);
+    if (r.ok) return verDepois('/app/conta?salvo=1');
+    erro = r.erro;
+    campos = r.campos;
+  }
 }
 
 const rc = await Astro.locals.api<Conta>('/api/me');
@@ -144,6 +159,46 @@ const reenviado = Astro.url.searchParams.has('verificacao');
         <p class="item__oque">{conta.plano === 'PLUS' ? 'Plus' : 'Free'}</p>
       </li>
     </ul>
+  </section>
+
+  <section class="cartao">
+    <h2 class="cartao__titulo">Meus dados</h2>
+    <p class="cartao__nota">
+      Baixa um arquivo com tudo o que guardamos: sua conta, os perfis dos seus
+      pets, os contatos de emergência e o histórico de leituras das tags.
+    </p>
+    <a class="btn btn--secundario" style="margin-top:0" href="/app/conta/exportar">
+      Baixar meus dados
+    </a>
+    {Astro.url.searchParams.has('export-falhou') && (
+      <p class="erro-campo" style="margin-top:12px">Não consegui gerar o arquivo. Tente de novo.</p>
+    )}
+  </section>
+
+  <section class="cartao perigo">
+    <h2 class="cartao__titulo" style="color:#fff">Encerrar minha conta</h2>
+    <p class="cartao__nota" style="color:#fff">
+      Apaga seu nome, e-mail, telefones, os perfis dos seus pets e as fotos.
+      <strong> Todas as suas tags são desativadas</strong> — quem encostar o
+      celular em qualquer uma delas não vê mais nada.
+    </p>
+    <p class="cartao__nota" style="color:#fff">
+      Não tem volta. Se quiser guardar o histórico, baixe seus dados antes.
+    </p>
+
+    {erroEncerrar && <p class="erro-campo" style="color:#fff">{erroEncerrar}</p>}
+
+    <form method="POST">
+      <input type="hidden" name="acao" value="encerrar" />
+      <div class="campo">
+        <label for="senha-encerrar" style="color:#fff">Confirme sua senha</label>
+        <input id="senha-encerrar" name="senha" type="password" required
+               autocomplete="current-password" />
+      </div>
+      <button class="btn btn--secundario" style="margin-top:0" type="submit">
+        Encerrar minha conta para sempre
+      </button>
+    </form>
   </section>
 
   <p class="rodape-link"><a class="link" href="/sair">Sair da conta</a></p>

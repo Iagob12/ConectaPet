@@ -196,10 +196,19 @@ O passo 2 do plano está completo. Verificado subindo a aplicação contra um My
 gerenciado: migrations aplicadas, fluxo de reivindicação, perfil, visibilidade, modo
 perdido e ciclo do lote exercitados de ponta a ponta.
 
-Ainda não existe em código, mas já está no contrato: as rotas de conta (`/api/me`,
-exportação e exclusão). O envio de e-mail é um stub em log, e o armazenamento de fotos é
-em disco — serve para desenvolvimento, mas **não sobrevive a redeploy**: trocar por S3/R2
-antes de produção é uma classe nova implementando `ArmazenamentoFotos`.
+O envio de e-mail é um stub em log, e o armazenamento de fotos é em disco — serve para
+desenvolvimento, mas **não sobrevive a redeploy**: trocar por S3/R2 antes de produção é
+uma classe nova implementando `ArmazenamentoFotos`.
+
+**Encerrar conta anonimiza, não apaga a linha.** A escolha estava no desenho do banco desde
+a primeira migração: `anonimizado_em` existe em `usuarios`, e a auditoria grava o ator como
+UUID justamente para sobreviver a isso sem virar dado pessoal. Apagar a linha levaria junto
+o rastro de quem reivindicou e transferiu cada tag — que é o que permite responder depois
+"de quem era esta tag quando ela mudou de dono". Some o que identifica: nome, e-mail,
+telefones, fotos (do armazenamento, não só da linha) e os perfis dos pets. As tags do tutor
+são **desativadas**, não apenas desvinculadas: uma tag viva depois disso ficaria na coleira
+apontando para um perfil que não existe mais. Encerrar exige a senha de novo, pelo mesmo
+motivo da reautenticação do administrativo.
 
 **Perfil `dev`:** cria `admin@conectapet.local` / `admin-de-desenvolvimento` e um lote
 de 10 tags com os códigos no console. O envio de e-mail é um stub que registra em log — trocar por SES ou Resend
