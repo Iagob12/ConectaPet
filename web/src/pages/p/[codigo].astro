@@ -1,0 +1,305 @@
+---
+// Pagina de resgate. A tela mais importante do produto.
+//
+// Contexto de uso: um estranho, na rua, com o pet no colo, no sol, em rede
+// ruim, no celular dele. Tudo aqui e subordinado a isso.
+//
+// Renderizada no servidor: o HTML util chega na primeira resposta. `tel:` e
+// `wa.me` funcionam sem JavaScript nenhum — so a partilha de localizacao
+// depende de script.
+export const prerender = false;
+
+const { codigo } = Astro.params;
+const API = import.meta.env.API_URL ?? 'http://localhost:8080';
+
+let perfil = null;
+let falhou = false;
+
+try {
+  const r = await fetch(`${API}/api/public/tags/${codigo}`, {
+    headers: { 'User-Agent': Astro.request.headers.get('user-agent') ?? '' },
+  });
+  if (r.ok) perfil = await r.json();
+  else falhou = true;
+} catch {
+  falhou = true;
+}
+
+const ativo = perfil?.estado === 'ATIVO';
+const pet = perfil?.pet;
+const tutor = perfil?.tutor;
+const saude = perfil?.saude;
+const contatos = perfil?.contatosEmergencia;
+const perdido = perfil?.modoPerdido === true;
+
+// Mensagem pre-preenchida: quem encontrou nao deveria ter que pensar no que
+// escrever com um cachorro desconhecido no colo.
+const msgWhats = encodeURIComponent(`Ola! Encontrei ${pet?.nome ?? 'seu pet'}.`);
+
+// A API devolve caminho relativo; ela e quem serve a foto, sob a mesma regra de
+// visibilidade do perfil.
+const foto = pet?.foto?.media ? `${API}${pet.foto.media}` : null;
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+---
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Um perfil com o telefone do tutor indexado no Google e o pior desfecho possivel. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{ativo ? `${pet.nome} — ConectaPet` : 'ConectaPet'}</title>
+  <style>
+    :root {
+      --teal-500:#2FA8A5; --teal-700:#1D6B69; --teal-100:#D9F0EF;
+      --orange-500:#F0A02E; --orange-100:#FCEBD2;
+      --navy-900:#22313A; --navy-700:#3B4E59;
+      --white:#fff; --sand-100:#FAF3E7; --gray-300:#D6D2C9;
+      --call-600:#0E8449; --whats-700:#0F7A6E;
+      --alert-600:#D92D20; --alert-50:#FEF0EF;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{
+      margin:0; background:var(--white); color:var(--navy-700);
+      /* Sem moldura: cada pixel serve ao botao de ligar. */
+      font:400 17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    }
+    .marca-topo{height:6px;background:var(--teal-500)}
+    .folha{max-width:520px;margin:0 auto;padding:0 20px 40px}
+
+    /* 1. Faixa de alerta */
+    .alerta{
+      display:flex;gap:12px;align-items:flex-start;
+      background:var(--alert-50);border-top:4px solid var(--alert-600);
+      margin:0 -20px 20px;padding:16px 20px;
+      color:var(--navy-900);font-size:18px;font-weight:600;line-height:1.35;
+    }
+    .alerta svg{flex:none;color:var(--alert-600);margin-top:2px}
+
+    /* 2. Foto e nome */
+    .cartao-pet{
+      background:var(--white);border:2px solid var(--navy-900);
+      border-radius:28px;overflow:hidden;box-shadow:4px 4px 0 var(--navy-900);
+      margin-top:20px;
+    }
+    .cartao-pet img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+    .sem-foto{
+      aspect-ratio:4/3;background:var(--orange-100);
+      display:flex;align-items:center;justify-content:center;color:var(--navy-900);
+    }
+    .nome{margin:16px 16px 4px;font-size:28px;font-weight:800;color:var(--navy-900);line-height:1.15}
+    .meta{margin:0 16px 16px;font-size:16px;color:var(--navy-700)}
+
+    /* 3-5. Botoes: solidos, largura total, alvo grande */
+    .acoes{margin-top:20px;display:grid;gap:12px}
+    .btn{
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      min-height:64px;border-radius:9999px;border:2px solid var(--navy-900);
+      font-size:18px;font-weight:600;text-decoration:none;color:#fff;
+      box-shadow:3px 3px 0 var(--navy-900);
+    }
+    .btn:active{transform:translate(3px,3px);box-shadow:none}
+    .btn--ligar{background:var(--call-600)}
+    .btn--whats{background:var(--whats-700)}
+    .btn--local{background:var(--white);color:var(--navy-900);min-height:56px}
+    .btn[hidden]{display:none}
+
+    /* 6-7. Blocos de informacao, sempre abertos */
+    .bloco{
+      margin-top:20px;background:var(--sand-100);
+      border:2px solid var(--navy-900);border-radius:20px;padding:16px;
+    }
+    .bloco h2{margin:0 0 8px;font-size:16px;font-weight:700;color:var(--navy-900);
+      letter-spacing:.06em;text-transform:uppercase}
+    .bloco dl{margin:0;display:grid;gap:8px}
+    .bloco dt{font-weight:600;color:var(--navy-900);font-size:15px}
+    .bloco dd{margin:0 0 4px;font-size:17px}
+    .contato{display:flex;justify-content:space-between;gap:12px;align-items:center;
+      padding:10px 0;border-top:1px solid var(--gray-300)}
+    .contato:first-of-type{border-top:0}
+    .contato a{color:var(--teal-700);font-weight:600;white-space:nowrap}
+    .recado{margin-top:16px;padding:14px 16px;background:var(--teal-100);
+      border:2px solid var(--navy-900);border-radius:20px;color:var(--navy-900)}
+
+    /* 8. Marca, discreta */
+    .rodape{margin-top:32px;text-align:center;font-size:14px;color:var(--navy-700)}
+
+    .aviso{margin-top:24px;text-align:center}
+    .aviso h1{font-size:24px;color:var(--navy-900);margin:0 0 12px}
+    .aviso p{max-width:38ch;margin:0 auto 20px}
+    .aviso a{display:inline-flex;align-items:center;min-height:56px;padding:0 28px;
+      border-radius:9999px;background:var(--teal-500);color:var(--navy-900);
+      border:2px solid var(--navy-900);box-shadow:3px 3px 0 var(--navy-900);
+      font-weight:600;text-decoration:none}
+    #status-local{margin-top:8px;font-size:15px;text-align:center;min-height:22px}
+    @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="marca-topo"></div>
+  <main class="folha">
+
+    {ativo && perdido && (
+      <p class="alerta">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 4l9 15.5H3L12 4z"/><path d="M12 10v4M12 17h.01"/>
+        </svg>
+        <span>ESTE PET ESTÁ PERDIDO</span>
+      </p>
+    )}
+
+    {ativo ? (
+      <>
+        <div class="cartao-pet">
+          {foto
+            ? <img src={foto} alt={`Foto de ${pet.nome}`} width="400" height="300" />
+            : <div class="sem-foto" aria-hidden="true">
+                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="7.3" cy="9.2" r="1.9"/><circle cx="12" cy="7.4" r="1.9"/>
+                  <circle cx="16.7" cy="9.2" r="1.9"/>
+                  <path d="M12 12.4c3 0 5.2 2 5.2 4.3S15 20.6 12 20.6s-5.2-1.6-5.2-3.9S9 12.4 12 12.4z"/>
+                </svg>
+              </div>}
+          <p class="nome">{pet.nome}</p>
+          <p class="meta">
+            {[pet.raca, pet.cor, pet.pesoKg ? `${pet.pesoKg} kg` : null,
+              pet.cidade ? `${pet.cidade}${pet.estado ? ', ' + pet.estado : ''}` : null]
+              .filter(Boolean).join(' · ')}
+          </p>
+        </div>
+
+        <div class="acoes">
+          {tutor?.telefoneE164 && (
+            <a class="btn btn--ligar" href={`tel:${tutor.telefoneE164}`}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6.5 3h3l1.6 4-2.1 1.6a12 12 0 006.4 6.4L17 12.9l4 1.6v3a2 2 0 01-2.2 2A16.6 16.6 0 014.5 5.2 2 2 0 016.5 3z"/>
+              </svg>
+              Ligar para {tutor.nome}
+            </a>
+          )}
+
+          {tutor?.whatsappE164 && (
+            <a class="btn btn--whats" href={`https://wa.me/${tutor.whatsappE164}?text=${msgWhats}`}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20.5 11.6a8.5 8.5 0 01-12.7 7.4L3.5 20.5l1.6-4.2A8.5 8.5 0 1120.5 11.6z"/>
+              </svg>
+              Chamar no WhatsApp
+            </a>
+          )}
+
+          <button class="btn btn--local" id="btn-local" type="button" hidden>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21.2s7-6.5 7-11.2a7 7 0 10-14 0c0 4.7 7 11.2 7 11.2z"/><circle cx="12" cy="10" r="2.6"/>
+            </svg>
+            Avisar onde encontrei
+          </button>
+          <p id="status-local" role="status" aria-live="polite"></p>
+        </div>
+
+        {saude && (
+          <section class="bloco">
+            <h2>Informações de saúde</h2>
+            <dl>
+              {saude.alergias && <><dt>Alergias</dt><dd>{saude.alergias}</dd></>}
+              {saude.medicacaoContinua && <><dt>Medicação contínua</dt><dd>{saude.medicacaoContinua}</dd></>}
+              {saude.condicoes && <><dt>Condições</dt><dd>{saude.condicoes}</dd></>}
+              {saude.cuidadosEspeciais && <><dt>Cuidados especiais</dt><dd>{saude.cuidadosEspeciais}</dd></>}
+              {saude.veterinarioNome && (
+                <><dt>Veterinário</dt>
+                  <dd>{saude.veterinarioNome}
+                    {saude.veterinarioTelefoneE164 &&
+                      <> — <a href={`tel:${saude.veterinarioTelefoneE164}`}>{saude.veterinarioTelefoneExibicao}</a></>}
+                  </dd></>
+              )}
+            </dl>
+          </section>
+        )}
+
+        {contatos && contatos.length > 0 && (
+          <section class="bloco">
+            <h2>Contatos de emergência</h2>
+            {contatos.map((c) => (
+              <div class="contato">
+                <span>{c.nome}{c.parentesco ? ` · ${c.parentesco}` : ''}</span>
+                <a href={`tel:${c.telefoneE164}`}>{c.telefoneExibicao}</a>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {perfil.mensagemPersonalizada && <p class="recado">{perfil.mensagemPersonalizada}</p>}
+      </>
+    ) : falhou ? (
+      <div class="aviso">
+        <h1>Não consegui carregar</h1>
+        <p>Verifique sua conexão e tente de novo.</p>
+        <a href={`/p/${codigo}`}>Tentar de novo</a>
+      </div>
+    ) : (
+      /* Estado B. A resposta da API e deliberadamente indistinguivel entre
+         "nao existe" e "nao ativada" — a interface respeita isso e nao inventa
+         duas mensagens, senao recria no frontend o vazamento de enumeracao que
+         o backend evita. */
+      <div class="aviso">
+        <h1>Esta tag ainda não tem perfil</h1>
+        <p>Se ela é sua, ative agora com o código impresso no cartão que veio na embalagem.</p>
+        <a href={`/ativar?codigo=${codigo}`}>Sou o dono, quero ativar</a>
+      </div>
+    )}
+
+    <p class="rodape">ConectaPet · Aproxima e Protege</p>
+  </main>
+
+  <script define:vars={{ codigo, API }}>
+    // A unica coisa nesta pagina que depende de JavaScript.
+    //
+    // Dois papeis: confirmar que quem abriu e gente (o beacon e a UNICA entrada
+    // que notifica o tutor — robo de preview de link nao executa script), e
+    // enviar a localizacao SE a pessoa tocar no botao.
+    const enviar = (corpo) =>
+      fetch(`${API}/api/public/tags/${codigo}/leituras`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(corpo ?? {}),
+        keepalive: true,
+      }).catch(() => {});
+
+    // Confirma a leitura humana. Se falhar, a pagina nao pode quebrar.
+    enviar(null);
+
+    const botao = document.getElementById('btn-local');
+    const status = document.getElementById('status-local');
+    if (botao && 'geolocation' in navigator) {
+      botao.hidden = false;
+      botao.addEventListener('click', () => {
+        // A permissao so e pedida no toque, nunca ao abrir a pagina.
+        status.textContent = 'Enviando sua localização aproximada ao tutor…';
+        botao.disabled = true;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            enviar({
+              localizacaoCompartilhada: true,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              precisaoM: Math.round(pos.coords.accuracy),
+            });
+            status.textContent = 'Pronto, avisamos o tutor. Obrigado por ajudar.';
+          },
+          () => {
+            status.textContent = 'Sem problema — os botões acima continuam funcionando.';
+            botao.disabled = false;
+          },
+          { timeout: 10000, maximumAge: 60000 }
+        );
+      });
+    }
+  </script>
+</body>
+</html>

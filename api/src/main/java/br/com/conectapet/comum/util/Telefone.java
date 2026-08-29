@@ -80,6 +80,25 @@ public final class Telefone {
         return e164 == null ? null : e164.replaceAll("\\D", "");
     }
 
+    /**
+     * Normaliza para gravar. Vazio continua vazio; invalido e recusado.
+     *
+     * Recusar em vez de gravar cru e deliberado: o numero errado so aparece no
+     * pior momento, quando alguem tenta ligar com o pet no colo.
+     */
+    public static String paraGravar(String bruto) {
+        if (bruto == null || bruto.isBlank()) {
+            return null;
+        }
+        String e164 = paraE164(bruto);
+        if (e164 == null) {
+            throw new br.com.conectapet.comum.erro.ProblemaException(
+                    br.com.conectapet.comum.erro.TipoErro.DADOS_INVALIDOS,
+                    "Telefone invalido: use DDD e numero, como (11) 99999-0000.");
+        }
+        return e164;
+    }
+
     public static boolean valido(String bruto) {
         return paraE164(bruto) != null;
     }

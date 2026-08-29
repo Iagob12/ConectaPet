@@ -9,7 +9,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.util.List;
@@ -60,6 +63,25 @@ public class ManipuladorGlobalErros {
     public ResponseEntity<ProblemDetail> acessoNegado(HttpServletRequest req) {
         return ResponseEntity.status(TipoErro.SEM_PERMISSAO.status())
                 .body(montar(TipoErro.SEM_PERMISSAO, null, req));
+    }
+
+    /**
+     * Rota inexistente e 404, nao 500.
+     *
+     * Sem este tratamento a rede de seguranca abaixo engole a excecao do proprio
+     * Spring e transforma um endereco digitado errado em erro de servidor — o que
+     * enche o monitoramento de alarme falso e esconde erro de verdade.
+     */
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ProblemDetail> naoEncontrado(HttpServletRequest req) {
+        return ResponseEntity.status(TipoErro.NAO_ENCONTRADO.status())
+                .body(montar(TipoErro.NAO_ENCONTRADO, null, req));
+    }
+
+    /** Metodo HTTP errado na rota certa tambem nao e erro de servidor. */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ProblemDetail> metodoInvalido(HttpServletRequest req) {
+        return ResponseEntity.status(405).body(montar(TipoErro.NAO_ENCONTRADO, null, req));
     }
 
     /**

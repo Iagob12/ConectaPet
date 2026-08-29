@@ -147,7 +147,7 @@ public class PetServico {
         s.setCondicoes(dados.getCondicoes());
         s.setCuidadosEspeciais(dados.getCuidadosEspeciais());
         s.setVeterinarioNome(dados.getVeterinarioNome());
-        s.setVeterinarioTelefone(dados.getVeterinarioTelefone());
+        s.setVeterinarioTelefone(br.com.conectapet.comum.util.Telefone.paraGravar(dados.getVeterinarioTelefone()));
         s.setClinica(dados.getClinica());
         return saudes.save(s);
     }
@@ -218,6 +218,7 @@ public class PetServico {
                     "Seu plano permite ate " + teto + " contato(s) de emergencia por pet.");
         }
         novo.setPetId(pet.getId());
+        novo.setTelefone(br.com.conectapet.comum.util.Telefone.paraGravar(novo.getTelefone()));
         return contatos.save(novo);
     }
 
@@ -227,7 +228,7 @@ public class PetServico {
         Pet pet = meuPet(petUuid, u);
         ContatoEmergencia c = contatoDoPet(contatoUuid, pet);
         c.setNome(dados.getNome());
-        c.setTelefone(dados.getTelefone());
+        c.setTelefone(br.com.conectapet.comum.util.Telefone.paraGravar(dados.getTelefone()));
         c.setParentesco(dados.getParentesco());
         c.setOrdem(dados.getOrdem());
         return contatos.save(c);

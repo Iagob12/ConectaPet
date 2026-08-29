@@ -56,7 +56,7 @@ public class AutenticacaoServico {
         u.setEmail(normalizado);
         u.setSenhaHash(encoder.encode(senha));
         u.setNome(nome.trim());
-        u.setTelefonePrincipal(telefone);
+        u.setTelefonePrincipal(br.com.conectapet.comum.util.Telefone.paraGravar(telefone));
         return usuarios.save(u);
     }
 

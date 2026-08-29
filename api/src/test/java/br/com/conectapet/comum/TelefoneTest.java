@@ -4,7 +4,7 @@ import br.com.conectapet.comum.util.Telefone;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 class TelefoneTest {
 
@@ -32,6 +32,19 @@ class TelefoneTest {
         assertThat(Telefone.paraE164("01999990000")).isNull();
         assertThat(Telefone.paraE164("abc")).isNull();
         assertThat(Telefone.paraE164(null)).isNull();
+    }
+
+    @Test
+    @DisplayName("paraGravar normaliza, deixa vazio passar e recusa invalido")
+    void paraGravar() {
+        assertThat(Telefone.paraGravar("(11) 3333-0000")).isEqualTo("+551133330000");
+        assertThat(Telefone.paraGravar(null)).isNull();
+        assertThat(Telefone.paraGravar("   ")).isNull();
+
+        // Recusar em vez de gravar cru: o numero errado so apareceria no pior
+        // momento, quando alguem tenta ligar com o pet no colo.
+        assertThatThrownBy(() -> Telefone.paraGravar("99999-0000"))
+                .isInstanceOf(br.com.conectapet.comum.erro.ProblemaException.class);
     }
 
     @Test

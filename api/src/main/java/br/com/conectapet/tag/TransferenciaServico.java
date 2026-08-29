@@ -9,6 +9,7 @@ import br.com.conectapet.notificacao.Notificacao;
 import br.com.conectapet.notificacao.NotificacaoServico;
 import br.com.conectapet.pet.Pet;
 import br.com.conectapet.pet.PetRepositorio;
+import br.com.conectapet.pet.PetServico;
 import br.com.conectapet.pet.PetSaudeRepositorio;
 import br.com.conectapet.pet.VisibilidadeRepositorio;
 import br.com.conectapet.pet.ContatoRepositorio;
@@ -45,6 +46,7 @@ public class TransferenciaServico {
     private final TagRepositorio tags;
     private final CodigoTransferenciaRepositorio codigos;
     private final PetRepositorio pets;
+    private final PetServico petServico;
     private final UsuarioRepositorio usuarios;
     private final AuditoriaServico auditoria;
     private final NotificacaoServico notificacoes;
@@ -52,13 +54,14 @@ public class TransferenciaServico {
     private final Duration validade;
 
     public TransferenciaServico(TagRepositorio tags, CodigoTransferenciaRepositorio codigos,
-                                PetRepositorio pets, UsuarioRepositorio usuarios,
+                                PetRepositorio pets, PetServico petServico, UsuarioRepositorio usuarios,
                                 AuditoriaServico auditoria, NotificacaoServico notificacoes,
                                 GeradorCodigo gerador,
                                 @Value("${conectapet.transferencia.validade}") Duration validade) {
         this.tags = tags;
         this.codigos = codigos;
         this.pets = pets;
+        this.petServico = petServico;
         this.usuarios = usuarios;
         this.auditoria = auditoria;
         this.notificacoes = notificacoes;
@@ -221,11 +224,16 @@ public class TransferenciaServico {
         destino.setPetId(pet.getId());
         tags.save(destino);
 
+        // Vincular o pet nao basta: sem reavaliar, a tag fica presa em
+        // REIVINDICADA e a pagina publica responde "nao ativada" com o perfil
+        // inteiro preenchido do outro lado.
+        petServico.reavaliarTags(pet, dono);
+
         auditoria.registrar(dono.uuid(), AuditoriaServico.ACAO_PERFIL_MIGRADO,
                 "TAG", destino.getUuid(),
                 Map.of("petUuid", pet.getUuid().toString(), "desativouAnterior", desativarAnterior), ipHash);
 
-        return destino;
+        return tags.findByUuid(tagDestinoUuid).orElseThrow();
     }
 
     // ---- Apoio --------------------------------------------------------------
