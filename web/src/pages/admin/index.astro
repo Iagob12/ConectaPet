@@ -96,8 +96,9 @@ const pendentes = lotes.filter((l) => l.status !== 'CONFIRMADO');
     <p class="aviso" role="status">
       <span>
         <strong>{pendentes.length === 1 ? 'Um lote ainda tem os códigos de ativação em claro.' : `${pendentes.length} lotes ainda têm os códigos de ativação em claro.`}</strong><br />
-        Grave os NFCs, imprima os cartões e confirme o lote. Depois de confirmado
-        só resta o hash, e o cartão perdido não tem como ser reemitido.
+        Grave os NFCs e confirme o lote. Depois de confirmado, os códigos de
+        ativação não existem mais em claro — hoje eles não são exigidos para
+        ativar, mas é o que permitiria voltar a exigi-los sem reimprimir nada.
       </span>
     </p>
   )}
@@ -140,8 +141,8 @@ const pendentes = lotes.filter((l) => l.status !== 'CONFIRMADO');
   <form class="cartao" method="POST">
     <h2 class="cartao__titulo">Novo lote</h2>
     <p class="cartao__nota">
-      Gera os pares de código de cada tag: o público, que vai no NFC, e o de
-      ativação, que vai impresso no cartão dentro da caixa.
+      Gera o código público de cada tag — o que vai gravado no NFC e aparece
+      no fim da URL. É só isso que o cliente precisa para ativar.
     </p>
 
     <div class="campo">

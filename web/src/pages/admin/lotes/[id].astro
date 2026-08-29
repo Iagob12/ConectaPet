@@ -124,8 +124,9 @@ const baseSuspeita = /localhost|127\.0\.0\.1|:\d{4}/.test(base);
       <form class="cartao segredo" method="POST">
         <h2 class="cartao__titulo">Ver os códigos</h2>
         <p class="cartao__nota">
-          O código de ativação é o que impede quem manuseia a encomenda de se
-          cadastrar como dono. Por isso a senha é pedida de novo, e cada
+          O código de ativação não é exigido na ativação hoje, mas continua
+          gerado e guardado. A senha é pedida de novo porque ele é o que
+          permitiria voltar a proteger um lote sem reimprimir nada — e cada
           consulta fica registrada.
         </p>
         <div class="campo">
@@ -142,10 +143,10 @@ const baseSuspeita = /localhost|127\.0\.0\.1|:\d{4}/.test(base);
         <section class="cartao">
           <h2 class="cartao__titulo">{linhas.length} tags deste lote</h2>
           <p class="cartao__nota">
-            Grave a coluna <strong>endereço</strong> em cada NFC e imprima o
-            <strong> código de ativação</strong> no cartão que vai dentro da
-            mesma caixa daquela tag. Os dois precisam casar: o cartão trocado
-            deixa a tag impossível de ativar.
+            Grave a coluna <strong>endereço</strong> em cada NFC. É o único
+            passo obrigatório: quem encostar o celular nessa tag cai direto no
+            cadastro. O código de ativação ao lado está de reserva e não
+            precisa ser impresso.
           </p>
 
           {baseSuspeita && (
@@ -186,9 +187,10 @@ const baseSuspeita = /localhost|127\.0\.0\.1|:\d{4}/.test(base);
       <form class="cartao perigo" method="POST">
         <h2 class="cartao__titulo" style="color:#fff">Confirmar o lote</h2>
         <p class="cartao__nota" style="color:#fff">
-          Só depois de gravar os NFCs e imprimir os cartões. Confirmar apaga os
-          códigos de ativação em claro para sempre: se um cartão se perder
-          depois disso, aquela tag não tem como ser ativada e vira perda.
+          Só depois de gravar os NFCs. Confirmar apaga os códigos de ativação em
+          claro para sempre — as tags continuam ativáveis normalmente, porque
+          hoje a ativação não os exige. O que se perde é a opção de voltar a
+          exigi-los neste lote sem regravar as tags.
         </p>
         <div class="campo">
           <label for="senha-confirmar" style="color:#fff">Sua senha</label>

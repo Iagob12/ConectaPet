@@ -63,17 +63,28 @@ public class ReivindicacaoServico {
         this.janela = janela;
     }
 
+    /**
+     * Reivindicacao pelo codigo da URL, sem segredo adicional.
+     *
+     * Decisao do produto: quem encosta o celular numa tag sem perfil cria a
+     * conta e assume a tag ali mesmo. O codigo de ativacao impresso deixou de
+     * ser exigido — o fluxo curto foi escolhido sabendo do custo, que e a
+     * janela entre a fabrica e a entrega: NFC atravessa papelao, entao quem
+     * manuseia a encomenda fechada consegue ler a tag e se cadastrar antes do
+     * cliente. A protecao que resta e operacional (marcar enviada, e o 409
+     * abaixo, que ao menos torna o roubo visivel para quem receber a caixa).
+     *
+     * O hash do codigo de ativacao continua gravado e o CSV continua a emiti-lo:
+     * voltar a exigi-lo e mudanca de codigo, sem migracao nem reimpressao.
+     */
     @Transactional
-    public Tag reivindicar(String codigoPublicoBruto, String codigoAtivacaoBruto,
-                           UsuarioAutenticado usuario, String ipHash) {
+    public Tag reivindicar(String codigoPublicoBruto, UsuarioAutenticado usuario, String ipHash) {
 
         String codigoPublico = GeradorCodigo.normalizar(codigoPublicoBruto);
-        String codigoAtivacao = GeradorCodigo.normalizar(codigoAtivacaoBruto);
 
         // Forma invalida nao gasta tentativa: erro de digitacao nao pode consumir
         // o limite de quem esta apenas tentando ativar a propria tag.
-        if (!GeradorCodigo.formaValida(codigoPublico, GeradorCodigo.TAMANHO_PUBLICO)
-                || !GeradorCodigo.formaValida(codigoAtivacao, GeradorCodigo.TAMANHO_ATIVACAO)) {
+        if (!GeradorCodigo.formaValida(codigoPublico, GeradorCodigo.TAMANHO_PUBLICO)) {
             throw new ProblemaException(TipoErro.CODIGO_INVALIDO);
         }
 
@@ -81,21 +92,16 @@ public class ReivindicacaoServico {
 
         Optional<Tag> achada = tags.findByCodigoPublico(codigoPublico);
 
-        // BCrypt roda mesmo quando a tag nao existe, para igualar o tempo de
-        // resposta entre "codigo inexistente" e "codigo de ativacao errado".
-        String hashAlvo = achada.map(Tag::getCodigoAtivacaoHash).orElse(HASH_FALSO);
-        boolean confere = encoder.matches(codigoAtivacao, hashAlvo);
-
-        if (achada.isEmpty() || !confere) {
+        if (achada.isEmpty()) {
             registro.falha(codigoPublico, ipHash);
             throw new ProblemaException(TipoErro.CODIGO_INVALIDO);
         }
 
         Tag tag = achada.get();
 
-        // 409 so acontece DEPOIS de a pessoa provar posse com o codigo correto.
-        // E o unico ponto em que a API confirma que um codigo existe, e quem
-        // chegou ate aqui abriu a caixa.
+        // Sem o codigo de ativacao, este 409 passou a ser alcancavel por quem
+        // so digitou um codigo publico valido. Nao e vazamento novo: a pagina
+        // /p/{codigo} ja mostra o perfil de uma tag ativa a qualquer um.
         if (!tag.getStatus().reivindicavel()) {
             throw new ProblemaException(TipoErro.TAG_JA_REIVINDICADA,
                     "Esta tag ja tem dono. Se voce a recebeu de outra pessoa, peca um codigo de transferencia.");

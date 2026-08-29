@@ -34,14 +34,14 @@ const [status, sessao] = await Promise.all([
 ]);
 const jaEmUso = status?.dados?.estado === 'ATIVO';
 
-// Ja logado: pula direto para o codigo de ativacao. Se a tag ja esta em uso,
+// Ja logado: pula direto para a reivindicacao. Se a tag ja esta em uso,
 // fica aqui para explicar em vez de deixar a pessoa errar no passo seguinte.
 if (sessao.ok && !jaEmUso) return Astro.redirect('/ativar/codigo');
 
 const proximo = encodeURIComponent('/ativar/codigo');
 ---
 
-<Base titulo="Ativar minha tag" passo={{ atual: 1, total: 4 }}>
+<Base titulo="Ativar minha tag" passo={{ atual: 1, total: 3 }}>
   <h1>Vamos ativar sua tag</h1>
   <p class="sub">
     Em poucos passos o perfil do seu pet fica pronto. Primeiro, crie sua conta
@@ -60,7 +60,7 @@ const proximo = encodeURIComponent('/ativar/codigo');
         <p style="margin-top:0">
           Se você recebeu este pet de outra pessoa, peça a ela um
           <strong> código de transferência</strong> — é assim que a tag muda de
-          titular, sem passar pelo código de ativação.
+          titular.
         </p>
         <a class="btn btn--principal" href="/app/receber">Tenho um código de transferência</a>
         <a class="btn btn--secundario" href={`/p/${codigo}`}>Ver a página desta tag</a>

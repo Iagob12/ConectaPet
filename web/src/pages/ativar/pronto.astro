@@ -23,7 +23,7 @@ const ativo = p?.estado === 'ATIVO';
 Astro.cookies.delete('cp_ativando', { path: '/' });
 ---
 
-<Base titulo="Tudo pronto" passo={{ atual: 4, total: 4 }}>
+<Base titulo="Tudo pronto" passo={{ atual: 3, total: 3 }}>
   <h1>{ativo ? 'Pronto! Sua tag está ativa' : 'Quase lá'}</h1>
   <p class="sub">
     {ativo

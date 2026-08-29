@@ -77,7 +77,7 @@ public class TagControlador {
     @PostMapping("/reivindicar")
     public TagResposta reivindicar(@Valid @RequestBody ReivindicarEntrada dto, HttpServletRequest req) {
         UsuarioAutenticado u = usuarioAtual.obrigatorio();
-        Tag tag = reivindicacao.reivindicar(dto.codigoPublico(), dto.codigoAtivacao(), u, ipHash(req));
+        Tag tag = reivindicacao.reivindicar(dto.codigoPublico(), u, ipHash(req));
         return montar(tag);
     }
 
@@ -148,16 +148,12 @@ public class TagControlador {
 
     // ---- DTOs --------------------------------------------------------------
 
+    /** So o codigo que vem na URL da tag. O de ativacao deixou de ser exigido. */
     public record ReivindicarEntrada(
             @NotBlank
             @Pattern(regexp = "^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{10}$",
                      message = "O codigo da tag tem 10 caracteres e nao usa 0, O, I, 1, L nem U")
-            String codigoPublico,
-
-            @NotBlank
-            @Pattern(regexp = "^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{8}$",
-                     message = "O codigo de ativacao tem 8 caracteres e nao usa 0, O, I, 1, L nem U")
-            String codigoAtivacao) {}
+            String codigoPublico) {}
 
     public record AceitarEntrada(
             @NotBlank

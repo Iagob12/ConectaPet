@@ -31,7 +31,7 @@ if (Astro.request.method === 'POST') {
   });
 
   if (r.ok) {
-    // Nao mandamos ninguem verificar e-mail agora: o codigo de ativacao ja
+    // Nao mandamos ninguem verificar e-mail agora: quem esta com a tag na mao ja
     // prova posse da embalagem, e desviar para a caixa de entrada com a tag na
     // mao e o jeito mais rapido de perder o cliente.
     return redirecionarCom(next, r.cookies);
