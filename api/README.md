@@ -87,20 +87,35 @@ H2 o teste passaria e a produção quebraria.
 
 ## Decisões que o código materializa
 
-**Dois códigos.** `codigoPublico` (10 caracteres) vai gravado na tag e aparece na URL.
-`codigoAtivacao` (8 caracteres) é impresso no cartão dentro da embalagem e guardado só
-como hash BCrypt de custo 12. Sem o segundo, qualquer pessoa que manuseie a encomenda no
-transporte poderia se cadastrar como dono.
+**Um código para ativar.** `codigoPublico` (10 caracteres) vai gravado na tag, aparece no
+fim da URL e é o único que o cliente precisa: quem encosta o celular numa tag sem perfil
+cria a conta e assume a tag ali mesmo.
+
+Existe um `codigoAtivacao` (8 caracteres) gerado junto e guardado como hash BCrypt, mas
+**ele não é exigido**. Foi decisão de produto, tomada com o custo na mesa: o fluxo curto
+dispensa imprimir e casar um cartão com cada tag, e em troca abre uma janela — NFC
+atravessa papelão, então quem manuseia a encomenda fechada consegue ler a tag e se
+cadastrar antes do cliente. A proteção que resta é operacional (marcar as tags como
+enviadas só no despacho) e o `409` de tag com dono, que ao menos torna o roubo visível
+para quem recebe a caixa.
+
+O hash continua gravado e o CSV do lote continua emitindo o código: voltar a exigi-lo é
+mudança de código, sem migração, sem regravar tag e sem reimprimir nada.
 
 **Alfabeto de 30 símbolos:** `23456789ABCDEFGHJKMNPQRSTVWXYZ`. Não é Base32 de
 biblioteca — o Crockford já tira `I L O U` e aqui tiramos também `0` e `1`. Geração e
 validação são manuais de propósito; trocar por um decoder de Base32 quebra os códigos já
 gravados nas tags.
 
-**Indistinguibilidade.** Código público inexistente e código de ativação errado devolvem
-o mesmo `403`, com o mesmo corpo e o mesmo custo de tempo — o BCrypt roda mesmo quando a
-tag não existe. Se a API distinguisse, criar uma conta bastaria para enumerar todos os
-códigos e coletar o telefone de todos os tutores.
+**Indistinguibilidade, onde ela ainda vale.** Nas rotas públicas (`/api/public/tags/...`),
+código inexistente e tag não ativada devolvem exatamente a mesma resposta, com piso de
+tempo igual. É o que impede varrer o espaço de códigos para descobrir quais existem.
+
+Na reivindicação a distinção passou a existir junto com a remoção do código de ativação:
+quem digita um código válido descobre, pelo `409`, que ele já tem dono. Não é vazamento
+novo — `/p/{codigo}` já mostra o perfil de uma tag ativa a qualquer pessoa. O que continua
+travado é o outro lado: código inexistente não devolve nada além de "inválido", e o limite
+de tentativas é o que contém a varredura.
 
 **Dois baldes de tentativa, independentes.** Um por IP e um **global por código**, sem IP
 na chave. Com IP na chave, um atacante com 200 endereços faria 1.000 tentativas por hora
