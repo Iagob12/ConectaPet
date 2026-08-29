@@ -57,10 +57,20 @@ vazamento do segredo que impede quem manuseia a encomenda de se cadastrar como d
 ## Testes
 
 ```bash
-./mvnw test                    # 48 unitários, em segundos, sem Docker
-./mvnw verify                  # acrescenta os de integração (exige Docker)
+./mvnw test                    # 64 unitários, em segundos, sem Docker
+./mvnw verify                  # acrescenta os 57 de integração (sobe MySQL via Docker)
 ./mvnw verify -Psem-docker     # o ciclo completo, pulando os de integração
 ```
+
+**Sem Docker na máquina?** Um MySQL já rodando serve igual — aponte a suíte para ele:
+
+```bash
+./mvnw verify -Dteste.banco.url="jdbc:mysql://127.0.0.1:3306/conectapet_teste" -Dteste.banco.usuario=conectapet -Dteste.banco.senha=SUA_SENHA
+```
+
+**Use um schema separado.** Os testes truncam todas as tabelas entre casos; apontar para o
+banco de desenvolvimento apagaria os dados dele. A suíte recusa um schema cujo nome não
+termine em `_teste` — é o tipo de engano que só se percebe depois de perdido.
 
 Os de integração ficam no `verify`, e não no `test`, para o ciclo curto continuar curto.
 
