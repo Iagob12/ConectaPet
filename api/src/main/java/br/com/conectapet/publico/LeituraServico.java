@@ -128,6 +128,7 @@ public class LeituraServico {
         conteudo.put("ocorridaEm", leitura.getOcorridaEm().toString());
         conteudo.put("temLocalizacao", leitura.isLocalizacaoCompartilhada());
         conteudo.put("temMensagem", leitura.getMensagemDeQuemEncontrou() != null);
+        conteudo.put("modoPerdido", tag.isModoPerdido());
         // O telefone de quem encontrou NAO entra aqui: o corpo da notificacao
         // vira log e fila. Ele fica so na tabela de leituras, e o tutor o ve
         // no painel, sob autenticacao.

@@ -24,10 +24,13 @@ public class EnvioEmail implements CanalEnvio {
      * motivo do seed de tags: o conteudo carrega um passe de entrada na conta.
      */
     private final boolean registrarConteudo;
+    private final ModeloEmail modelos;
 
     public EnvioEmail(
+            ModeloEmail modelos,
             @org.springframework.beans.factory.annotation.Value("${conectapet.notificacao.log-conteudo:false}")
             boolean registrarConteudo) {
+        this.modelos = modelos;
         this.registrarConteudo = registrarConteudo;
     }
 
@@ -38,10 +41,16 @@ public class EnvioEmail implements CanalEnvio {
 
     @Override
     public void enviar(Notificacao n) {
+        // A mensagem e montada aqui, e nao no provedor, para que trocar SES por
+        // Resend nao leve junto o texto que o cliente le.
+        ModeloEmail.Mensagem m = modelos.montar(n);
+
         // O destinatario e mascarado: e-mail nao entra em log em nivel INFO.
-        log.info("[e-mail simulado] tipo={} para={}", n.getTipo(), mascarar(n.getDestinatario()));
+        log.info("[e-mail simulado] tipo={} para={} assunto=\"{}\"",
+                n.getTipo(), mascarar(n.getDestinatario()), m.assunto());
+
         if (registrarConteudo) {
-            log.warn("[e-mail simulado] conteudo={} <- SO EM DESENVOLVIMENTO", n.getConteudo());
+            log.warn("[e-mail simulado] corpo:\n{}\n<- SO EM DESENVOLVIMENTO", m.texto());
         }
     }
 
