@@ -1,0 +1,91 @@
+---
+export const prerender = false;
+
+import Base from '../layouts/Base.astro';
+import { chamar, redirecionarCom } from '../lib/api';
+
+const next = Astro.url.searchParams.get('next') || '/app';
+let erro: string | null = null;
+let campos: Record<string, string> = {};
+let form = { nome: '', email: '', telefonePrincipal: '' };
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario: trata como requisicao invalida, nao como
+    // erro de servidor.
+    return new Response(null, { status: 303, headers: { Location: Astro.url.pathname } });
+  }
+  form = {
+    nome: String(d.get('nome') ?? ''),
+    email: String(d.get('email') ?? ''),
+    telefonePrincipal: String(d.get('telefone') ?? ''),
+  };
+  const senha = String(d.get('senha') ?? '');
+
+  const r = await chamar('/api/auth/registrar', {
+    metodo: 'POST',
+    corpo: { ...form, senha },
+  });
+
+  if (r.ok) {
+    // Nao mandamos ninguem verificar e-mail agora: o codigo de ativacao ja
+    // prova posse da embalagem, e desviar para a caixa de entrada com a tag na
+    // mao e o jeito mais rapido de perder o cliente.
+    return redirecionarCom(next, r.cookies);
+  }
+  erro = r.status === 409 ? 'Este e-mail já tem conta. Tente entrar.' : r.erro;
+  campos = r.campos;
+}
+---
+
+<Base titulo="Criar conta" passo={{ atual: 1, total: 4 }}>
+  <h1>Criar sua conta</h1>
+  <p class="sub">
+    O telefone é o que aparece para quem encontrar seu pet. Você escolhe depois
+    o que fica visível.
+  </p>
+
+  {erro && <p class="aviso" role="alert">{erro}</p>}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="nome">Seu nome</label>
+      <input id="nome" name="nome" autocomplete="name" required
+             value={form.nome} aria-invalid={campos.nome ? 'true' : undefined} />
+      {campos.nome && <p class="erro-campo">{campos.nome}</p>}
+    </div>
+
+    <div class="campo">
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="email"
+             inputmode="email" required value={form.email}
+             aria-invalid={campos.email ? 'true' : undefined} />
+      {campos.email && <p class="erro-campo">{campos.email}</p>}
+    </div>
+
+    <div class="campo">
+      <label for="telefone">Telefone com WhatsApp</label>
+      <input id="telefone" name="telefone" type="tel" autocomplete="tel"
+             inputmode="tel" placeholder="(11) 99999-0000" required
+             value={form.telefonePrincipal} />
+      <p class="ajuda">É este número que quem achar seu pet vai ver.</p>
+    </div>
+
+    <div class="campo">
+      <label for="senha">Senha</label>
+      <input id="senha" name="senha" type="password" autocomplete="new-password"
+             minlength="10" required />
+      <p class="ajuda">Ao menos 10 caracteres.</p>
+      {campos.senha && <p class="erro-campo">{campos.senha}</p>}
+    </div>
+
+    <button class="btn btn--principal" type="submit">Criar conta</button>
+  </form>
+
+  <p class="rodape-link">
+    Já tem conta? <a class="link" href={`/entrar?next=${encodeURIComponent(next)}`}>Entrar</a>
+  </p>
+</Base>

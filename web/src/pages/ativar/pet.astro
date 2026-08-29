@@ -1,0 +1,113 @@
+---
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { chamar, normalizarCodigo } from '../../lib/api';
+
+const cookie = Astro.request.headers.get('cookie');
+const sessao = await chamar('/api/me', { cookie });
+if (!sessao.ok) return Astro.redirect('/ativar');
+
+const codigo = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
+const tags = await chamar<any[]>('/api/tags', { cookie });
+const tag = tags.dados?.find((t) => t.codigoPublico === codigo);
+if (!tag) return Astro.redirect('/ativar/codigo');
+
+let erro: string | null = null;
+let campos: Record<string, string> = {};
+let form = { nome: '', especie: 'CACHORRO', raca: '', cidade: '', estado: '' };
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario: trata como requisicao invalida, nao como
+    // erro de servidor.
+    return new Response(null, { status: 303, headers: { Location: Astro.url.pathname } });
+  }
+  form = {
+    nome: String(d.get('nome') ?? ''),
+    especie: String(d.get('especie') ?? 'CACHORRO'),
+    raca: String(d.get('raca') ?? ''),
+    cidade: String(d.get('cidade') ?? ''),
+    estado: String(d.get('estado') ?? '').toUpperCase(),
+  };
+
+  // Salva neste passo. Um formulário longo que perde tudo ao errar um campo é
+  // onde o cadastro morre.
+  const r = await chamar<any>('/api/pets', {
+    metodo: 'POST',
+    cookie,
+    corpo: {
+      nome: form.nome,
+      especie: form.especie,
+      raca: form.raca || null,
+      cidade: form.cidade || null,
+      estado: form.estado || null,
+      tagUuid: tag.uuid,
+    },
+  });
+
+  if (r.ok) return Astro.redirect('/ativar/pronto', 303);
+  erro = r.erro;
+  campos = r.campos;
+}
+---
+
+<Base titulo="Sobre o pet" passo={{ atual: 3, total: 4 }}>
+  <h1>Quem é o seu pet?</h1>
+  <p class="sub">
+    Só o essencial agora. Saúde, contatos de emergência e foto você adiciona
+    depois, no painel.
+  </p>
+
+  <p class="aviso aviso--calmo">
+    <span>Tag <strong>{codigo}</strong> ativada. Falta o perfil.</span>
+  </p>
+
+  {erro && <p class="aviso" role="alert">{erro}</p>}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="nome">Nome do pet</label>
+      <input id="nome" name="nome" required maxlength="60" autofocus
+             value={form.nome} aria-invalid={campos.nome ? 'true' : undefined} />
+      {campos.nome && <p class="erro-campo">{campos.nome}</p>}
+    </div>
+
+    <div class="campo">
+      <label for="especie">Espécie</label>
+      <select id="especie" name="especie">
+        <option value="CACHORRO" selected={form.especie === 'CACHORRO'}>Cachorro</option>
+        <option value="GATO" selected={form.especie === 'GATO'}>Gato</option>
+        <option value="OUTRO" selected={form.especie === 'OUTRO'}>Outro</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="raca">Raça <span class="opcional">(opcional)</span></label>
+      <input id="raca" name="raca" maxlength="60" value={form.raca}
+             placeholder="Vira-lata, Beagle…" />
+    </div>
+
+    <div class="campo">
+      <label for="cidade">Cidade <span class="opcional">(opcional)</span></label>
+      <input id="cidade" name="cidade" maxlength="80" value={form.cidade} />
+      <p class="ajuda">Ajuda quem encontrou a saber se o pet está longe de casa. O endereço completo nunca aparece.</p>
+    </div>
+
+    <div class="campo">
+      <label for="estado">Estado <span class="opcional">(opcional)</span></label>
+      <input id="estado" name="estado" maxlength="2" minlength="2" value={form.estado}
+             placeholder="SP" style="max-width:120px" />
+    </div>
+
+    <button class="btn btn--principal" type="submit">Salvar e continuar</button>
+  </form>
+</Base>
+
+<style>
+  /* Marcar o que é opcional é mais rápido de ler que asterisco no obrigatório. */
+  .opcional { font-weight:400; color:var(--navy-700); }
+</style>

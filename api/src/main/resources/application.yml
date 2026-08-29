@@ -115,6 +115,9 @@ logging:
     br.com.conectapet: DEBUG
     org.hibernate.SQL: DEBUG
 conectapet:
+  cookie:
+    # http://localhost nao aceita cookie Secure em alguns navegadores
+    seguro: false
   seed:
     # Gera um lote de 10 tags e imprime os codigos de ativacao no console.
     # So no perfil dev: em qualquer outro isso seria vazamento.

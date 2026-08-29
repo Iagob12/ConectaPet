@@ -1,0 +1,72 @@
+---
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { chamar, normalizarCodigo } from '../../lib/api';
+
+const cookie = Astro.request.headers.get('cookie');
+const sessao = await chamar('/api/me', { cookie });
+if (!sessao.ok) return Astro.redirect('/ativar');
+
+const codigo = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
+if (!codigo) return Astro.redirect('/app');
+
+// O preview vem do MESMO endpoint publico que um estranho na rua consome.
+// Montar uma previa a partir dos dados do painel mostraria o que o tutor
+// cadastrou, nao o que o mundo enxerga — que e justamente a duvida dele.
+const perfil = await chamar<any>(`/api/public/tags/${codigo}`);
+const p = perfil.dados;
+const ativo = p?.estado === 'ATIVO';
+
+Astro.cookies.delete('cp_ativando', { path: '/' });
+---
+
+<Base titulo="Tudo pronto" passo={{ atual: 4, total: 4 }}>
+  <h1>{ativo ? 'Pronto! Sua tag está ativa' : 'Quase lá'}</h1>
+  <p class="sub">
+    {ativo
+      ? 'É exatamente isto que uma pessoa vê ao encostar o celular na tag do seu pet.'
+      : 'Falta pouco para a tag começar a funcionar.'}
+  </p>
+
+  {ativo ? (
+    <>
+      <div class="previa">
+        <p class="previa__rotulo">Prévia pública</p>
+        <div class="previa__tela">
+          <p class="previa__nome">{p.pet.nome}</p>
+          {p.pet.cidade && <p class="previa__meta">{p.pet.cidade}{p.pet.estado ? `, ${p.pet.estado}` : ''}</p>}
+          {p.tutor?.telefoneExibicao && <p class="previa__linha">Ligar para {p.tutor.nome} — {p.tutor.telefoneExibicao}</p>}
+          {p.tutor?.whatsappExibicao && <p class="previa__linha">WhatsApp — {p.tutor.whatsappExibicao}</p>}
+          {p.saude && <p class="previa__linha">Informações de saúde visíveis</p>}
+          {p.contatosEmergencia?.length > 0 && <p class="previa__linha">{p.contatosEmergencia.length} contato(s) de emergência</p>}
+          {!p.pet.numeroMicrochip && <p class="previa__oculto">Microchip oculto</p>}
+        </div>
+      </div>
+
+      <div class="cartao" style="margin-top:20px">
+        <a class="btn btn--principal" href={`/p/${codigo}`}>Ver a página de verdade</a>
+        <a class="btn btn--secundario" href="/app">Adicionar foto e saúde</a>
+      </div>
+    </>
+  ) : (
+    <div class="cartao">
+      <p style="margin-top:0">
+        A tag ainda não está exibindo o perfil. Normalmente falta um telefone
+        visível no seu cadastro.
+      </p>
+      <a class="btn btn--principal" href="/app">Ir para o painel</a>
+    </div>
+  )}
+</Base>
+
+<style>
+  .previa { border:2px dashed var(--navy-900); border-radius:24px; padding:16px; background:var(--sand-100); }
+  .previa__rotulo { margin:0 0 12px; font-size:13px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--navy-700); }
+  .previa__tela { background:var(--white); border:2px solid var(--navy-900); border-radius:16px; padding:16px; }
+  .previa__nome { margin:0; font-size:24px; font-weight:800; color:var(--navy-900); }
+  .previa__meta { margin:2px 0 12px; font-size:15px; }
+  .previa__linha { margin:0 0 6px; font-size:16px; color:var(--navy-900); }
+  .previa__oculto { margin:10px 0 0; font-size:14px; color:var(--navy-700); font-style:italic; }
+</style>

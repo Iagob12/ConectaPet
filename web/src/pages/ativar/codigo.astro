@@ -1,0 +1,156 @@
+---
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { chamar, normalizarCodigo, caractereInvalido } from '../../lib/api';
+
+const cookie = Astro.request.headers.get('cookie');
+const sessao = await chamar<{ nome: string }>('/api/me', { cookie });
+if (!sessao.ok) return Astro.redirect('/ativar');
+
+const guardado = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
+
+let erro: string | null = null;
+let dica: string | null = null;
+let codigoPublico = guardado;
+let codigoAtivacao = '';
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario: trata como requisicao invalida, nao como
+    // erro de servidor.
+    return new Response(null, { status: 303, headers: { Location: Astro.url.pathname } });
+  }
+  codigoPublico = normalizarCodigo(String(d.get('codigoPublico') ?? ''));
+  codigoAtivacao = normalizarCodigo(String(d.get('codigoAtivacao') ?? ''));
+
+  // Valida a forma ANTES de enviar: são 5 tentativas por hora, e gastar uma
+  // com erro de leitura do cartão seria punir quem está só tentando ativar a
+  // própria tag.
+  const ruimPublico = caractereInvalido(codigoPublico);
+  const ruimAtivacao = caractereInvalido(codigoAtivacao);
+
+  if (ruimPublico || ruimAtivacao) {
+    const c = ruimPublico ?? ruimAtivacao;
+    // Orienta, não adivinha. Trocar 0 por O automaticamente esconderia o
+    // engano e faria a pessoa errar de novo sem entender por quê.
+    const parecidos: Record<string, string> = {
+      '0': 'O', 'O': '0', '1': 'I ou L', 'I': '1', 'L': '1', 'U': 'V',
+    };
+    erro = `O caractere "${c}" não existe nos nossos códigos.`;
+    dica = parecidos[c]
+      ? `Confira no cartão: pode ser um "${parecidos[c]}". Nossos códigos nunca usam 0, O, I, 1, L nem U.`
+      : 'Nossos códigos usam apenas números de 2 a 9 e letras, sem 0, O, I, 1, L nem U.';
+  } else if (codigoPublico.length !== 10 || codigoAtivacao.length !== 8) {
+    erro = 'O código da tag tem 10 caracteres e o de ativação tem 8.';
+  } else {
+    const r = await chamar('/api/tags/reivindicar', {
+      metodo: 'POST',
+      cookie,
+      corpo: { codigoPublico, codigoAtivacao },
+    });
+
+    if (r.ok) {
+      Astro.cookies.set('cp_ativando', codigoPublico, {
+        path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7,
+      });
+      // 303 e nao 302: forca a proxima requisicao a ser GET. Com 302 o
+      // cliente reenvia o POST, e um F5 na tela seguinte duplicaria o cadastro.
+      return Astro.redirect('/ativar/pet', 303);
+    }
+
+    // Cada estado tem uma saída diferente. Uma mensagem só para os três
+    // deixaria a pessoa sem saber o que fazer a seguir.
+    if (r.status === 403) {
+      erro = 'Código de ativação incorreto.';
+      dica = 'Confira o cartão que veio dentro da embalagem. Ele não é o código impresso na tag.';
+    } else if (r.status === 409) {
+      erro = 'Esta tag já tem dono.';
+      dica = 'Se você a recebeu de outra pessoa, peça a ela um código de transferência — é assim que a tag muda de titular.';
+    } else if (r.status === 423) {
+      erro = 'Muitas tentativas seguidas.';
+      dica = 'Por segurança, aguarde uma hora antes de tentar de novo. Se não achar o cartão, fale com a gente.';
+    } else {
+      erro = r.erro;
+    }
+  }
+}
+---
+
+<Base titulo="Código de ativação" passo={{ atual: 2, total: 4 }}>
+  <h1>Onde está o código de ativação</h1>
+  <p class="sub">
+    Ele vem impresso no cartão dentro da caixa — <strong>não é</strong> o código
+    gravado na tag. São 8 caracteres.
+  </p>
+
+  <!-- A ilustração existe porque é aqui que o suporte recebe ligação se a
+       instrução for vaga: as duas peças vêm na mesma embalagem. -->
+  <svg class="ilustra" viewBox="0 0 320 150" role="img"
+       aria-label="Dentro da embalagem vêm a tag redonda e um cartão com o código de ativação de 8 caracteres.">
+    <rect x="8" y="18" width="304" height="118" rx="16" fill="#FAF3E7"
+          stroke="#22313A" stroke-width="3" stroke-dasharray="9 7" />
+    <circle cx="72" cy="77" r="34" fill="#fff" stroke="#22313A" stroke-width="3" />
+    <circle cx="72" cy="36" r="8" fill="none" stroke="#22313A" stroke-width="3" />
+    <path d="M68 66a11 11 0 0 1 0 22M77 60a20 20 0 0 1 0 34" fill="none"
+          stroke="#2FA8A5" stroke-width="3.5" stroke-linecap="round" />
+    <text x="72" y="128" text-anchor="middle" font-size="12" fill="#3B4E59">a tag</text>
+    <rect x="132" y="46" width="160" height="62" rx="10" fill="#fff"
+          stroke="#22313A" stroke-width="3" />
+    <text x="212" y="70" text-anchor="middle" font-size="10" fill="#3B4E59">código de ativação</text>
+    <text x="212" y="93" text-anchor="middle" font-size="20" font-weight="700"
+          font-family="monospace" fill="#22313A">K7M2PQ9X</text>
+    <text x="212" y="128" text-anchor="middle" font-size="12" fill="#3B4E59">o cartão</text>
+  </svg>
+
+  {erro && (
+    <p class="aviso" role="alert">
+      <span><strong>{erro}</strong>{dica && <><br />{dica}</>}</span>
+    </p>
+  )}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="codigoPublico">Código da tag</label>
+      <input id="codigoPublico" name="codigoPublico" class="mono" required
+             maxlength="10" minlength="10" autocapitalize="characters"
+             autocomplete="off" spellcheck="false" value={codigoPublico}
+             placeholder="10 caracteres" />
+      <p class="ajuda">Já veio preenchido se você chegou pelo link da tag.</p>
+    </div>
+
+    <div class="campo">
+      <label for="codigoAtivacao">Código de ativação</label>
+      <input id="codigoAtivacao" name="codigoAtivacao" class="mono" required
+             maxlength="8" minlength="8" autocapitalize="characters"
+             autocomplete="off" spellcheck="false" value={codigoAtivacao}
+             placeholder="8 caracteres do cartão" autofocus />
+      <p class="ajuda">Sem 0, O, I, 1, L nem U — esses nunca aparecem nos nossos códigos.</p>
+    </div>
+
+    <button class="btn btn--principal" type="submit">Ativar minha tag</button>
+  </form>
+
+  <p class="rodape-link">Perdeu o cartão? <a class="link" href="/">Fale com a gente</a></p>
+</Base>
+
+<style>
+  .ilustra { display:block; width:100%; height:auto; margin-bottom:20px; }
+  .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; text-transform:uppercase; }
+</style>
+
+<script>
+  // Conveniência: caixa alta e sem espaços enquanto digita. A validação de
+  // verdade é a do servidor — isto aqui só evita atrito.
+  for (const id of ['codigoPublico', 'codigoAtivacao']) {
+    const campo = document.getElementById(id) as HTMLInputElement | null;
+    campo?.addEventListener('input', () => {
+      const posicao = campo.selectionStart;
+      campo.value = campo.value.toUpperCase().replace(/[\s-]/g, '');
+      campo.setSelectionRange(posicao, posicao);
+    });
+  }
+</script>

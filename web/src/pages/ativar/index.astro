@@ -1,0 +1,55 @@
+---
+// Entrada do fluxo de ativacao.
+//
+// O codigo publico chega pela URL (a pessoa veio de /p/{codigo}) e e guardado
+// num cookie de servidor. Nao uso sessionStorage: ele e por aba, e o link de
+// verificacao de e-mail abre numa aba nova — contexto novo, storage vazio.
+// Seria exatamente o cenario que precisamos cobrir.
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { chamar, normalizarCodigo, caractereInvalido } from '../../lib/api';
+
+const codigoUrl = normalizarCodigo(Astro.url.searchParams.get('codigo'));
+const codigoCookie = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
+const codigo = codigoUrl || codigoCookie;
+
+if (codigo && !caractereInvalido(codigo)) {
+  // Sobrevive a sair da URL e voltar.
+  Astro.cookies.set('cp_ativando', codigo, {
+    path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
+const sessao = await chamar<{ nome: string }>('/api/me', {
+  cookie: Astro.request.headers.get('cookie'),
+});
+
+// Ja logado: pula direto para o codigo de ativacao.
+if (sessao.ok) return Astro.redirect('/ativar/codigo');
+
+const proximo = encodeURIComponent('/ativar/codigo');
+---
+
+<Base titulo="Ativar minha tag" passo={{ atual: 1, total: 4 }}>
+  <h1>Vamos ativar sua tag</h1>
+  <p class="sub">
+    Em poucos passos o perfil do seu pet fica pronto. Primeiro, crie sua conta
+    ou entre, se já tiver uma.
+  </p>
+
+  {codigo && (
+    <p class="aviso aviso--calmo">
+      <span>Guardamos a tag <strong>{codigo}</strong>. Ela continua aqui mesmo que você saia e volte.</span>
+    </p>
+  )}
+
+  <div class="cartao">
+    <a class="btn btn--principal" href={`/criar-conta?next=${proximo}`}>Criar minha conta</a>
+    <a class="btn btn--secundario" href={`/entrar?next=${proximo}`}>Já tenho conta</a>
+  </div>
+
+  <p class="rodape-link">
+    Ainda não recebeu sua tag? <a class="link" href="/">Conheça a ConectaPet</a>
+  </p>
+</Base>

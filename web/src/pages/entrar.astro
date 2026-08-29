@@ -1,0 +1,58 @@
+---
+export const prerender = false;
+
+import Base from '../layouts/Base.astro';
+import { chamar, redirecionarCom } from '../lib/api';
+
+const next = Astro.url.searchParams.get('next') || '/app';
+let erro: string | null = null;
+let email = '';
+
+if (Astro.request.method === 'POST') {
+  let dados: FormData;
+  try {
+    dados = await Astro.request.formData();
+  } catch {
+    // POST sem corpo de formulario: trata como requisicao invalida, nao como
+    // erro de servidor.
+    return new Response(null, { status: 303, headers: { Location: Astro.url.pathname } });
+  }
+  email = String(dados.get('email') ?? '');
+  const senha = String(dados.get('senha') ?? '');
+
+  const r = await chamar('/api/auth/login', { metodo: 'POST', corpo: { email, senha } });
+
+  if (r.ok) {
+    // A API emite os cookies; a pagina so repassa. O token nunca chega perto
+    // de JavaScript do cliente.
+    return redirecionarCom(next, r.cookies);
+  }
+  erro = r.status === 423
+    ? 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.'
+    : 'E-mail ou senha incorretos.';
+}
+---
+
+<Base titulo="Entrar">
+  <h1>Entrar</h1>
+  <p class="sub">Use o e-mail e a senha da sua conta ConectaPet.</p>
+
+  {erro && <p class="aviso" role="alert">{erro}</p>}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="email"
+             inputmode="email" required value={email} />
+    </div>
+    <div class="campo">
+      <label for="senha">Senha</label>
+      <input id="senha" name="senha" type="password" autocomplete="current-password" required />
+    </div>
+    <button class="btn btn--principal" type="submit">Entrar</button>
+  </form>
+
+  <p class="rodape-link">
+    Não tem conta? <a class="link" href={`/criar-conta?next=${encodeURIComponent(next)}`}>Criar agora</a>
+  </p>
+</Base>
