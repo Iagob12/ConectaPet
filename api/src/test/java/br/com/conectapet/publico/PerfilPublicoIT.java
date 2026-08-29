@@ -64,6 +64,10 @@ class PerfilPublicoIT extends TesteIntegracao {
         p.setEstado("SP");
         p.setNumeroMicrochip("900123456789012");
         nina = petServico.criar(p, tag.getUuid(), ana);
+        // Reler: criar o pet ligou a tag a ele NO BANCO, e o objeto em memoria
+        // ficou com petId nulo. Sem isto os testes de notificacao rodavam contra
+        // uma tag que, para o servico, nao tem pet nenhum.
+        tag = tags.findByUuid(tag.getUuid()).orElseThrow();
 
         PetSaude s = new PetSaude();
         s.setAlergias("Alergia a dipirona");
@@ -129,8 +133,15 @@ class PerfilPublicoIT extends TesteIntegracao {
 
         ligar(v -> { v.setMostrarTelefone(false); v.setMostrarWhatsapp(true); });
         String soWhats = serializar();
-        assertThat(soWhats).doesNotContain("telefoneE164");
-        assertThat(soWhats).contains("whatsapp");
+
+        // A assercao olha o objeto do TUTOR, nao o JSON inteiro: "telefoneE164"
+        // tambem e o nome do campo do contato de emergencia, que continua
+        // visivel de proposito. Varrer o documento todo reprovava o
+        // comportamento certo.
+        var tutor = json.readTree(soWhats).path("tutor");
+        assertThat(tutor.has("telefoneE164")).isFalse();
+        assertThat(tutor.has("telefoneExibicao")).isFalse();
+        assertThat(tutor.path("whatsappE164").asText()).isEqualTo("5511999990000");
     }
 
     @Test
