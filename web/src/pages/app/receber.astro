@@ -1,0 +1,100 @@
+---
+export const prerender = false;
+
+import Painel from '../../layouts/Painel.astro';
+import { paraLogin } from '../../lib/painel';
+import { verDepois, normalizarCodigo, caractereInvalido } from '../../lib/api';
+
+let erro: string | null = null;
+let dica: string | null = null;
+let codigo = normalizarCodigo(Astro.url.searchParams.get('codigo'));
+
+const sessao = await Astro.locals.api('/api/me');
+if (!sessao.ok) return paraLogin(Astro);
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  codigo = normalizarCodigo(String(d.get('codigo') ?? ''));
+
+  const ruim = caractereInvalido(codigo);
+  if (ruim) {
+    erro = `O caractere "${ruim}" não existe nos nossos códigos.`;
+    dica = 'Nossos códigos nunca usam 0, O, I, 1, L nem U.';
+  } else {
+    const r = await Astro.locals.api<{ codigoPublico: string }>('/api/tags/titularidade/aceitar', {
+      metodo: 'POST',
+      corpo: { codigo },
+    });
+    if (r.status === 401) return paraLogin(Astro);
+    // Vai direto para o cadastro do pet: a tag chega sem perfil, e parar em
+    // "recebida com sucesso" deixaria a pessoa com uma tag que não mostra nada.
+    if (r.ok && r.dados?.codigoPublico) {
+      Astro.cookies.set('cp_ativando', r.dados.codigoPublico, {
+        path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7,
+      });
+      return verDepois('/ativar/pet');
+    }
+    if (r.ok) return verDepois('/app?recebida=1');
+
+    if (r.status === 403 || r.status === 404) {
+      erro = 'Código inválido ou já usado.';
+      dica = 'Cada código serve uma vez só e vale por pouco tempo. Peça outro a quem está passando a tag.';
+    } else if (r.status === 410 || r.status === 422) {
+      erro = 'Este código expirou.';
+      dica = 'Peça um novo a quem está passando a tag.';
+    } else {
+      erro = r.erro;
+    }
+  }
+}
+---
+
+<Painel titulo="Receber uma tag" voltar={{ href: '/app', texto: 'Meus pets' }} aba="pets">
+  <h1>Receber uma tag</h1>
+  <p class="sub">
+    Quem está passando a tag gera um código no painel dela. Digite aqui e a tag
+    passa a ser sua.
+  </p>
+  <p class="sub">
+    Ela chega <strong>em branco</strong>: os dados do dono anterior não vêm
+    junto, e o próximo passo é cadastrar o seu pet.
+  </p>
+
+  {erro && (
+    <p class="aviso" role="alert">
+      <span><strong>{erro}</strong>{dica && <><br />{dica}</>}</span>
+    </p>
+  )}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="codigo">Código de transferência</label>
+      <input id="codigo" name="codigo" class="mono" required autocapitalize="characters"
+             autocomplete="off" spellcheck="false" value={codigo} autofocus />
+      <p class="ajuda">Vale por pouco tempo depois de gerado.</p>
+    </div>
+    <button class="btn btn--principal" type="submit">Receber a tag</button>
+  </form>
+
+  <p class="rodape-link">
+    Recebeu uma tag nova, ainda na caixa? <a class="link" href="/ativar">Ative por aqui</a>
+  </p>
+</Painel>
+
+<style>
+  .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; text-transform:uppercase; }
+</style>
+
+<script>
+  const campo = document.getElementById('codigo') as HTMLInputElement | null;
+  campo?.addEventListener('input', () => {
+    const posicao = campo.selectionStart;
+    campo.value = campo.value.toUpperCase().replace(/[\s-]/g, '');
+    campo.setSelectionRange(posicao, posicao);
+  });
+</script>

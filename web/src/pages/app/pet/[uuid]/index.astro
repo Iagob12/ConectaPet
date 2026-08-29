@@ -146,7 +146,10 @@ if (q.has('falhou') && !aviso) aviso = 'Não consegui concluir. Tente de novo.';
     <section class="cartao">
       <h2 class="cartao__titulo">A tag</h2>
       <p class="cartao__nota" style="margin-bottom:8px">Código {tag.codigoPublico} · ativada em {quando(tag.reivindicadaEm)}</p>
-      <a class="btn btn--secundario" style="margin-top:0" href={`/p/${tag.codigoPublico}`}>Ver o que os outros veem</a>
+      <div class="acoes">
+        <a class="btn btn--secundario" style="margin-top:0" href={`/p/${tag.codigoPublico}`}>Ver o que os outros veem</a>
+        <a class="btn btn--secundario" style="margin-top:0" href={`/app/tag/${tag.uuid}`}>Transferir ou desativar</a>
+      </div>
     </section>
   )}
 </Painel>

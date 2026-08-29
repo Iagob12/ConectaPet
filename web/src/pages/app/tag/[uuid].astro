@@ -1,0 +1,218 @@
+---
+export const prerender = false;
+
+import Painel from '../../../layouts/Painel.astro';
+import { paraLogin, quando, type Pet, type Tag, type Conta } from '../../../lib/painel';
+import { verDepois } from '../../../lib/api';
+
+const uuid = Astro.params.uuid!;
+let erro: string | null = null;
+let codigoGerado: { codigo: string; expiraEm: string } | null = null;
+
+if (Astro.request.method === 'POST') {
+  let d: FormData;
+  try {
+    d = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  const acao = String(d.get('acao') ?? '');
+
+  if (acao === 'transferir') {
+    const r = await Astro.locals.api<{ codigo: string; expiraEm: string }>(
+      `/api/tags/${uuid}/titularidade`, { metodo: 'POST' }
+    );
+    if (r.status === 401) return paraLogin(Astro);
+    // O código aparece uma vez só. Redirecionar aqui o perderia, então esta é
+    // a única ação da tela que renderiza em vez de seguir para outra página.
+    if (r.ok) codigoGerado = r.dados;
+    else erro = r.status === 403
+      ? 'Confirme seu e-mail antes de transferir a tag. Você faz isso em “Minha conta”.'
+      : r.erro;
+  }
+
+  if (acao === 'cancelar-transferencia') {
+    const r = await Astro.locals.api(`/api/tags/${uuid}/titularidade`, { metodo: 'DELETE' });
+    if (r.status === 401) return paraLogin(Astro);
+    return verDepois(`${Astro.url.pathname}?${r.ok ? 'cancelada=1' : 'falhou=1'}`);
+  }
+
+  if (acao === 'desativar') {
+    const r = await Astro.locals.api(`/api/tags/${uuid}/desativar`, { metodo: 'POST' });
+    if (r.status === 401) return paraLogin(Astro);
+    if (r.ok) return verDepois('/app?tag-desativada=1');
+    erro = r.erro;
+  }
+
+  if (acao === 'migrar') {
+    const r = await Astro.locals.api(`/api/tags/${uuid}/migrar-perfil`, {
+      metodo: 'POST',
+      corpo: {
+        petUuid: String(d.get('petUuid') ?? ''),
+        desativarTagAnterior: d.get('desativarTagAnterior') != null,
+      },
+    });
+    if (r.status === 401) return paraLogin(Astro);
+    if (r.ok) return verDepois('/app?migrado=1');
+    erro = r.erro;
+  }
+}
+
+const [rt, rp, rc] = await Promise.all([
+  Astro.locals.api<Tag[]>('/api/tags'),
+  Astro.locals.api<Pet[]>('/api/pets'),
+  Astro.locals.api<Conta>('/api/me'),
+]);
+if (rt.status === 401) return paraLogin(Astro);
+
+const tags = rt.dados ?? [];
+const tag = tags.find((t) => t.uuid === uuid);
+if (!tag) return Astro.redirect('/app');
+
+const pets = rp.dados ?? [];
+const pet = pets.find((p) => p.uuid === tag.petUuid) ?? null;
+const conta = rc.dados;
+const desativada = tag.status === 'DESATIVADA';
+
+// Migrar só faz sentido para uma tag sem perfil: é a tag NOVA que recebe o pet
+// que já existe. Numa tag que já tem pet, a ação seria trocar de pet, que é
+// outra coisa e não é isso que o endpoint faz.
+const podeReceberPerfil = !tag.petUuid && !desativada;
+
+const q = Astro.url.searchParams;
+const feito = q.has('cancelada') ? 'Transferência cancelada. O código não vale mais.' : null;
+if (q.has('falhou') && !erro) erro = 'Não consegui concluir. Tente de novo.';
+---
+
+<Painel titulo={`Tag ${tag.codigoPublico}`}
+        voltar={{ href: pet ? `/app/pet/${pet.uuid}` : '/app', texto: pet ? pet.nome : 'Meus pets' }}
+        aba="pets">
+  <h1>Tag {tag.codigoPublico}</h1>
+  <p class="sub">
+    {pet ? `Ligada ao perfil de ${pet.nome}.` : 'Ativada, mas sem perfil ligado a ela.'}
+    {tag.reivindicadaEm && ` Sua desde ${quando(tag.reivindicadaEm)}.`}
+  </p>
+
+  {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+
+  {desativada && (
+    <p class="aviso" role="status">
+      <span>
+        <strong>Esta tag está desativada.</strong><br />
+        Quem encostar o celular nela não vê nada. Isso não tem volta pelo site.
+      </span>
+    </p>
+  )}
+
+  {codigoGerado && (
+    <section class="cartao segredo">
+      <h2 class="cartao__titulo">Código de transferência</h2>
+      <p class="cartao__nota">
+        Anote agora: ele aparece <strong>uma vez só</strong>. Quem digitar este
+        código vira dono da tag, então passe apenas para a pessoa certa.
+      </p>
+      <p class="codigo-grande">{codigoGerado.codigo}</p>
+      <p class="cartao__nota" style="margin-bottom:0">
+        Vale até {quando(codigoGerado.expiraEm)}. A outra pessoa cria a conta
+        dela e usa o código em <strong>Recebi uma tag de outra pessoa</strong>,
+        no painel.
+      </p>
+    </section>
+  )}
+
+  {!desativada && (
+    <>
+      <section class="cartao">
+        <h2 class="cartao__titulo">Passar a tag para outra pessoa</h2>
+        <p class="cartao__nota">
+          Para quando o pet muda de tutor. Gera um código que a outra pessoa
+          digita na conta dela — a partir daí a tag é dela e some da sua lista.
+        </p>
+        {pet && (
+          <p class="aviso" role="status">
+            <span>
+              <strong>O perfil de {pet.nome} não vai junto.</strong><br />
+              A tag chega em branco para a outra pessoa, que cadastra o pet do
+              jeito dela. Seus dados de contato não são passados adiante, e o
+              perfil continua aqui — se quiser, ligue-o depois a outra tag.
+            </span>
+          </p>
+        )}
+
+        {conta && !conta.emailVerificado ? (
+          <p class="aviso" role="status" style="margin:0">
+            <span>
+              <strong>Confirme seu e-mail primeiro.</strong><br />
+              Transferir uma tag é dar a outra pessoa os dados de contato ligados
+              a ela, então pedimos um endereço que sabemos ser seu.
+              <br /><a class="link" href="/app/conta">Confirmar meu e-mail</a>
+            </span>
+          </p>
+        ) : (
+          <form method="POST">
+            <input type="hidden" name="acao" value="transferir" />
+            <button class="btn btn--principal" type="submit">Gerar código de transferência</button>
+          </form>
+        )}
+
+        <form method="POST">
+          <input type="hidden" name="acao" value="cancelar-transferencia" />
+          <button class="btn btn--secundario" type="submit">Cancelar uma transferência pendente</button>
+        </form>
+      </section>
+
+      {podeReceberPerfil && pets.length > 0 && (
+        <section class="cartao">
+          <h2 class="cartao__titulo">Usar esta tag para um pet que já tenho</h2>
+          <p class="cartao__nota">
+            Para quando a tag antiga se perdeu ou quebrou. O perfil inteiro passa
+            para esta tag — foto, saúde, contatos e histórico.
+          </p>
+          <form method="POST">
+            <input type="hidden" name="acao" value="migrar" />
+            <div class="campo">
+              <label for="petUuid">Qual pet</label>
+              <select id="petUuid" name="petUuid" required>
+                {pets.map((p) => <option value={p.uuid}>{p.nome}</option>)}
+              </select>
+            </div>
+            <div class="opcao">
+              <input type="checkbox" id="desativarTagAnterior" name="desativarTagAnterior" checked />
+              <div>
+                <label for="desativarTagAnterior">Desativar a tag antiga</label>
+                <p>
+                  Deixe marcado se ela se perdeu. Quem achar a tag velha não vê
+                  mais os seus dados.
+                </p>
+              </div>
+            </div>
+            <button class="btn btn--principal" type="submit">Mover o perfil para esta tag</button>
+          </form>
+        </section>
+      )}
+
+      <section class="cartao perigo">
+        <h2 class="cartao__titulo" style="color:#fff">Desativar esta tag</h2>
+        <p class="cartao__nota" style="color:#fff">
+          Para tag perdida ou roubada. Quem encostar o celular nela deixa de ver
+          qualquer coisa, na hora. <strong>Não tem como reverter pelo site.</strong>
+        </p>
+        <form method="POST">
+          <input type="hidden" name="acao" value="desativar" />
+          <button class="btn btn--secundario" style="margin-top:0" type="submit">
+            Desativar para sempre
+          </button>
+        </form>
+      </section>
+    </>
+  )}
+</Painel>
+
+<style>
+  .codigo-grande {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 30px; font-weight: 700; letter-spacing: .16em;
+    color: var(--navy-900); margin: 8px 0 16px; word-break: break-all;
+  }
+</style>

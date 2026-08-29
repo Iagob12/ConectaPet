@@ -27,11 +27,18 @@ for (const t of tags) {
 // de volta. Sem isso ela some do painel e a pessoa acha que perdeu a tag.
 const semPerfil = tags.filter((t) => !t.petUuid && t.status !== 'DESATIVADA');
 const perdidos = pets.filter((p) => tagDoPet.get(p.uuid)?.modoPerdido);
+
+const q = Astro.url.searchParams;
+const feito = q.has('recebida') ? 'Tag recebida. O perfil dela já está aqui.'
+  : q.has('tag-desativada') ? 'Tag desativada. Ela não mostra mais nada a quem encostar o celular.'
+  : q.has('migrado') ? 'Perfil movido para a tag nova.'
+  : null;
 ---
 
 <Painel titulo="Meus pets" aba="pets">
   <h1>Meus pets</h1>
 
+  {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
   {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
 
   {perdidos.length > 0 && (
@@ -65,15 +72,24 @@ const perdidos = pets.filter((p) => tagDoPet.get(p.uuid)?.modoPerdido);
               <p class="cartao__nota" style="margin-bottom:8px">
                 {[ESPECIES[p.especie] ?? p.especie, p.raca].filter(Boolean).join(' · ')}
               </p>
-              {t?.modoPerdido
-                ? <span class="etiqueta etiqueta--perdido">Modo perdido</span>
-                : p.pronto
-                  ? <span class="etiqueta etiqueta--ativa">Tag ativa</span>
-                  : <span class="etiqueta etiqueta--alerta">Falta um passo</span>}
+              {!t
+                ? <span class="etiqueta">Sem tag</span>
+                : t.modoPerdido
+                  ? <span class="etiqueta etiqueta--perdido">Modo perdido</span>
+                  : p.pronto
+                    ? <span class="etiqueta etiqueta--ativa">Tag ativa</span>
+                    : <span class="etiqueta etiqueta--alerta">Falta um passo</span>}
             </div>
           </div>
 
-          {!p.pronto && p.oQueFalta && (
+          {!t && (
+            <p class="cartao__nota" style="margin:16px 0 0">
+              Este perfil não está ligado a nenhuma tag. Ative uma tag nova e
+              escolha mover o perfil dele para ela.
+            </p>
+          )}
+
+          {t && !p.pronto && p.oQueFalta && (
             <p class="cartao__nota" style="margin:16px 0 0"><strong>Para a tag funcionar:</strong> {p.oQueFalta}</p>
           )}
 
@@ -94,9 +110,12 @@ const perdidos = pets.filter((p) => tagDoPet.get(p.uuid)?.modoPerdido);
     ))}
   </div>
 
-  {(pets.length > 0 || semPerfil.length > 0) && (
-    <p class="rodape-link"><a class="link" href="/ativar">Ativar outra tag</a></p>
-  )}
+  <p class="rodape-link" style="margin-top:28px">
+    <a class="link" href="/ativar">Ativar uma tag nova</a>
+  </p>
+  <p class="rodape-link" style="margin-top:8px">
+    <a class="link" href="/app/receber">Recebi uma tag de outra pessoa</a>
+  </p>
 
   {/* Quem administra tambem e tutor: sem este link, a unica forma de achar o
       administrativo seria decorar o endereco. */}

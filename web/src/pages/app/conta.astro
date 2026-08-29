@@ -18,6 +18,11 @@ if (Astro.request.method === 'POST') {
     // para a propria URL fazia um cliente que repete o POST girar sem fim.
     return new Response('Requisicao invalida.', { status: 400 });
   }
+  if (d.get('acao') === 'reenviar-verificacao') {
+    await Astro.locals.api('/api/me/verificar-email', { metodo: 'POST' });
+    return verDepois('/app/conta?verificacao=1');
+  }
+
   form = {
     nome: texto(d, 'nome'),
     telefonePrincipal: texto(d, 'telefonePrincipal'),
@@ -45,6 +50,7 @@ const v = {
   whatsapp: form?.whatsapp ?? conta.whatsappExibicao ?? '',
 };
 const salvo = Astro.url.searchParams.has('salvo');
+const reenviado = Astro.url.searchParams.has('verificacao');
 ---
 
 <Painel titulo="Minha conta" aba="conta">
@@ -55,6 +61,23 @@ const salvo = Astro.url.searchParams.has('salvo');
   </p>
 
   {salvo && <p class="sucesso" role="status"><span>Dados salvos.</span></p>}
+  {reenviado && (
+    <p class="sucesso" role="status">
+      <span>Link enviado. Confira sua caixa de entrada.</span>
+    </p>
+  )}
+
+  {/* O e-mail nao verificado nao trava a tag, mas trava recuperar a conta e
+      passar a tag adiante — as duas coisas que so aparecem quando ja e tarde. */}
+  {!conta.emailVerificado && (
+    <p class="aviso" role="status">
+      <span>
+        <strong>Seu e-mail ainda não foi confirmado.</strong><br />
+        Sem isso você não consegue recuperar a conta se esquecer a senha, nem
+        transferir uma tag para outra pessoa.
+      </span>
+    </p>
+  )}
   {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
 
   <form class="cartao" method="POST">
@@ -99,7 +122,18 @@ const salvo = Astro.url.searchParams.has('salvo');
     <ul class="lista-limpa">
       <li class="item">
         <p class="item__quando">E-mail</p>
-        <p class="item__oque">{conta.email}</p>
+        <p class="item__oque">
+          {conta.email}
+          {conta.emailVerificado
+            ? <span class="etiqueta etiqueta--ativa" style="margin-left:8px">Confirmado</span>
+            : <span class="etiqueta etiqueta--alerta" style="margin-left:8px">Não confirmado</span>}
+        </p>
+        {!conta.emailVerificado && (
+          <form method="POST" style="margin:8px 0">
+            <input type="hidden" name="acao" value="reenviar-verificacao" />
+            <button class="copiar" type="submit">Enviar link de confirmação</button>
+          </form>
+        )}
         <p class="item__quando">
           Trocar o e-mail muda a forma de recuperar a conta, então ainda não é
           feito por aqui — fale com a gente.

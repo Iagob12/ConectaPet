@@ -1,0 +1,47 @@
+---
+export const prerender = false;
+
+import Base from '../layouts/Base.astro';
+import { chamar } from '../lib/api';
+
+const token = Astro.url.searchParams.get('token') ?? '';
+
+// Confirma no carregamento, sem exigir clique nem sessão: quem abre o link já
+// provou o que precisava provar, que é ter acesso à caixa de entrada. Pedir
+// login aqui travaria justamente quem abriu o e-mail em outro aparelho.
+const r = token
+  ? await chamar('/api/auth/verificar-email', { metodo: 'POST', corpo: { token } })
+  : null;
+
+const ok = r?.ok === true;
+---
+
+<Base titulo={ok ? 'E-mail confirmado' : 'Confirmar e-mail'}>
+  {ok ? (
+    <>
+      <h1>E-mail confirmado</h1>
+      <p class="sub">
+        Agora você consegue recuperar a conta se esquecer a senha, e passar uma
+        tag para outra pessoa.
+      </p>
+      <div class="cartao">
+        <a class="btn btn--principal" href="/app">Ir para os meus pets</a>
+      </div>
+    </>
+  ) : (
+    <>
+      <h1>Não consegui confirmar</h1>
+      <p class="sub">
+        {!token
+          ? 'Este endereço veio sem o código do link. Abra o link do e-mail inteiro.'
+          : r?.erro ?? 'O link não vale mais.'}
+      </p>
+      <div class="cartao">
+        <p style="margin-top:0">
+          Entre na sua conta e peça outro link em “Minha conta”.
+        </p>
+        <a class="btn btn--principal" href="/app/conta">Ir para minha conta</a>
+      </div>
+    </>
+  )}
+</Base>

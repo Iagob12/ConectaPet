@@ -29,10 +29,11 @@ public class AutenticacaoControlador {
     private final UsuarioRepositorio usuarios;
     private final UsuarioAtual usuarioAtual;
     private final RecuperacaoSenhaServico recuperacao;
+    private final VerificacaoEmailServico verificacao;
 
     public AutenticacaoControlador(AutenticacaoServico servico, JwtServico jwt, CookieServico cookies,
                                    PropriedadesJwt props, UsuarioRepositorio usuarios, UsuarioAtual usuarioAtual,
-                                   RecuperacaoSenhaServico recuperacao) {
+                                   RecuperacaoSenhaServico recuperacao, VerificacaoEmailServico verificacao) {
         this.servico = servico;
         this.jwt = jwt;
         this.cookies = cookies;
@@ -40,6 +41,7 @@ public class AutenticacaoControlador {
         this.usuarios = usuarios;
         this.usuarioAtual = usuarioAtual;
         this.recuperacao = recuperacao;
+        this.verificacao = verificacao;
     }
 
     /**
@@ -51,6 +53,9 @@ public class AutenticacaoControlador {
     @PostMapping("/registrar")
     public ResponseEntity<UsuarioResposta> registrar(@Valid @RequestBody RegistroEntrada dto) {
         Usuario u = servico.registrar(dto.email(), dto.senha(), dto.nome(), dto.telefonePrincipal());
+        // Sai no cadastro, mas nao bloqueia nada agora: a sessao ja vale, e o
+        // codigo de ativacao da tag e prova mais forte que um clique em link.
+        verificacao.enviar(u);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .headers(comSessao(u))
                 .body(UsuarioResposta.de(u));
@@ -95,6 +100,13 @@ public class AutenticacaoControlador {
         recuperacao.solicitar(dto.email());
     }
 
+    /** Publico porque quem clica no link do e-mail pode nao estar logado. */
+    @PostMapping("/verificar-email")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmarEmail(@Valid @RequestBody TokenEntrada dto) {
+        verificacao.confirmar(dto.token());
+    }
+
     /**
      * Nao devolve sessao de proposito.
      *
@@ -128,6 +140,8 @@ public class AutenticacaoControlador {
     public record LoginEntrada(@NotBlank @Email String email, @NotBlank String senha) {}
 
     public record EmailEntrada(@NotBlank @Email String email) {}
+
+    public record TokenEntrada(@NotBlank String token) {}
 
     public record ResetEntrada(
             @NotBlank String token,

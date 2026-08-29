@@ -31,16 +31,19 @@ public class ContaControlador {
     private final UsuarioRepositorio usuarios;
     private final AssinaturaRepositorio assinaturas;
     private final UsuarioAtual usuarioAtual;
+    private final br.com.conectapet.autenticacao.VerificacaoEmailServico verificacao;
     private final int tetoContatosFree;
     private final int tetoContatosPlus;
 
     public ContaControlador(UsuarioRepositorio usuarios, AssinaturaRepositorio assinaturas,
                             UsuarioAtual usuarioAtual,
+                            br.com.conectapet.autenticacao.VerificacaoEmailServico verificacao,
                             @org.springframework.beans.factory.annotation.Value("${conectapet.planos.free.teto-contatos}") int tetoContatosFree,
                             @org.springframework.beans.factory.annotation.Value("${conectapet.planos.plus.teto-contatos}") int tetoContatosPlus) {
         this.usuarios = usuarios;
         this.assinaturas = assinaturas;
         this.usuarioAtual = usuarioAtual;
+        this.verificacao = verificacao;
         this.tetoContatosFree = tetoContatosFree;
         this.tetoContatosPlus = tetoContatosPlus;
     }
@@ -66,6 +69,14 @@ public class ContaControlador {
         u.setTelefoneSecundario(Telefone.paraGravar(dto.telefoneSecundario()));
         u.setWhatsapp(Telefone.paraGravar(dto.whatsapp()));
         return montar(usuarios.save(u));
+    }
+
+    /** Sempre 202: reenviar para um e-mail ja verificado nao faz nada, e dizer
+     *  isso de forma diferente nao ajudaria ninguem. */
+    @PostMapping("/verificar-email")
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.ACCEPTED)
+    public void reenviarVerificacao() {
+        verificacao.enviar(carregar());
     }
 
     private Usuario carregar() {

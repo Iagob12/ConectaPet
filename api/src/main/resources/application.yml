@@ -54,6 +54,10 @@ conectapet:
   reset-senha:
     # Curto: e um passe de entrada na conta viajando por e-mail.
     validade: PT1H
+  verificacao-email:
+    # Mais longo que o reset: nao da acesso a nada, so confirma o endereco, e
+    # e comum a pessoa so abrir a caixa de entrada no dia seguinte.
+    validade: P2D
   tag:
     url-publica: ${URL_PUBLICA_TAG:https://conectapet.com.br/p/}
   cors:
