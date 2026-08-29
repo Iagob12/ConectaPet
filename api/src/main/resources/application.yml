@@ -53,6 +53,30 @@ server:
     include-stacktrace: never
   forward-headers-strategy: framework   # IP real atras do proxy da hospedagem
 
+# Sonda de saude, e so ela. O actuator expoe muita coisa por padrao — metricas,
+# variaveis de ambiente, mapeamentos — e nada disso precisa estar de pe para o
+# orquestrador saber se a aplicacao responde.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      # Sem detalhe: "UP" basta para o healthcheck, e o detalhe diria a quem
+      # sondar de fora qual banco esta atras e se ele esta fora do ar.
+      show-details: never
+  health:
+    mail:
+      # Desligado de proposito. A sonda responde "esta instancia consegue
+      # atender?", e nao "toda integracao opcional esta no ar". Com o provedor
+      # de e-mail ausente — que e o padrao — o indicador tenta conectar num
+      # SMTP vazio e derruba a saude inteira: o container nunca ficaria
+      # saudavel, o balanceador nao mandaria trafego, e a pagina de resgate
+      # ficaria fora do ar por causa de uma notificacao que nem e sincrona.
+      # Falha de envio ja e tratada na fila, com nova tentativa.
+      enabled: false
+
 conectapet:
   jwt:
     segredo: ${JWT_SEGREDO}
