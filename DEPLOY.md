@@ -43,8 +43,14 @@ o mínimo viável.
 
 ### 3. O site, na Vercel
 
-Importe o repositório e aponte o diretório raiz para `web/`. O `vercel.json`
-já fixa a região em `gru1` (São Paulo) e o comando de build.
+Importe o repositório e aponte o **diretório raiz para `web/`** — é de lá que a Vercel
+lê o `vercel.json`, então ele mora em `web/vercel.json` e não na raiz do repositório.
+
+**A região não é fixada.** Escolher onde as funções rodam exige plano Pro; no Hobby elas
+ficam na região padrão da conta. Isso enfraquece o argumento de latência que levou a
+escolher São Paulo — mas como a API está em Ohio de qualquer forma, o site renderizando
+nos EUA até reduz o caminho entre os dois. Quando houver Pro, `"regions": ["gru1"]` no
+`vercel.json` traz o site para São Paulo.
 
 Variáveis a definir no painel:
 
