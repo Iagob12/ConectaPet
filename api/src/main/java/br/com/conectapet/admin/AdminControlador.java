@@ -47,12 +47,14 @@ public class AdminControlador {
     private final UsuarioAtual usuarioAtual;
     private final String urlPublica;
     private final String ipPimenta;
+    private final br.com.conectapet.seguranca.IpDoCliente ipDoCliente;
 
     public AdminControlador(LoteServico loteServico, LoteRepositorio lotes, TagRepositorio tags,
                             MetricasServico metricas, ReautenticacaoServico reautenticacao,
                             AuditoriaServico auditoria, UsuarioAtual usuarioAtual,
                             @Value("${conectapet.tag.url-publica}") String urlPublica,
-                            @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta) {
+                            @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
+                              br.com.conectapet.seguranca.IpDoCliente ipDoCliente) {
         this.loteServico = loteServico;
         this.lotes = lotes;
         this.tags = tags;
@@ -62,6 +64,7 @@ public class AdminControlador {
         this.usuarioAtual = usuarioAtual;
         this.urlPublica = urlPublica;
         this.ipPimenta = ipPimenta;
+        this.ipDoCliente = ipDoCliente;
     }
 
     // ---- Reautenticacao ----------------------------------------------------
@@ -197,7 +200,7 @@ public class AdminControlador {
     // ---- Apoio -------------------------------------------------------------
 
     private String ipHash(HttpServletRequest req) {
-        return Hashes.ipPseudonimo(req.getRemoteAddr(), ipPimenta);
+        return Hashes.ipPseudonimo(ipDoCliente.de(req), ipPimenta);
     }
 
     // ---- DTOs --------------------------------------------------------------

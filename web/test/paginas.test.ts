@@ -41,6 +41,34 @@ describe('página de resgate — a tela mais importante', () => {
     expect(html).toContain('wa.me/5511988887777');
   });
 
+  it('tem um h1, e ele é o nome do pet', async () => {
+    // Sem h1, quem usa leitor de tela chega numa página sem título e com
+    // <h2> soltos — a lista de cabeçalhos, que é como essas pessoas se
+    // orientam, vem quebrada. O nome do pet já era o maior texto da tela;
+    // agora ele também é o cabeçalho, e a hierarquia fecha.
+    const html = await (await pegar(`/p/${ATIVA}`)).text();
+
+    const inicioH1 = html.indexOf('<h1');
+    expect(inicioH1).toBeGreaterThan(-1);
+    expect(html.slice(inicioH1, html.indexOf('</h1>', inicioH1))).toContain('Thor');
+
+    // Nenhum <h2> pode aparecer antes do <h1>.
+    const posH2 = html.indexOf('<h2');
+    if (posH2 !== -1) expect(inicioH1).toBeLessThan(posH2);
+  });
+
+  it('o foco do teclado é visível nos botões de contato', async () => {
+    // O anel padrão do navegador é desenhado com a cor do texto do elemento:
+    // sobre os botões escuros de ligar e WhatsApp ele some. Quem navega por
+    // teclado ou controle adaptativo perde a única pista de onde está.
+    const html = await (await pegar(`/p/${ATIVA}`)).text();
+    // A folha e embutida (ver inlineStylesheets no astro.config); se um dia
+    // voltar a ser externa, o teste a busca em vez de falhar por engano.
+    const externa = html.match(/<link rel="stylesheet" href="([^"]+)"/);
+    const css = externa ? await (await pegar(externa[1])).text() : html;
+    expect(css).toContain(':focus-visible');
+  });
+
   it('não entra em índice de busca', async () => {
     // A página tem nome, foto e telefone de uma pessoa. Indexar isso
     // transformaria o produto num diretório de contatos.

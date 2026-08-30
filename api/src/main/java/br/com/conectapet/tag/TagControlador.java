@@ -28,6 +28,7 @@ public class TagControlador {
     private final UsuarioAtual usuarioAtual;
     private final String urlPublica;
     private final String ipPimenta;
+    private final br.com.conectapet.seguranca.IpDoCliente ipDoCliente;
     private final java.time.Duration validadeTransferencia;
 
     public TagControlador(TagRepositorio tags, br.com.conectapet.pet.PetRepositorio pets,
@@ -36,6 +37,7 @@ public class TagControlador {
                           br.com.conectapet.auditoria.AuditoriaServico auditoria, UsuarioAtual usuarioAtual,
                           @Value("${conectapet.tag.url-publica}") String urlPublica,
                           @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
+                              br.com.conectapet.seguranca.IpDoCliente ipDoCliente,
                           @Value("${conectapet.transferencia.validade}") java.time.Duration validadeTransferencia) {
         this.tags = tags;
         this.pets = pets;
@@ -45,6 +47,7 @@ public class TagControlador {
         this.usuarioAtual = usuarioAtual;
         this.urlPublica = urlPublica;
         this.ipPimenta = ipPimenta;
+        this.ipDoCliente = ipDoCliente;
         this.validadeTransferencia = validadeTransferencia;
     }
 
@@ -143,7 +146,7 @@ public class TagControlador {
 
     /** O IP em claro nunca e persistido nem logado. */
     private String ipHash(HttpServletRequest req) {
-        return Hashes.ipPseudonimo(req.getRemoteAddr(), ipPimenta);
+        return Hashes.ipPseudonimo(ipDoCliente.de(req), ipPimenta);
     }
 
     // ---- DTOs --------------------------------------------------------------

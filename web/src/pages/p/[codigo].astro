@@ -42,7 +42,7 @@ let falhou = false;
  */
 for (let tentativa = 0; tentativa < 2 && !perfil; tentativa++) {
   try {
-    const r = await fetch(`${API}/api/public/tags/${codigo}`, {
+    const r = await fetch(`${API}/api/public/tags/${encodeURIComponent(codigo ?? '')}`, {
       headers: { 'User-Agent': Astro.request.headers.get('user-agent') ?? '' },
       signal: AbortSignal.timeout(4000),
     });
@@ -188,6 +188,15 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   .codigo-tag span{display:block;font-size:14px;color:var(--navy-700);margin-bottom:6px}
   .codigo-tag strong{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
     font-size:26px;letter-spacing:.16em;color:var(--navy-900);word-break:break-all}
+    /* Foco visivel, declarado e nao herdado do navegador.
+       O anel padrao e desenhado com a cor do texto do elemento: sobre os
+       botoes escuros de ligar e WhatsApp ele quase desaparece. Aqui o anel e
+       navy com afastamento, entao ele cai no fundo claro da pagina e mantem
+       contraste alto contra qualquer um dos botoes. Vale para quem navega por
+       teclado e para quem usa controle adaptativo — que e justamente parte de
+       quem pode achar um cachorro na rua. */
+    :focus-visible{outline:3px solid var(--navy-900);outline-offset:3px;border-radius:4px}
+    .btn:focus-visible{outline-offset:4px}
     @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 </head>
@@ -217,7 +226,7 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
                   <path d="M12 12.4c3 0 5.2 2 5.2 4.3S15 20.6 12 20.6s-5.2-1.6-5.2-3.9S9 12.4 12 12.4z"/>
                 </svg>
               </div>}
-          <p class="nome">{pet.nome}</p>
+          <h1 class="nome">{pet.nome}</h1>
           <p class="meta">
             {[pet.raca, pet.cor, pet.pesoKg ? `${pet.pesoKg} kg` : null,
               pet.cidade ? `${pet.cidade}${pet.estado ? ', ' + pet.estado : ''}` : null]

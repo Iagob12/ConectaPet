@@ -34,6 +34,14 @@ input,select{
   background:var(--white);border:2px solid var(--navy-900);border-radius:12px;
 }
 input:focus,select:focus{outline:3px solid var(--teal-500);outline-offset:2px}
+/* Links e botoes tambem. Antes so os campos tinham foco declarado, e o anel
+   padrao do navegador e desenhado com a cor do texto: sobre .btn, que tem
+   fundo escuro e borda escura, ele fica praticamente invisivel. Navy com
+   afastamento cai no fundo claro da pagina e mantem contraste alto. */
+a:focus-visible,button:focus-visible,summary:focus-visible{
+  outline:3px solid var(--navy-900);outline-offset:3px;border-radius:4px;
+}
+.btn:focus-visible{outline-offset:4px}
 input[aria-invalid="true"]{border-color:var(--alert-600)}
 .erro-campo{color:var(--alert-600);font-size:14px;font-weight:600;margin:0}
 

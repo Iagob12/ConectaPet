@@ -32,12 +32,14 @@ public class AutenticacaoControlador {
     private final VerificacaoEmailServico verificacao;
     private final LimiteTentativasLogin limiteLogin;
     private final String ipPimenta;
+    private final br.com.conectapet.seguranca.IpDoCliente ipDoCliente;
 
     public AutenticacaoControlador(AutenticacaoServico servico, JwtServico jwt, CookieServico cookies,
                                    PropriedadesJwt props, UsuarioRepositorio usuarios, UsuarioAtual usuarioAtual,
                                    RecuperacaoSenhaServico recuperacao, VerificacaoEmailServico verificacao,
                                    LimiteTentativasLogin limiteLogin,
-                                   @org.springframework.beans.factory.annotation.Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta) {
+                                   @org.springframework.beans.factory.annotation.Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
+                              br.com.conectapet.seguranca.IpDoCliente ipDoCliente) {
         this.servico = servico;
         this.jwt = jwt;
         this.cookies = cookies;
@@ -48,6 +50,7 @@ public class AutenticacaoControlador {
         this.verificacao = verificacao;
         this.limiteLogin = limiteLogin;
         this.ipPimenta = ipPimenta;
+        this.ipDoCliente = ipDoCliente;
     }
 
     /**
@@ -75,7 +78,7 @@ public class AutenticacaoControlador {
     @PostMapping("/login")
     public ResponseEntity<UsuarioResposta> login(@Valid @RequestBody LoginEntrada dto,
                                                  HttpServletRequest req) {
-        String ipHash = br.com.conectapet.comum.util.Hashes.ipPseudonimo(req.getRemoteAddr(), ipPimenta);
+        String ipHash = br.com.conectapet.comum.util.Hashes.ipPseudonimo(ipDoCliente.de(req), ipPimenta);
         limiteLogin.verificar(dto.email(), ipHash);
 
         Usuario u;

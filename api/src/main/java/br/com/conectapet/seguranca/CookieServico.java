@@ -10,9 +10,20 @@ import java.time.Duration;
  * Sessao em cookie HttpOnly, nunca em localStorage: qualquer XSS levaria junto
  * os dados de contato de todos os pets do tutor.
  *
- * SameSite=Lax funciona porque site e API vivem sob o mesmo dominio-raiz.
- * SameSite=None esta proibido, inclusive so em preview — e o tipo de
- * configuracao que vaza para producao. Previews usam preview-*.conectapet.com.br.
+ * SameSite=Lax, e SameSite=None esta proibido — inclusive so em preview, que e
+ * o tipo de configuracao que vaza para producao.
+ *
+ * Lax significa que o navegador NAO manda estes cookies para outro site. Hoje,
+ * em producao, o site (vercel.app) e a API (onrender.com) sao sites diferentes,
+ * e isso funciona apenas porque quem fala com a API autenticada e o servidor do
+ * site — nao o navegador. As duas unicas chamadas que o navegador faz direto a
+ * API sao publicas: a foto e a confirmacao de leitura.
+ *
+ * A consequencia pratica, para quem for mexer nisto: uma chamada autenticada
+ * feita DO NAVEGADOR direto para a API vai falhar em silencio enquanto os dois
+ * estiverem em dominios-raiz distintos. O cookie simplesmente nao e enviado, e
+ * a resposta e um 401 sem causa aparente. O caminho certo e passar pelo BFF,
+ * como todo o resto do painel ja faz — nao afrouxar para SameSite=None.
  */
 @Service
 public class CookieServico {

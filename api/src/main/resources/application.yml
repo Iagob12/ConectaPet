@@ -54,7 +54,13 @@ server:
   error:
     include-message: never
     include-stacktrace: never
-  forward-headers-strategy: framework   # IP real atras do proxy da hospedagem
+  # DESLIGADO de proposito. Ligado, o ForwardedHeaderFilter do Spring faz duas
+  # coisas ruins aqui: assume o IP da PRIMEIRA entrada do X-Forwarded-For — que
+  # e escrita pelo cliente, nao pelo proxy — e depois remove o cabecalho, de
+  # modo que nem da para corrigir depois. Quem resolve o IP e o IpDoCliente,
+  # que le a ultima entrada. Nada mais aqui depende de scheme ou host
+  # encaminhado: a API nao emite redirect e o Secure do cookie e explicito.
+  forward-headers-strategy: none
 
 # Sonda de saude, e so ela. O actuator expoe muita coisa por padrao — metricas,
 # variaveis de ambiente, mapeamentos — e nada disso precisa estar de pe para o
@@ -89,6 +95,15 @@ conectapet:
     # legitimo sem esta janela: a segunda apresentaria um token ja rotacionado.
     tolerancia-rotacao: PT10S
   privacidade:
+    # Quantos proxies existem entre a internet e esta aplicacao. Define qual
+    # entrada do X-Forwarded-For e confiavel: a ultima menos (n-1).
+    #
+    # 1 no Render, na Vercel e atras do Caddy do docker-compose. Use 0 para
+    # execucao direta, sem proxy nenhum na frente.
+    #
+    # Errar para MAIS e uma falha de seguranca: passa a confiar numa entrada
+    # que o cliente escreve, e todo limite por IP volta a ser contornavel.
+    proxies-confiaveis: ${PROXIES_CONFIAVEIS:1}
     ip-pimenta: ${IP_PIMENTA}
   site:
     # Base dos links que saem por e-mail. Errado aqui, o link de redefinir

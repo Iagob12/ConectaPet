@@ -42,6 +42,22 @@ export default defineConfig({
   // vir renderizada do servidor. Alguem segurando um cachorro desconhecido, no
   // sol, em rede ruim, nao pode esperar bundle + roteador + fetch.
   // Endereco publico. Usado para link canonico e para a checagem abaixo.
+  build: {
+    // O padrao do Astro e "auto", que so embute folhas abaixo de 4 kB. A da
+    // pagina de resgate tem 5 kB e ficava de fora por pouco — custando uma ida
+    // e volta a mais para buscar o CSS antes de a tela existir.
+    //
+    // Essa ida e volta e paga por TODO leitor de tag, sempre: a pagina responde
+    // no-store e quem a abre e um estranho que nunca esteve no site, entao nao
+    // ha cache a aproveitar. Em 4G ruim, na rua, com um cachorro no colo, ela
+    // aparece como um instante de tela branca antes dos botoes de ligar.
+    //
+    // O custo da troca e real e pequeno: as folhas deixam de ser cacheadas
+    // entre paginas do painel, onde a navegacao e repetida. Cinco a sete
+    // quilobytes por pagina, contra uma ida e volta na tela que justifica o
+    // produto inteiro.
+    inlineStylesheets: 'always',
+  },
   site: process.env.URL_SITE ?? 'http://localhost:4321',
 
   security: {

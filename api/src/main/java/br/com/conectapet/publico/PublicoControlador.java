@@ -39,17 +39,20 @@ public class PublicoControlador {
     private final LeituraServico leituras;
     private final ListaEsperaServico listaEspera;
     private final String ipPimenta;
+    private final br.com.conectapet.seguranca.IpDoCliente ipDoCliente;
     private final Duration piso;
 
     public PublicoControlador(TagRepositorio tags, PerfilPublicoServico perfis, LeituraServico leituras,
                               ListaEsperaServico listaEspera,
                               @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
+                              br.com.conectapet.seguranca.IpDoCliente ipDoCliente,
                               @Value("${conectapet.limites.piso-resposta-publica}") Duration piso) {
         this.tags = tags;
         this.perfis = perfis;
         this.leituras = leituras;
         this.listaEspera = listaEspera;
         this.ipPimenta = ipPimenta;
+        this.ipDoCliente = ipDoCliente;
         this.piso = piso;
     }
 
@@ -132,7 +135,7 @@ public class PublicoControlador {
     }
 
     private String ipHash(HttpServletRequest req) {
-        return Hashes.ipPseudonimo(req.getRemoteAddr(), ipPimenta);
+        return Hashes.ipPseudonimo(ipDoCliente.de(req), ipPimenta);
     }
 
     // ---- DTOs --------------------------------------------------------------
