@@ -16,7 +16,8 @@
 <meta property="og:title" content="Se ele se perder, quem achar já sabe pra quem ligar.">
 <meta property="og:description" content="A ConectaPet é uma tag NFC para coleira. Quem encontrar seu pet só encosta o celular na tag e vê seus dados de contato na hora — sem app, sem cadastro, sem ligar pra ninguém antes.">
 <meta property="og:site_name" content="ConectaPet">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2322313A'/><circle cx='16' cy='17' r='6.5' fill='none' stroke='%232FA8A5' stroke-width='2.6'/><path d='M16 6.5v7' stroke='%23F0A02E' stroke-width='2.6' stroke-linecap='round'/></svg>">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 <!--
   ConectaPet — landing page (arquivo único, sem dependências externas).
@@ -26,9 +27,14 @@
   com fallback de sistema. Para usar as fontes reais, adicione no <head>:
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
 
-  LOGO: o símbolo está desenhado em SVG inline (#logo-mark), aproximando a arte
-  enviada. Para usar o arquivo oficial, troque o bloco <svg><use href="#logo-mark"></svg>
-  por <img src="logo.png" alt="ConectaPet" width="44" height="38">.
+  LOGO: a arte oficial é /marca.png (só o símbolo) e /logo.png (símbolo + nome
+  + slogan), recortadas do arquivo original. Ela aparece no herói e no
+  cabeçalho quando o menu está sobre fundo claro.
+
+  O #logo-mark-mono continua em uso, e não é um resto: sobre a foto do herói e
+  no rodapé escuro, a arte colorida some — o contorno navy dá 1.3:1 contra
+  esses fundos. A silhueta branca é a leitura correta ali, e nenhum arquivo
+  colorido a substitui.
 -->
 
 <style>
@@ -353,6 +359,12 @@ p.step-chip,.step-chip{
 .brand{ display:inline-flex; align-items:center; gap:10px; min-height:44px; text-decoration:none; margin-right:auto; }
 .brand:hover{ color:inherit; }
 .brand__mark{ width:52px; height:45px; flex:none; }
+/* Duas marcas no DOM, uma visivel por vez. Trocar por CSS em vez de trocar o
+   href por JavaScript evita o instante em que a marca aparece com a cor errada
+   durante a rolagem, e mantem a arte correta com o JavaScript desligado. */
+.brand__mark--mono{ display:none; }
+.js .site-header:not(.is-stuck) .brand__mark--arte{ display:none; }
+.js .site-header:not(.is-stuck) .brand__mark--mono{ display:block; }
 .brand__text{ display:flex; flex-direction:column; line-height:1; }
 .brand__name{
   font-family:var(--font-display); font-weight:800; letter-spacing:-.02em;
@@ -917,7 +929,11 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   <!-- Hero: pet com a tag na coleira e o celular sendo aproximado -->
   <symbol id="ill-hero" viewBox="0 0 480 360">
     <circle cx="150" cy="190" r="142" fill="#FFFFFF"/>
-    <use href="#logo-mark" x="14" y="70" width="272" height="234"/>
+    <!-- A arte oficial, dentro da cena desenhada. preserveAspectRatio porque a
+         proporcao do arquivo (1.094) nao e a da caixa (1.162): sem ele o
+         cachorro estica. -->
+    <image href="/marca.png" x="14" y="70" width="272" height="234"
+           preserveAspectRatio="xMidYMid meet"/>
     <g fill="none" stroke="#2FA8A5" stroke-width="4.5" stroke-linecap="round">
       <path d="M300 186A20 20 0 0 0 300 226"/>
       <path d="M310 174A32 32 0 0 0 310 238"/>
@@ -1079,7 +1095,9 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   <header class="site-header" id="topo">
     <div class="container nav">
       <a class="brand" href="#topo" aria-label="ConectaPet — ir para o início">
-        <svg class="brand__mark" width="46" height="40" viewBox="0 0 200 172" aria-hidden="true" focusable="false"><use id="brand-mark-use" href="#logo-mark"/></svg>
+        <img class="brand__mark brand__mark--arte" src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+             width="46" height="42" alt="" decoding="async">
+        <svg class="brand__mark brand__mark--mono" width="46" height="40" viewBox="0 0 200 172" aria-hidden="true" focusable="false"><use href="#logo-mark-mono"/></svg>
         <span class="brand__text">
           <span class="brand__name">Conecta<span>Pet</span></span>
           <span class="brand__slogan">Aproxima e Protege</span>
@@ -1869,7 +1887,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   /* ---- Cabeçalho: transparente sobre o hero, sólido depois dele -------- */
   var header = doc.querySelector(".site-header");
   var heroEl = doc.querySelector(".hero");
-  var brandUse = doc.getElementById("brand-mark-use");
   var ticking = false;
   function onScroll() {
     var stuck = true;
@@ -1877,7 +1894,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
       stuck = heroEl.getBoundingClientRect().bottom <= header.getBoundingClientRect().height;
     }
     header.classList.toggle("is-stuck", stuck);
-    if (brandUse) { brandUse.setAttribute("href", stuck ? "#logo-mark" : "#logo-mark-mono"); }
     ticking = false;
   }
   window.addEventListener("scroll", function () {

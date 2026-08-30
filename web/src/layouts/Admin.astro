@@ -21,10 +21,16 @@ import '../styles/base.css';
        relance, que a tela aberta nao e a do tutor. */
     .barra--admin{background:var(--navy-900)}
   </style>
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </head>
 <body>
   <header class="barra barra--admin">
-    <a class="barra__marca" href="/admin">ConectaPet · admin</a>
+    <a class="barra__marca" href="/admin">
+      <img class="marca-chip" src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+      width="46" height="42" alt="" />
+      <span>ConectaPet · admin</span>
+    </a>
     <nav class="barra__menu" aria-label="Administrativo">
       <a href="/admin" aria-current={aba === 'lotes' ? 'page' : undefined}>Lotes</a>
       <a href="/admin/tags" aria-current={aba === 'tags' ? 'page' : undefined}>Tags</a>

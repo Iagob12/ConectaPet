@@ -17,9 +17,15 @@ import '../styles/base.css';
   <meta name="robots" content="noindex, nofollow" />
   <title>{titulo} — ConectaPet</title>
   
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </head>
 <body>
-  <p class="topo">ConectaPet</p>
+  <p class="topo">
+    <img class="marca-chip" src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+    width="46" height="42" alt="" />
+    <span>ConectaPet</span>
+  </p>
   <main class="folha">
     {passo && (
       <div class="passos" role="progressbar" aria-valuenow={passo.atual}

@@ -97,6 +97,8 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Um perfil com o telefone do tutor indexado no Google e o pior desfecho possivel. -->
   <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>{ativo ? `${pet.nome} — ConectaPet` : 'ConectaPet'}</title>
   <style>
     :root {
@@ -171,7 +173,13 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
       border:2px solid var(--navy-900);border-radius:20px;color:var(--navy-900)}
 
     /* 8. Marca, discreta */
+    /* A marca fica no rodape, e nao no topo, de proposito: o topo pertence
+       ao alerta e aos botoes de ligar. Aqui ela serve a quem ja resolveu o
+       problema e quer saber que servico e este — e com loading="lazy" ela nem
+       disputa banda com a foto do pet, que e o que a pessoa precisa ver.
+       width e height explicitos para a chegada dela nao empurrar a tela. */
     .rodape{margin-top:32px;text-align:center;font-size:14px;color:var(--navy-700)}
+    .rodape img{display:block;margin:0 auto 8px}
 
     .aviso{margin-top:24px;text-align:center}
     .aviso h1{font-size:24px;color:var(--navy-900);margin:0 0 12px}
@@ -324,7 +332,11 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
       </div>
     ) : null}
 
-    <p class="rodape">ConectaPet · Aproxima e Protege</p>
+    <p class="rodape">
+      <img src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x" width="56" height="51"
+           alt="" loading="lazy" decoding="async" />
+      ConectaPet · Aproxima e Protege
+    </p>
   </main>
 
   {/* API_PUBLICA, nao API: este script roda no NAVEGADOR de quem achou o pet,
