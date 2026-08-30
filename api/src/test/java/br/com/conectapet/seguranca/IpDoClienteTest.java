@@ -31,7 +31,7 @@ class IpDoClienteTest {
     @DisplayName("varredura automatica (o padrao)")
     class Automatico {
 
-        private final IpDoCliente ip = new IpDoCliente(IpDoCliente.AUTOMATICO);
+        private final IpDoCliente ip = new IpDoCliente(IpDoCliente.AUTOMATICO, false);
 
         @Test
         @DisplayName("acha o cliente mesmo sem saber quantos proxies existem")
@@ -89,26 +89,26 @@ class IpDoClienteTest {
         @Test
         @DisplayName("um proxy pega a ultima entrada")
         void umProxy() {
-            assertThat(new IpDoCliente(1).de(pedido("10.0.0.1", "9.9.9.9, " + REAL))).isEqualTo(REAL);
+            assertThat(new IpDoCliente(1, false).de(pedido("10.0.0.1", "9.9.9.9, " + REAL))).isEqualTo(REAL);
         }
 
         @Test
         @DisplayName("dois proxies andam uma casa para a esquerda")
         void doisProxies() {
-            assertThat(new IpDoCliente(2).de(pedido("10.0.0.1", "9.9.9.9, " + REAL + ", 10.0.0.7")))
+            assertThat(new IpDoCliente(2, false).de(pedido("10.0.0.1", "9.9.9.9, " + REAL + ", 10.0.0.7")))
                     .isEqualTo(REAL);
         }
 
         @Test
         @DisplayName("cabecalho mais curto que o esperado cai no endereco da conexao")
         void curtoDemais() {
-            assertThat(new IpDoCliente(2).de(pedido("198.51.100.4", "9.9.9.9"))).isEqualTo("198.51.100.4");
+            assertThat(new IpDoCliente(2, false).de(pedido("198.51.100.4", "9.9.9.9"))).isEqualTo("198.51.100.4");
         }
 
         @Test
         @DisplayName("zero proxies ignora o cabecalho por completo")
         void semProxyNenhum() {
-            assertThat(new IpDoCliente(0).de(pedido("198.51.100.4", "9.9.9.9, " + REAL)))
+            assertThat(new IpDoCliente(0, false).de(pedido("198.51.100.4", "9.9.9.9, " + REAL)))
                     .isEqualTo("198.51.100.4");
         }
     }

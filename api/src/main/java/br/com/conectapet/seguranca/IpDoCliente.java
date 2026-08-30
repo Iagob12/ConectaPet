@@ -1,6 +1,8 @@
 package br.com.conectapet.seguranca;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -46,10 +48,15 @@ public class IpDoCliente {
     /** Varredura automatica: nao depende de saber a topologia do provedor. */
     public static final int AUTOMATICO = -1;
 
-    private final int proxiesConfiaveis;
+    private static final Logger log = LoggerFactory.getLogger(IpDoCliente.class);
 
-    public IpDoCliente(@Value("${conectapet.privacidade.proxies-confiaveis:-1}") int proxiesConfiaveis) {
+    private final int proxiesConfiaveis;
+    private final boolean diagnostico;
+
+    public IpDoCliente(@Value("${conectapet.privacidade.proxies-confiaveis:-1}") int proxiesConfiaveis,
+                       @Value("${conectapet.privacidade.diagnostico-proxy:false}") boolean diagnostico) {
         this.proxiesConfiaveis = proxiesConfiaveis;
+        this.diagnostico = diagnostico;
     }
 
     public String de(HttpServletRequest req) {
@@ -61,6 +68,7 @@ public class IpDoCliente {
             return req.getRemoteAddr();
         }
         String[] partes = cabecalho.split(",");
+        diagnosticar(cabecalho);
 
         if (proxiesConfiaveis > 0) {
             // Contagem explicita, para quem sabe a topologia e prefere fixa-la.
@@ -98,5 +106,39 @@ public class IpDoCliente {
                 || s.startsWith("fd") || s.startsWith("fc")   // ULA
                 || s.startsWith("fe80")                       // link-local
                 || s.matches("^172[.](1[6-9]|2[0-9]|3[01])[.].*");
+    }
+
+    /**
+     * Diagnostico da cadeia, para descobrir a topologia sem adivinhar.
+     *
+     * Duas tentativas de deduzir de fora ja falharam: contar um salto pegou um
+     * endereco interno que muda, e varrer ate a primeira entrada publica
+     * tambem — as entradas internas desta hospedagem sao publicas. Cada
+     * hipotese custa um deploy e nao conclui nada. Uma linha de log conclui.
+     *
+     * NAO registra endereco nenhum. So a posicao, se e publico ou privado, e
+     * os dois ultimos octetos mascarados — o suficiente para ver quais
+     * entradas mudam entre requisicoes e quais nao, que e a pergunta. Registrar
+     * o IP inteiro seria destruir no log exatamente o que a ip-pimenta existe
+     * para proteger.
+     */
+    private void diagnosticar(String cabecalho) {
+        if (!diagnostico || cabecalho == null) {
+            return;
+        }
+        String[] p = cabecalho.split(",");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < p.length; i++) {
+            String ip = p[i].trim();
+            sb.append(i > 0 ? " | " : "").append(i).append(':')
+              .append(interno(ip) ? "priv " : "pub ").append(mascarar(ip));
+        }
+        log.info("XFF com {} entrada(s) -> {}", p.length, sb);
+    }
+
+    /** Mantem so o prefixo: da para ver se mudou, nao para saber de quem e. */
+    private static String mascarar(String ip) {
+        int corte = ip.indexOf('.') > 0 ? ip.indexOf('.', ip.indexOf('.') + 1) : -1;
+        return corte > 0 ? ip.substring(0, corte) + ".x.x" : "?";
     }
 }

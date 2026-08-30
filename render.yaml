@@ -76,6 +76,17 @@ services:
       - key: CORS_ORIGENS
         value: https://conecta-pet-inky.vercel.app
 
+      # ---- Diagnostico de proxy (TEMPORARIO) ----
+      # Liga uma linha de log por requisicao com a FORMA da cadeia do
+      # X-Forwarded-For: quantas entradas, quais publicas, prefixo mascarado.
+      # Nenhum endereco completo vai para o log.
+      #
+      # Existe porque deduzir a topologia de fora ja falhou duas vezes, e cada
+      # tentativa custa um deploy. DESLIGUE assim que o numero de saltos
+      # estiver definido — log por requisicao nao e coisa de producao.
+      - key: DIAGNOSTICO_PROXY
+        value: "true"
+
       # ---- Primeiro administrador ----
       # Cadastre-se pelo site, ponha o e-mail aqui e reinicie o serviço.
       - key: ADMIN_EMAIL
