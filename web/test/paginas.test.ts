@@ -252,6 +252,26 @@ describe('cabeçalhos de segurança', () => {
     expect(csp).toContain(`connect-src 'self' ${origemApi}`);
   });
 
+it('a política não bloqueia as fontes que a landing carrega', async () => {
+    // Aconteceu de verdade: a primeira versão desta política bloqueou a folha
+    // do Google Fonts e a landing passou a renderizar com a fonte do sistema.
+    // Não quebra nada de forma visível — a tipografia inteira só muda, calada.
+    // Este teste lê os hosts do próprio HTML, então cobre também qualquer
+    // fonte que venha a ser adicionada depois.
+    const html = await (await pegar('/')).text();
+    const csp = (await pegar('/entrar')).headers.get('content-security-policy') ?? '';
+
+    const externos = [...html.matchAll(/<link[^>]+href="(https:\/\/[^"]+)"/g)]
+      .map((m) => new URL(m[1]).origin);
+
+    for (const origem of new Set(externos)) {
+      expect(csp, `${origem} não está liberado no CSP`).toContain(origem);
+    }
+    // Guarda contra o teste virar vazio se a landing parar de linkar externos.
+    expect(csp).toContain('https://fonts.googleapis.com');
+    expect(csp).toContain('https://fonts.gstatic.com');
+  });
+
   it('as demais páginas também vêm protegidas', async () => {
     const r = await pegar('/entrar');
     expect(r.headers.get('x-content-type-options')).toBe('nosniff');
