@@ -95,15 +95,21 @@ conectapet:
     # legitimo sem esta janela: a segunda apresentaria um token ja rotacionado.
     tolerancia-rotacao: PT10S
   privacidade:
-    # Quantos proxies existem entre a internet e esta aplicacao. Define qual
-    # entrada do X-Forwarded-For e confiavel: a ultima menos (n-1).
+    # Como achar o IP de quem chamou, atras do proxy da hospedagem.
     #
-    # 1 no Render, na Vercel e atras do Caddy do docker-compose. Use 0 para
-    # execucao direta, sem proxy nenhum na frente.
+    #   -1  varredura automatica (padrao): pega a ultima entrada PUBLICA do
+    #       X-Forwarded-For, da direita para a esquerda. Nao depende de saber
+    #       quantos proxies existem, porque os internos usam faixas privadas.
+    #    0  sem proxy nenhum: ignora o cabecalho e usa o endereco da conexao.
+    #   >0  contagem explicita de saltos, para quem sabe a topologia.
     #
-    # Errar para MAIS e uma falha de seguranca: passa a confiar numa entrada
-    # que o cliente escreve, e todo limite por IP volta a ser contornavel.
-    proxies-confiaveis: ${PROXIES_CONFIAVEIS:1}
+    # O padrao e -1 porque a contagem fixa ja falhou aqui: com 1, o Render
+    # devolveu um endereco interno que muda entre requisicoes, e o limite ficou
+    # erratico. Contar saltos exige acertar um numero que o provedor nao
+    # documenta e muda sem avisar — errar para menos da uma chave que varia
+    # sozinha, errar para mais da uma chave que o atacante escolhe, e os dois
+    # casos significam "nenhum limite", em silencio.
+    proxies-confiaveis: ${PROXIES_CONFIAVEIS:-1}
     ip-pimenta: ${IP_PIMENTA}
   site:
     # Base dos links que saem por e-mail. Errado aqui, o link de redefinir
