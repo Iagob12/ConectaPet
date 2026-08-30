@@ -227,3 +227,35 @@ describe('vitrine e telas públicas', () => {
     expect(r.status).toBe(400);
   });
 });
+
+describe('cabeçalhos de segurança', () => {
+  it('a página de resgate não pode ser emoldurada por outro site', async () => {
+    // Sem isto, um golpe monta "achamos seu pet, pague para reaver" com o
+    // perfil real num iframe atrás — convincente porque os dados são reais.
+    const r = await pegar(`/p/${ATIVA}`);
+    expect(r.headers.get('x-frame-options')).toBe('DENY');
+    expect(r.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+  });
+
+  it('o código da tag não vaza para o WhatsApp no Referer', async () => {
+    const r = await pegar(`/p/${ATIVA}`);
+    expect(r.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
+  });
+
+  it('a política deixa a foto e o aviso ao tutor funcionarem', async () => {
+    // O navegador fala DIRETO com a API nesses dois pontos. Uma política que
+    // esqueça a origem da API apaga a foto e cala a notificação — e nada
+    // acusa: o erro fica só no console de quem achou o pet.
+    const csp = (await pegar(`/p/${ATIVA}`)).headers.get('content-security-policy') ?? '';
+    const origemApi = `http://127.0.0.1:${api.porta}`;
+    expect(csp).toContain(`img-src 'self' data: ${origemApi}`);
+    expect(csp).toContain(`connect-src 'self' ${origemApi}`);
+  });
+
+  it('as demais páginas também vêm protegidas', async () => {
+    const r = await pegar('/entrar');
+    expect(r.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(r.headers.get('content-security-policy')).toContain("object-src 'none'");
+    expect(r.headers.get('content-security-policy')).toContain("form-action 'self'");
+  });
+});
