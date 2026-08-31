@@ -29,11 +29,16 @@ import '../styles/base.css';
 <body>
 <div class="moldura">
 <div class="folha-papel">
-  <p class="topo">
-    <img class="marca-chip" src="/marca-branca.png" srcset="/marca-branca.png 1x, /marca-branca@2x.png 2x"
-    width="46" height="42" alt="" />
-    <span>ConectaPet</span>
-  </p>
+  <header class="topo">
+    <a class="marca" href="/" aria-label="ConectaPet — ir para a página inicial">
+      <img src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+           width="52" height="48" alt="" decoding="async" />
+      <span class="marca__texto">
+        <span class="marca__nome">Conecta<span>Pet</span></span>
+        <span class="marca__slogan">Aproxima e Protege</span>
+      </span>
+    </a>
+  </header>
   <main class="folha">
     {passo && (
       <div class="passos" role="progressbar" aria-valuenow={passo.atual}

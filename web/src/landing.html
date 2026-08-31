@@ -374,7 +374,16 @@ p.step-chip,.step-chip{
   font-family:var(--font-display); font-weight:800; letter-spacing:-.02em;
   font-size:20px; color:var(--navy-900);
 }
-.brand__name span{ color:var(--teal-500); }
+/* teal-600, e não o teal-500 da arte. O próprio token diz: "cor de marca:
+   preenchimento, nunca texto sobre branco" — e o nome escrito ao lado do
+   símbolo é texto. Sobre branco o 500 dá 2.89:1, abaixo dos 3:1 exigidos até
+   para texto grande em negrito.
+
+   A rigor a WCAG isenta logotipos dessa regra, então não era uma violação.
+   Mas 2.89 é difícil de ler para quem enxerga pouco, e o 600 é um tom tão
+   próximo que fica indistinguível ao lado do símbolo — passa a 4.30 sem custo
+   nenhum de identidade. Não vale defender um número ruim por tecnicalidade. */
+.brand__name span{ color:var(--teal-600); }
 .brand__slogan{ display:none; font-size:11px; color:var(--navy-700); margin-top:4px; letter-spacing:.02em; }
 .site-footer .brand__slogan{ display:block; font-size:13px; margin-top:6px; }
 .site-footer .brand__mark{ width:56px; height:48px; color:#fff; }

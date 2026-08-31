@@ -16,11 +16,6 @@ import '../styles/base.css';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <title>{titulo} — Administrativo ConectaPet</title>
-  <style>
-    /* A barra do administrativo e escura de proposito: e para ficar obvio, de
-       relance, que a tela aberta nao e a do tutor. */
-    .barra--admin{background:var(--navy-900)}
-  </style>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- As mesmas famílias da vitrine. display=swap: o texto aparece na hora com
@@ -33,11 +28,14 @@ import '../styles/base.css';
 <body>
 <div class="moldura">
 <div class="folha-papel">
-  <header class="barra barra--admin">
-    <a class="barra__marca" href="/admin">
-      <img class="marca-chip" src="/marca-branca.png" srcset="/marca-branca.png 1x, /marca-branca@2x.png 2x"
-      width="46" height="42" alt="" />
-      <span>ConectaPet · admin</span>
+  <header class="barra topo topo--admin">
+    <a class="marca" href="/" aria-label="ConectaPet — ir para a página inicial">
+      <img src="/marca-branca.png" srcset="/marca-branca.png 1x, /marca-branca@2x.png 2x"
+           width="52" height="48" alt="" decoding="async" />
+      <span class="marca__texto">
+        <span class="marca__nome">Conecta<span>Pet</span> · admin</span>
+        <span class="marca__slogan">Aproxima e Protege</span>
+      </span>
     </a>
     <nav class="barra__menu" aria-label="Administrativo">
       <a href="/admin" aria-current={aba === 'lotes' ? 'page' : undefined}>Lotes</a>
