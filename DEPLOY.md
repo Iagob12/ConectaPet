@@ -119,6 +119,36 @@ aplicação **recusa subir** — de propósito: o deploy falha, o Render mantém
 versão anterior no ar, e o erro aparece na hora. A alternativa seria subir
 calado e a pessoa ficar esperando um e-mail de recuperação que nunca sai.
 
+### O plano gratuito do Render não envia e-mail nenhum
+
+**Desde setembro de 2025 o Render bloqueia as portas SMTP 25, 465 e 587 em
+serviços gratuitos.** A conexão nem chega a ser recusada: ela simplesmente
+expira.
+
+```
+MailConnectException: Couldn't connect to host, port: smtp.gmail.com, 587; timeout 10000
+```
+
+Esse erro não diz nada sobre a causa, e leva a procurar no lugar errado — senha
+de app, verificação em duas etapas, remetente. Nenhum deles tem a ver.
+
+Nas instâncias **pagas**, 465 e 587 funcionam. A porta 25 continua bloqueada em
+qualquer plano, porque o Render roda sobre EC2. Fonte:
+https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports
+
+Duas saídas:
+
+| Caminho | Custo | O que muda |
+|---|---|---|
+| **Render `starter`** | US$ 7/mês | Nada no código. Resolve junto a hibernação de 3 min |
+| **API HTTP** (Brevo, SendGrid) | grátis | Um `CanalEnvio` novo falando HTTPS na 443, que não é bloqueada |
+
+A primeira é a recomendada por um motivo que não é o e-mail: no plano gratuito a
+aplicação leva **202 segundos** para acordar depois de 15 minutos parada, e nesse
+tempo quem encostou o celular na tag vê "nossos servidores não responderam". O
+plano pago já era necessário antes de entregar a primeira tag; ele só passou a
+resolver dois problemas em vez de um.
+
 ### O que o Gmail custa
 
 Cerca de **500 destinatários por dia** na conta gratuita, e o remetente é um
