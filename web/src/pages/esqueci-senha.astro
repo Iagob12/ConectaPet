@@ -32,7 +32,7 @@ const excedeu = Astro.request.method === 'POST' && !enviado;
 <Base titulo="Esqueci minha senha">
   {enviado ? (
     <>
-      <h1>Confira seu e-mail</h1>
+      <h1>Confira seu <span>e-mail</span></h1>
       <p class="sub">
         Se existe uma conta com <strong>{email}</strong>, o link para criar uma
         senha nova chegou lá. Ele vale por uma hora.
@@ -47,7 +47,7 @@ const excedeu = Astro.request.method === 'POST' && !enviado;
     </>
   ) : (
     <>
-      <h1>Esqueci minha senha</h1>
+      <h1>Esqueci minha <span>senha</span></h1>
       <p class="sub">
         Mandamos um link para você criar outra. Sua tag continua funcionando
         normalmente enquanto isso.

@@ -37,7 +37,7 @@ const feito = q.has('recebida') ? 'Tag recebida. O perfil dela já está aqui.'
 ---
 
 <Painel titulo="Meus pets" aba="pets">
-  <h1>Meus pets</h1>
+  <h1>Meus <span>pets</span></h1>
 
   {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
   {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}

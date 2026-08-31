@@ -19,7 +19,7 @@ const ok = r?.ok === true;
 <Base titulo={ok ? 'E-mail confirmado' : 'Confirmar e-mail'}>
   {ok ? (
     <>
-      <h1>E-mail confirmado</h1>
+      <h1>E-mail <span>confirmado</span></h1>
       <p class="sub">
         Agora você consegue recuperar a conta se esquecer a senha, e passar uma
         tag para outra pessoa.
@@ -30,7 +30,7 @@ const ok = r?.ok === true;
     </>
   ) : (
     <>
-      <h1>Não consegui confirmar</h1>
+      <h1>Não consegui <span>confirmar</span></h1>
       <p class="sub">
         {!token
           ? 'Este endereço veio sem o código do link. Abra o link do e-mail inteiro.'

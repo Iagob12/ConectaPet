@@ -45,27 +45,73 @@
   --shadow-hard:4px 4px 0 var(--navy-900);
   --shadow-focus:0 0 0 3px rgba(47,168,165,.55);
 
+  /* layout */
+  --frame:12px;          /* borda fina de papel, igual no mobile e no desktop */
+
   /* tipografia */
   --font-display:"Poppins","Segoe UI",system-ui,-apple-system,sans-serif;
   --font-title:"Poppins","Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,sans-serif;
   --font-body:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
+
+/* ---- A folha de papel -----------------------------------------------------
+   O mesmo desenho da vitrine: um fundo quente por fora, e o conteúdo dentro de
+   uma folha arredondada. Era isto que faltava — o painel tinha uma faixa e uma
+   coluna solta no meio do nada, e por isso parecia outro produto.
+
+   O tom de fora é --sand-100 e o de dentro --orange-100: os dois são da marca,
+   e a diferença entre eles é o que faz a moldura existir. Na vitrine os dois
+   são iguais porque lá a moldura aparece contra a foto escura do herói; aqui
+   não há foto, então a moldura precisa de contraste próprio. */
 body{
-  margin:0;background:var(--orange-100);color:var(--navy-700);
+  margin:0;background:var(--sand-100);color:var(--navy-700);
   /* Inter, a mesma da vitrine. Antes era a fonte do sistema, e o efeito era o
      de sair de um site e entrar em outro ao terminar o cadastro. O fallback
      de sistema segue na frente do usuário se a fonte não carregar. */
   font:400 17px/1.55 var(--font-body);
 }
+.moldura{padding:var(--frame,12px)}
+.folha-papel{
+  background:var(--orange-100);
+  border-radius:var(--radius-sheet);
+  /* "clip", e não "hidden": hidden criaria um contexto de rolagem e quebraria
+     qualquer position:sticky daqui para a frente. É o corte que arredonda o
+     topo da barra sem ela precisar saber que está numa folha. */
+  overflow:clip;
+  min-height:calc(100vh - 2 * var(--frame,12px));
+}
 .topo{background:var(--teal-700);color:#fff;padding:14px 20px;font:700 18px/1.2 var(--font-display);letter-spacing:-.01em}
 .folha{max-width:520px;margin:0 auto;padding:24px 20px 48px}
+
+/* ---- As ondas da marca ----------------------------------------------------
+   O mesmo motivo do símbolo e da vitrine, onde ele separa dois blocos. Aqui
+   fecha o rodapé da folha.
+
+   É desenho puro, sem informação: aria-hidden no elemento, e nada aqui muda o
+   que um leitor de tela anuncia. Existe para a tela ser reconhecida como desta
+   marca antes de qualquer texto ser lido — que é justamente o que faltava. */
+.ondas{
+  display:flex;justify-content:center;
+  padding:32px 20px 40px;color:var(--teal-600);opacity:.45;
+}
+.ondas svg{display:block;width:min(240px,55%);height:auto}
+@media (prefers-reduced-motion:no-preference){
+  .ondas{transition:opacity .2s ease}
+}
 /* Poppins nos títulos, como na vitrine. clamp() em vez de tamanho fixo: em
    telas de 320px o título de 28px quebrava em três linhas e empurrava o
    formulário para fora da dobra. */
 h1{font:800 clamp(24px,6vw,30px)/1.15 var(--font-title);color:var(--navy-900);
    margin:0 0 8px;letter-spacing:-.02em}
 h2{font-family:var(--font-title);letter-spacing:-.01em}
+
+/* A assinatura da vitrine: a segunda parte do título em teal. Lá é <span
+   class="l2">; aqui basta um <span> dentro do h1, porque estes títulos têm
+   duas ou três palavras e não precisam de duas classes para isso.
+   É o detalhe que faz a tela ser reconhecida como da mesma marca antes de
+   qualquer texto ser lido. */
+h1 span{color:var(--teal-600)}
 .sub{margin:0 0 24px;max-width:44ch}
 
 .passos{display:flex;gap:6px;margin-bottom:20px}
