@@ -76,16 +76,30 @@ services:
       - key: CORS_ORIGENS
         value: https://conecta-pet-inky.vercel.app
 
-      # ---- Diagnostico de proxy (TEMPORARIO) ----
-      # Liga uma linha de log por requisicao com a FORMA da cadeia do
-      # X-Forwarded-For: quantas entradas, quais publicas, prefixo mascarado.
-      # Nenhum endereco completo vai para o log.
+      # ---- Proxies a frente da aplicacao ----
+      # TRES, e o numero saiu de medicao, nao de palpite. O diagnostico
+      # registrou a cadeia real:
       #
-      # Existe porque deduzir a topologia de fora ja falhou duas vezes, e cada
-      # tentativa custa um deploy. DESLIGUE assim que o numero de saltos
-      # estiver definido — log por requisicao nao e coisa de producao.
+      #   sem cabecalho forjado:  177.16.x.x | 172.71.x.x | 10.30.x.x (priv)
+      #   com um forjado na frente: 7.7.x.x | 177.16.x.x | 172.71.x.x | 10.30.x.x
+      #
+      # 177.16.x.x e o cliente. 172.71.x.x e a Cloudflare, que fica na frente do
+      # Render. 10.30.x.x e interno do Render. Sao dois saltos depois do
+      # cliente, e o do meio e PUBLICO — foi ele que a varredura automatica
+      # pegava, e como o IP de borda da Cloudflare muda a cada requisicao, o
+      # limite por IP ficava erratico.
+      #
+      # Se um dia o limite voltar a nao morder, o numero aqui e o primeiro
+      # suspeito: ligue DIAGNOSTICO_PROXY e leia a cadeia de novo, em vez de
+      # tentar outro numero no escuro.
+      - key: PROXIES_CONFIAVEIS
+        value: "3"
+
+      # ---- Diagnostico de proxy ----
+      # DESLIGADO. Ja cumpriu o papel: a cadeia esta documentada acima.
+      # Ligar de novo custa uma linha de log por requisicao.
       - key: DIAGNOSTICO_PROXY
-        value: "true"
+        value: "false"
 
       # ---- Primeiro administrador ----
       # Cadastre-se pelo site, ponha o e-mail aqui e reinicie o serviço.

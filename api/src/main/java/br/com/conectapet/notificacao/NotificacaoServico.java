@@ -80,8 +80,19 @@ public class NotificacaoServico {
             n.setUltimoErro(resumir(e));
             if (n.getTentativas() >= MAX_TENTATIVAS) {
                 n.setStatus(Notificacao.Status.FALHOU);
-                log.error("Notificacao {} desistiu apos {} tentativas", n.getId(), n.getTentativas());
+                // O motivo vai junto. Antes ele so era gravado na coluna
+                // ultimo_erro, e a linha de log dizia que algo quebrou sem
+                // dizer o que — para descobrir era preciso abrir o banco de
+                // producao. Quando as notificacoes param, o log e o primeiro
+                // lugar onde se olha, e precisa bastar.
+                log.error("Notificacao {} ({}) desistiu apos {} tentativas: {}",
+                        n.getId(), n.getTipo(), n.getTentativas(), n.getUltimoErro());
             } else {
+                // A primeira falha ja aparece. Com espera de 1, 2, 4 e 8
+                // minutos, esperar a desistencia final para saber que ha
+                // problema custa um quarto de hora de silencio.
+                log.warn("Notificacao {} ({}) falhou na tentativa {}: {}",
+                        n.getId(), n.getTipo(), n.getTentativas(), n.getUltimoErro());
                 // Espera crescente: 1, 2, 4, 8 minutos.
                 long minutos = (long) Math.pow(2, n.getTentativas() - 1);
                 n.setProcessarApos(Instant.now().plus(Duration.ofMinutes(minutos)));
@@ -90,8 +101,20 @@ public class NotificacaoServico {
         repo.save(n);
     }
 
+    /**
+     * Resumo da falha, sem o destinatario.
+     *
+     * O JavaMail costuma por o endereco que falhou dentro da mensagem da
+     * excecao. Como isto agora vai para o log — e nao so para uma coluna do
+     * banco — o endereco e mascarado: uma falha de envio nao pode virar uma
+     * lista de clientes em texto claro no log da hospedagem.
+     */
     private String resumir(Exception e) {
         String m = e.getClass().getSimpleName() + ": " + e.getMessage();
+        m = EMAIL.matcher(m).replaceAll("$1***@$2");
         return m.length() > 500 ? m.substring(0, 500) : m;
     }
+
+    private static final java.util.regex.Pattern EMAIL =
+            java.util.regex.Pattern.compile("([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9.-]+)");
 }
