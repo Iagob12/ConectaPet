@@ -43,6 +43,7 @@ public class ValidacaoConfiguracao {
     private final String smtpUsuario;
     private final String smtpSenha;
     private final String remetente;
+    private final String emailHttpChave;
 
     public ValidacaoConfiguracao(
             @Value("${conectapet.tag.url-publica}") String urlPublicaTag,
@@ -55,7 +56,8 @@ public class ValidacaoConfiguracao {
             @Value("${spring.mail.host:}") String smtpHost,
             @Value("${spring.mail.username:}") String smtpUsuario,
             @Value("${spring.mail.password:}") String smtpSenha,
-            @Value("${conectapet.email.remetente:}") String remetente) {
+            @Value("${conectapet.email.remetente:}") String remetente,
+            @Value("${conectapet.email.http.chave:}") String emailHttpChave) {
         this.urlPublicaTag = urlPublicaTag;
         this.urlSite = urlSite;
         this.corsOrigens = corsOrigens;
@@ -67,6 +69,7 @@ public class ValidacaoConfiguracao {
         this.smtpUsuario = smtpUsuario;
         this.smtpSenha = smtpSenha;
         this.remetente = remetente;
+        this.emailHttpChave = emailHttpChave;
     }
 
     @PostConstruct
@@ -154,6 +157,19 @@ public class ValidacaoConfiguracao {
                 // diferente do configurado, ou nao sai, e o motivo nao e obvio.
                 erros.add("No Gmail, EMAIL_REMETENTE precisa usar o endereco de SMTP_USUARIO ("
                         + smtpUsuario + "). O Gmail recusa remetente que nao seja a conta autenticada.");
+            }
+        }
+
+
+        // Mesma regra do smtp, e pelo mesmo motivo: sem a chave, a aplicacao
+        // sobe, a pessoa pede "esqueci a senha", e a falha so aparece na fila.
+        if ("http".equalsIgnoreCase(provedorEmail)) {
+            if (emailHttpChave.isBlank()) {
+                erros.add("EMAIL_PROVEDOR=http mas EMAIL_HTTP_CHAVE esta vazia. "
+                        + "E a chave de API do provedor de e-mail.");
+            }
+            if (remetente.isBlank()) {
+                erros.add("EMAIL_PROVEDOR=http mas EMAIL_REMETENTE esta vazio.");
             }
         }
 

@@ -107,46 +107,46 @@ services:
         sync: false
 
       # ---- E-mail ----
-      # LIGADO. O tutor e avisado quando alguem le a tag, a recuperacao de
-      # senha funciona e a verificacao de e-mail fecha.
+      # "http", e nao "smtp", por uma restricao da hospedagem e nao por
+      # preferencia: o plano gratuito do Render bloqueia as portas 25, 465 e
+      # 587 desde setembro de 2025, e a conexao SMTP expira sem dizer o motivo.
+      # A porta 443 passa.
       #
-      # Com "smtp" e host, usuario, senha ou remetente em branco, a aplicacao
-      # RECUSA subir — de proposito. O deploy falha, o Render mantem a versao
-      # anterior no ar, e o erro aparece na hora, em vez de a pessoa ficar
-      # esperando um e-mail de recuperacao que nunca sai.
+      # Se um dia o servico virar pago, "smtp" volta a funcionar e as variaveis
+      # SMTP_* abaixo ja estao prontas. Nao ha motivo para voltar, exceto
+      # preferencia.
+      # AINDA "log": trocar para "http" e o ultimo passo, depois que
+      # EMAIL_HTTP_CHAVE existir no grupo de ambiente. Com "http" e a chave
+      # vazia a aplicacao recusa subir — de proposito — e o deploy falharia
+      # sem necessidade.
       - key: EMAIL_PROVEDOR
-        value: smtp
+        value: log
 
-      # O servidor e a conta do Gmail. Nada aqui e segredo.
+      # Brevo: 300 e-mails por dia no plano gratuito. Escolhido por aceitar
+      # verificar um endereco @gmail.com como remetente, sem dominio proprio —
+      # o Resend, por comparacao, so entrega para o dono da conta ate haver
+      # dominio verificado, o que nao serve para avisar tutores.
       #
-      # SMTP_USUARIO e EMAIL_REMETENTE ficam versionados porque
-      # conectapet.contato@gmail.com e uma conta DO PRODUTO, nao pessoal: ela
-      # vai no campo "De" de todo e-mail que sai, entao ja e publica por
-      # construcao. Esconde-la num painel nao protegeria nada e ainda tiraria
-      # do code review o endereco que os clientes veem.
-      #
-      # SMTP_SENHA e a unica que fica de fora, no grupo de ambiente. No Gmail
-      # ela e uma SENHA DE APP (16 caracteres, gerada em
-      # myaccount.google.com/apppasswords), nunca a senha da conta: exige a
-      # verificacao em duas etapas ligada e pode ser revogada sozinha, sem
-      # mexer no acesso de ninguem.
-      #
-      # O remetente PRECISA ser o mesmo endereco de SMTP_USUARIO — o Gmail
-      # recusa ou reescreve um "De" que nao seja a conta autenticada, e a
-      # aplicacao checa isso na subida.
-      #
-      # Limite do Gmail gratuito: cerca de 500 destinatarios por dia. Cabe
-      # folgado no comeco. Com dominio proprio, Resend ou SES tiram esse teto e
-      # melhoram a entregabilidade — e a troca e so de host, usuario e senha,
-      # porque o EnvioEmailSmtp nao sabe qual provedor esta do outro lado.
+      # A chave de API fica no grupo de ambiente, nao aqui.
+      - key: EMAIL_HTTP_URL
+        value: https://api.brevo.com/v3/smtp/email
+      - key: EMAIL_HTTP_CHAVE
+        sync: false
+
+      # O remetente precisa estar VERIFICADO no Brevo, senao ele recusa com
+      # "sender not valid" — e esse texto agora aparece no log, junto da falha.
+      - key: EMAIL_REMETENTE
+        value: "ConectaPet <conectapet.contato@gmail.com>"
+
+      # ---- SMTP (inativo enquanto EMAIL_PROVEDOR=http) ----
+      # Ficam declarados para a troca ser so mudar EMAIL_PROVEDOR, caso o
+      # servico vire pago. SMTP_SENHA continua no grupo de ambiente.
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORTA
         value: "587"
       - key: SMTP_USUARIO
         value: conectapet.contato@gmail.com
-      - key: EMAIL_REMETENTE
-        value: "ConectaPet <conectapet.contato@gmail.com>"
       - key: SMTP_SENHA
         sync: false
 

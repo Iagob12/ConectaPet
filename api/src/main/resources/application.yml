@@ -130,6 +130,19 @@ conectapet:
     # proposito: um ambiente que herdasse SMTP por engano mandaria "alguem
     # leu a tag do seu pet" para cliente de verdade.
     provedor: ${EMAIL_PROVEDOR:log}
+    # Envio por API HTTP, para hospedagem que bloqueia SMTP.
+    #
+    # O plano gratuito do Render bloqueia as portas 25, 465 e 587 desde
+    # setembro de 2025, e a conexao expira sem dizer o motivo. A 443 passa.
+    #
+    # A url e do Brevo, escolhido por um motivo especifico: ele aceita
+    # verificar um endereco @gmail.com como remetente, sem exigir dominio
+    # proprio. O Resend, por comparacao, so entrega para o dono da conta
+    # enquanto nao houver dominio verificado — inutil para avisar tutores.
+    http:
+      url: ${EMAIL_HTTP_URL:https://api.brevo.com/v3/smtp/email}
+      chave: ${EMAIL_HTTP_CHAVE:}
+      tempo-limite: ${EMAIL_HTTP_TEMPO_LIMITE:PT10S}
     remetente: ${EMAIL_REMETENTE:ConectaPet <nao-responda@conectapet.com.br>}
     # Para onde vai a resposta de quem apertar "responder". Vazio desliga.
     responder-para: ${EMAIL_RESPONDER_PARA:}

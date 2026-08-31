@@ -18,7 +18,7 @@ class ValidacaoConfiguracaoTest {
                 "https://conectapet.com.br",
                 true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>");
+                "ConectaPet <conta@gmail.com>", "chave-http");
     }
 
     @Test
@@ -33,7 +33,7 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("http://localhost:4321/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>");
+                "ConectaPet <conta@gmail.com>", "chave-http");
 
         assertThat(v.problemas()).singleElement().asString()
                 .contains("url-publica")
@@ -46,7 +46,7 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "http://localhost:4321", true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>");
+                "ConectaPet <conta@gmail.com>", "chave-http");
 
         // A confirmacao de leitura e um fetch do navegador para outra origem.
         // Bloqueada, o tutor nunca e avisado — e nada no servidor registra erro.
@@ -59,7 +59,7 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("http://127.0.0.1:4321/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>");
+                "ConectaPet <conta@gmail.com>", "chave-http");
         assertThat(v.problemas()).hasSize(1);
     }
 
@@ -69,7 +69,7 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", false, true, true, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>");
+                "ConectaPet <conta@gmail.com>", "chave-http");
 
         assertThat(v.problemas()).hasSize(3);
         assertThat(String.join(" ", v.problemas()))
@@ -84,7 +84,7 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "log",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>");
+                "ConectaPet <conta@gmail.com>", "chave-http");
 
         // Da para subir de proposito sem provedor durante uma migracao; o aviso
         // no log e que nao pode faltar.
@@ -97,7 +97,7 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("http://localhost/p/", "http://localhost",
                 "http://localhost", false, true, true, "log",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>");
+                "ConectaPet <conta@gmail.com>", "chave-http");
 
         // Corrigir um, subir, descobrir o proximo, repetir — seria um ciclo de
         // deploy por variavel errada.
@@ -111,7 +111,7 @@ class ValidacaoConfiguracaoTest {
                 "https://conectapet.com.br",
                 "https://conectapet.com.br",
                 true, false, false, "smtp",
-                host, usuario, senha, remetente);
+                host, usuario, senha, remetente, "chave-http");
     }
 
     @Test
@@ -153,5 +153,28 @@ class ValidacaoConfiguracaoTest {
         assertThat(comSmtp("smtp.resend.com", "resend", "chave",
                            "ConectaPet <nao-responda@conectapet.com.br>").problemas())
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("http escolhido sem a chave de API e recusado na subida")
+    void httpSemChave() {
+        ValidacaoConfiguracao v = new ValidacaoConfiguracao(
+                "https://conectapet.com.br/p/", "https://conectapet.com.br",
+                "https://conectapet.com.br", true, false, false, "http",
+                "", "", "", "ConectaPet <c@gmail.com>", "");
+        assertThat(v.problemas()).anyMatch(e -> e.contains("EMAIL_HTTP_CHAVE"));
+    }
+
+    @Test
+    @DisplayName("http com chave e remetente sobe, sem exigir nada de smtp")
+    void httpCompleto() {
+        // Nenhum campo de SMTP e preenchido aqui de proposito: quem envia por
+        // API HTTP nao tem servidor SMTP nenhum para configurar, e exigir isso
+        // seria pedir configuracao que nao existe.
+        ValidacaoConfiguracao v = new ValidacaoConfiguracao(
+                "https://conectapet.com.br/p/", "https://conectapet.com.br",
+                "https://conectapet.com.br", true, false, false, "http",
+                "", "", "", "ConectaPet <c@gmail.com>", "chave-de-api");
+        assertThat(v.problemas()).isEmpty();
     }
 }
