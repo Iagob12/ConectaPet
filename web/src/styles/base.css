@@ -140,11 +140,14 @@ input[aria-invalid="true"]{border-color:var(--alert-600)}
    branca devolve o fundo para o qual a arte foi feita, sem alterar um pixel
    dela. */
 .marca-chip{
-  display:block;background:#fff;border-radius:10px;padding:3px;
-  /* 46px, e nao 38: a arte tem cao, gato e as ondas do NFC no mesmo
-     simbolo, e abaixo disso o desenho vira uma mancha. Comparado lado a lado
-     no navegador antes de escolher. */
-  width:46px;height:auto;flex:none;
+  /* Fundo transparente. A logo aqui e a versao BRANCA da mesma arte, gerada
+     a partir do arquivo original: sobre o teal das barras a versao colorida
+     perde o contorno navy e sobram manchas soltas de teal e laranja — o
+     cachorro e o gato desaparecem.
+
+     46px, e nao menos: a arte tem cao, gato e as ondas do NFC no mesmo
+     simbolo, e abaixo disso o desenho vira uma mancha. */
+  display:block;width:46px;height:auto;flex:none;
 }
 .barra__marca{display:flex;align-items:center;gap:10px;font-family:var(--font-display)}
 .topo{display:flex;align-items:center;gap:10px}

@@ -358,18 +358,17 @@ p.step-chip,.step-chip{
 .brand:hover{ color:inherit; }
 .brand__mark{ width:52px; height:auto; flex:none; }
 
-/* A arte tem contorno navy sobre fundo transparente. Sobre a foto do herói e
-   sobre a tinta do rodapé o traço desaparece — navy contra escuro dá pouco
-   mais de 1:1. A pastilha branca devolve o fundo para o qual o desenho foi
-   feito, sem alterar um pixel dele.
+/* Fundo sempre transparente. Onde o fundo é escuro, quem muda é a ARTE, não o
+   fundo atrás dela: a versão branca é a mesma logo, gerada a partir do arquivo
+   original, com o traço em branco. Sobre a foto do herói e sobre a tinta do
+   rodapé, a versão colorida perde o contorno navy e sobram manchas soltas de
+   teal e laranja — o cachorro e o gato somem.
 
-   É a MESMA solução usada nas barras do painel (.marca-chip em base.css), e
-   isso é proposital: a marca aparece do mesmo jeito no site e dentro do
-   produto, que é o que faz as duas telas parecerem a mesma marca. */
-.brand__mark--pastilha,
-.js .site-header:not(.is-stuck) .brand__mark{
-  background:#fff; border-radius:12px; padding:4px;
-}
+   Sem JavaScript o cabeçalho fica sólido e claro desde o início, então a
+   versão colorida é a que aparece por padrão. */
+.brand__mark--claro{ display:none; }
+.js .site-header:not(.is-stuck) .brand__mark--cor{ display:none; }
+.js .site-header:not(.is-stuck) .brand__mark--claro{ display:block; }
 .brand__text{ display:flex; flex-direction:column; line-height:1; }
 .brand__name{
   font-family:var(--font-display); font-weight:800; letter-spacing:-.02em;
@@ -1023,7 +1022,9 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   <header class="site-header" id="topo">
     <div class="container nav">
       <a class="brand" href="#topo" aria-label="ConectaPet — ir para o início">
-        <img class="brand__mark" src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+        <img class="brand__mark brand__mark--cor" src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+             width="46" height="42" alt="" decoding="async">
+        <img class="brand__mark brand__mark--claro" src="/marca-branca.png" srcset="/marca-branca.png 1x, /marca-branca@2x.png 2x"
              width="46" height="42" alt="" decoding="async">
         <span class="brand__text">
           <span class="brand__name">Conecta<span>Pet</span></span>
@@ -1711,7 +1712,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
       <div class="footer__top">
         <div class="footer__brand">
           <a class="brand" href="#topo" aria-label="ConectaPet — ir para o início">
-            <img class="brand__mark brand__mark--pastilha" src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+            <img class="brand__mark" src="/marca-branca.png" srcset="/marca-branca.png 1x, /marca-branca@2x.png 2x"
                  width="56" height="51" alt="" loading="lazy" decoding="async">
             <span class="brand__text">
               <span class="brand__name">Conecta<span>Pet</span></span>
