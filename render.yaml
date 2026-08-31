@@ -115,12 +115,8 @@ services:
       # Se um dia o servico virar pago, "smtp" volta a funcionar e as variaveis
       # SMTP_* abaixo ja estao prontas. Nao ha motivo para voltar, exceto
       # preferencia.
-      # AINDA "log": trocar para "http" e o ultimo passo, depois que
-      # EMAIL_HTTP_CHAVE existir no grupo de ambiente. Com "http" e a chave
-      # vazia a aplicacao recusa subir — de proposito — e o deploy falharia
-      # sem necessidade.
       - key: EMAIL_PROVEDOR
-        value: log
+        value: http
 
       # Brevo: 300 e-mails por dia no plano gratuito. Escolhido por aceitar
       # verificar um endereco @gmail.com como remetente, sem dominio proprio —
