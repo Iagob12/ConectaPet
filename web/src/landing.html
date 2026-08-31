@@ -146,6 +146,12 @@ strong,b{ color:var(--navy-900); font-weight:700; }
 .sheet{
   background:var(--orange-100);
   border-radius:var(--radius-sheet);
+  /* "clip", e nao "hidden": os dois cortam o conteudo no canto arredondado,
+     mas "hidden" cria um contexto de rolagem e o cabecalho sticky passaria a
+     grudar dentro da folha em vez de no topo da tela — ou seja, deixaria de
+     grudar. Quem cobria estes cantos era a barra de aviso; sem ela, e a folha
+     que precisa cortar. */
+  overflow:clip;
 }
 .container{ width:100%; max-width:1200px; margin-inline:auto; padding-inline:20px; }
 @media (min-width:768px){ .container{ padding-inline:32px; } }
@@ -321,21 +327,8 @@ p.step-chip,.step-chip{
 }
 
 /* ==========================================================================
-   7. BARRA DE AVISO + CABEÇALHO
+   7. CABEÇALHO
    ========================================================================== */
-.topbar{
-  background:var(--teal-700); color:#fff;
-  border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;
-  font-size:14px; line-height:1.5;
-}
-.topbar__inner{
-  display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
-  gap:4px 12px; padding-block:10px; text-align:center;
-}
-.topbar a{ display:inline-flex; align-items:center; min-height:44px; padding-inline:4px; color:#fff; font-weight:600; }
-.topbar a:hover{ color:#fff; text-decoration-thickness:2.5px; }
-.topbar :focus-visible{ outline-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.4); }
-
 .site-header{
   position:sticky; top:0; z-index:60;
   background:var(--white);
@@ -1025,14 +1018,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
 
 <div class="frame">
 <div class="sheet">
-
-  <!-- ===== 0. Barra de aviso ===== -->
-  <div class="topbar">
-    <p class="container topbar__inner">
-      <span>Frete grátis nas tags ConectaPet para todo o Brasil.</span>
-      <a href="#faq">Ver condições</a>
-    </p>
-  </div>
 
   <!-- ===== 1. Menu principal ===== -->
   <header class="site-header" id="topo">
