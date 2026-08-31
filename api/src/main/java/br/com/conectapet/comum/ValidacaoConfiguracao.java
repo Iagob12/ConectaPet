@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Profile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Recusa subir com configuracao de desenvolvimento fora do desenvolvimento.
@@ -38,6 +39,10 @@ public class ValidacaoConfiguracao {
     private final boolean seedHabilitado;
     private final boolean logConteudo;
     private final String provedorEmail;
+    private final String smtpHost;
+    private final String smtpUsuario;
+    private final String smtpSenha;
+    private final String remetente;
 
     public ValidacaoConfiguracao(
             @Value("${conectapet.tag.url-publica}") String urlPublicaTag,
@@ -46,7 +51,11 @@ public class ValidacaoConfiguracao {
             @Value("${conectapet.cookie.seguro:true}") boolean cookieSeguro,
             @Value("${conectapet.seed.habilitado:false}") boolean seedHabilitado,
             @Value("${conectapet.notificacao.log-conteudo:false}") boolean logConteudo,
-            @Value("${conectapet.email.provedor:log}") String provedorEmail) {
+            @Value("${conectapet.email.provedor:log}") String provedorEmail,
+            @Value("${spring.mail.host:}") String smtpHost,
+            @Value("${spring.mail.username:}") String smtpUsuario,
+            @Value("${spring.mail.password:}") String smtpSenha,
+            @Value("${conectapet.email.remetente:}") String remetente) {
         this.urlPublicaTag = urlPublicaTag;
         this.urlSite = urlSite;
         this.corsOrigens = corsOrigens;
@@ -54,6 +63,10 @@ public class ValidacaoConfiguracao {
         this.seedHabilitado = seedHabilitado;
         this.logConteudo = logConteudo;
         this.provedorEmail = provedorEmail;
+        this.smtpHost = smtpHost;
+        this.smtpUsuario = smtpUsuario;
+        this.smtpSenha = smtpSenha;
+        this.remetente = remetente;
     }
 
     @PostConstruct
@@ -115,10 +128,43 @@ public class ValidacaoConfiguracao {
                     + "para o log, e ele carrega o link de redefinir senha.");
         }
 
+
+        // SMTP escolhido, mas sem como falar com o servidor. Isto e erro, e nao
+        // aviso, porque a falha acontece longe daqui: a aplicacao sobe, o
+        // usuario pede "esqueci a senha", a notificacao entra na fila, e so na
+        // hora do envio a conexao falha. A pessoa fica esperando um e-mail que
+        // nunca vai chegar, e o unico sinal e uma excecao no log do servidor.
+        if ("smtp".equalsIgnoreCase(provedorEmail)) {
+            if (smtpHost.isBlank()) {
+                erros.add("EMAIL_PROVEDOR=smtp mas SMTP_HOST esta vazio. "
+                        + "Para o Gmail: smtp.gmail.com");
+            }
+            if (smtpUsuario.isBlank()) {
+                erros.add("EMAIL_PROVEDOR=smtp mas SMTP_USUARIO esta vazio.");
+            }
+            if (smtpSenha.isBlank()) {
+                erros.add("EMAIL_PROVEDOR=smtp mas SMTP_SENHA esta vazia. "
+                        + "No Gmail e uma senha de app, nao a senha da conta.");
+            }
+            if (remetente.isBlank()) {
+                erros.add("EMAIL_PROVEDOR=smtp mas EMAIL_REMETENTE esta vazio.");
+            } else if (ehGmail() && !remetente.toLowerCase(Locale.ROOT).contains(smtpUsuario.toLowerCase(Locale.ROOT))) {
+                // O Gmail recusa ou reescreve um From que nao seja a conta
+                // autenticada. Sem esta checagem o e-mail sai com um remetente
+                // diferente do configurado, ou nao sai, e o motivo nao e obvio.
+                erros.add("No Gmail, EMAIL_REMETENTE precisa usar o endereco de SMTP_USUARIO ("
+                        + smtpUsuario + "). O Gmail recusa remetente que nao seja a conta autenticada.");
+            }
+        }
+
         return erros;
     }
 
     /** Cobre localhost, 127.0.0.1 e a forma sem host de quem esqueceu de trocar. */
+    private boolean ehGmail() {
+        return smtpHost.toLowerCase(Locale.ROOT).contains("gmail.com");
+    }
+
     private boolean local(String valor) {
         if (valor == null || valor.isBlank()) {
             return false;

@@ -75,6 +75,59 @@ blueprint — só as chaves declaradas nele são tocadas.
 confirmação de leitura, nada registra erro, e o tutor nunca é avisado. É a razão
 de ela ser uma linha revisável no repositório e não um campo de painel.
 
+## E-mail pelo Gmail
+
+Sem provedor de e-mail, duas coisas do produto simplesmente não acontecem: **o
+tutor não é avisado quando alguém lê a tag** — que é a função central — e
+ninguém consegue recuperar a senha. A verificação de e-mail também não fecha, e
+ela é o que libera transferir uma tag para outro dono.
+
+O `EnvioEmailSmtp` fala SMTP puro e não sabe qual provedor está do outro lado.
+Ligar o Gmail é configuração, não código.
+
+### 1. Senha de app (você, no Google)
+
+Nunca a senha da conta. Uma senha de app é revogável sozinha, e vazando ela não
+dá acesso ao e-mail de ninguém — só permissão de enviar.
+
+1. Ligue a **verificação em duas etapas** em https://myaccount.google.com/security
+   (o Google só oferece senha de app com ela ligada)
+2. Vá em https://myaccount.google.com/apppasswords
+3. Crie uma para "ConectaPet". São 16 caracteres.
+
+### 2. As três variáveis (você, no Render)
+
+No grupo de ambiente `conectapet-admin` — **não** no painel do serviço, cujo
+formulário mascara todos os valores e apagaria os segredos ao salvar:
+
+| Variável | Valor |
+|---|---|
+| `SMTP_USUARIO` | o endereço @gmail.com da conta |
+| `SMTP_SENHA` | a senha de app, sem espaços |
+| `EMAIL_REMETENTE` | `ConectaPet <o-mesmo-endereço@gmail.com>` |
+
+**O remetente precisa ser o mesmo endereço da conta.** O Gmail recusa ou
+reescreve um `From` que não seja a conta autenticada — a aplicação checa isso na
+subida e recusa começar, em vez de deixar sair e-mail com remetente que ninguém
+configurou.
+
+### 3. Ligar (`EMAIL_PROVEDOR=smtp` no `render.yaml`)
+
+Por último, e só depois das três acima. Com `smtp` e qualquer uma vazia, a
+aplicação **recusa subir** — de propósito: o deploy falha, o Render mantém a
+versão anterior no ar, e o erro aparece na hora. A alternativa seria subir
+calado e a pessoa ficar esperando um e-mail de recuperação que nunca sai.
+
+### O que o Gmail custa
+
+Cerca de **500 destinatários por dia** na conta gratuita, e o remetente é um
+`@gmail.com` — o que pesa contra a entregabilidade e não parece profissional
+num aviso de "encontraram seu pet".
+
+Cabe folgado no começo e é grátis. Quando houver domínio próprio, Resend
+(3 mil/mês grátis) ou SES resolvem os dois problemas, e a migração é trocar
+host, usuário e senha.
+
 ### O que essa rota custa
 
 O Render não tem região na América do Sul. Ohio, a menos ruim, fica a uns
