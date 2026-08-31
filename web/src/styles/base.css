@@ -1,19 +1,71 @@
-/* Tokens e componentes compartilhados entre o fluxo de ativacao e o painel. */
+/* Tokens e componentes compartilhados entre o fluxo de ativacao e o painel.
+ *
+ * Os valores aqui sao os MESMOS do landing.html, e isso e verificado por
+ * teste (web/test/identidade.test.ts). Antes eram dois conjuntos parecidos
+ * mas nao iguais, e a diferenca aparecia como uma troca de marca: a vitrine
+ * com Poppins e Inter, sombras e raios proprios; o produto com a fonte do
+ * sistema e valores soltos no meio do arquivo.
+ *
+ * O landing.html e a fonte da verdade, por ser onde a identidade foi
+ * desenhada. Mudou la, muda aqui — e o teste falha nomeando o token que
+ * divergiu, porque ninguem relê dois arquivos de CSS procurando um hex
+ * diferente por dois digitos.
+ */
 :root {
-  --teal-500:#2FA8A5; --teal-600:#248785; --teal-700:#1D6B69; --teal-100:#D9F0EF;
+  /* principal */
+  --teal-500:#2FA8A5;   /* cor de marca: preenchimento, nunca texto sobre branco */
+  --teal-600:#248785;   /* hover/pressed */
+  --teal-700:#1D6B69;   /* texto e links em teal — os tons acima reprovam em AA */
+  --teal-100:#D9F0EF;
   --orange-500:#F0A02E; --orange-100:#FCEBD2;
   --navy-900:#22313A; --navy-700:#3B4E59;
-  --white:#fff; --sand-100:#FAF3E7; --gray-300:#D6D2C9;
-  --alert-600:#D92D20; --alert-50:#FEF0EF;
+
+  /* neutros */
+  --white:#FFFFFF; --sand-100:#FAF3E7; --gray-300:#D6D2C9; --gray-500:#8A8A93;
+  --navy-300:#A9B2B7;
+
+  /* Suporte: botões de ligar e WhatsApp da tela de resgate. Tons escuros de
+     propósito — os anteriores reprovavam em AA com texto branco (4.15 e 4.14
+     contra os 4.5 exigidos). Estes dão 4.76 e 5.21. */
+  --call-600:#0E8449; --whats-700:#0F7A6E;
+  --alert-600:#D92D20; --alert-50:#FEF0EF; --success-600:#2E9E5B;
+
+  /* forma */
+  --radius-sm:8px; --radius-md:12px; --radius-lg:20px;
+  --radius-xl:28px; --radius-sheet:32px; --radius-full:9999px;
+
+  /* espaço */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-6:24px; --sp-8:32px; --sp-12:48px; --sp-16:64px; --sp-24:96px;
+
+  /* sombra */
+  --shadow-xs:0 1px 2px rgba(34,49,58,.07);
+  --shadow-sm:0 4px 12px rgba(34,49,58,.10);
+  --shadow-md:0 12px 28px rgba(34,49,58,.12);
+  --shadow-hard:4px 4px 0 var(--navy-900);
+  --shadow-focus:0 0 0 3px rgba(47,168,165,.55);
+
+  /* tipografia */
+  --font-display:"Poppins","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-title:"Poppins","Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-body:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
 body{
   margin:0;background:var(--orange-100);color:var(--navy-700);
-  font:400 17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  /* Inter, a mesma da vitrine. Antes era a fonte do sistema, e o efeito era o
+     de sair de um site e entrar em outro ao terminar o cadastro. O fallback
+     de sistema segue na frente do usuário se a fonte não carregar. */
+  font:400 17px/1.55 var(--font-body);
 }
-.topo{background:var(--teal-700);color:#fff;padding:14px 20px;font-weight:700;letter-spacing:-.01em}
+.topo{background:var(--teal-700);color:#fff;padding:14px 20px;font:700 18px/1.2 var(--font-display);letter-spacing:-.01em}
 .folha{max-width:520px;margin:0 auto;padding:24px 20px 48px}
-h1{font-size:28px;line-height:1.2;color:var(--navy-900);margin:0 0 8px;letter-spacing:-.02em}
+/* Poppins nos títulos, como na vitrine. clamp() em vez de tamanho fixo: em
+   telas de 320px o título de 28px quebrava em três linhas e empurrava o
+   formulário para fora da dobra. */
+h1{font:800 clamp(24px,6vw,30px)/1.15 var(--font-title);color:var(--navy-900);
+   margin:0 0 8px;letter-spacing:-.02em}
+h2{font-family:var(--font-title);letter-spacing:-.01em}
 .sub{margin:0 0 24px;max-width:44ch}
 
 .passos{display:flex;gap:6px;margin-bottom:20px}
@@ -63,7 +115,13 @@ input[aria-invalid="true"]{border-color:var(--alert-600)}
 }
 .aviso--calmo{background:var(--teal-100);border-color:var(--navy-900)}
 .link{color:var(--teal-700);font-weight:600}
+/* Área de toque dos links de navegação secundária.
+   Mediram 20px de altura em tela de 320px — abaixo dos 24px que o WCAG 2.2
+   (2.5.8) exige, e muito abaixo do que se acerta com o polegar andando na rua.
+   O padding cresce só a área clicável; o texto continua exatamente onde
+   estava, então o desenho da tela não muda. */
 .rodape-link{margin-top:24px;text-align:center;font-size:16px}
+.rodape-link .link{display:inline-block;padding:12px 8px}
 
 /* ---- Painel do tutor ---------------------------------------------------- */
 
@@ -88,7 +146,7 @@ input[aria-invalid="true"]{border-color:var(--alert-600)}
      no navegador antes de escolher. */
   width:46px;height:auto;flex:none;
 }
-.barra__marca{display:flex;align-items:center;gap:10px}
+.barra__marca{display:flex;align-items:center;gap:10px;font-family:var(--font-display)}
 .topo{display:flex;align-items:center;gap:10px}
 .barra__menu a{text-decoration:none;padding:8px 4px;min-height:44px;display:flex;align-items:center}
 .barra__menu a[aria-current="page"]{text-decoration:underline;text-underline-offset:5px}
