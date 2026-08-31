@@ -196,6 +196,11 @@ conectapet:
     # "local" grava em disco e NAO sobrevive a redeploy; "s3" usa object
     # storage — S3, R2, MinIO, Backblaze. O bucket nunca e publico: os bytes
     # voltam para a API, que os serve sob a regra de visibilidade do perfil.
+    # local  disco do container. Some a cada publicacao — so para desenvolver.
+    # banco  os bytes no proprio MySQL. Cabe: as tres variantes de um pet
+    #        somam ~28 kB e o upload e recusado acima de 4 MB.
+    # s3     object storage (AWS ou Cloudflare R2), para quando o volume
+    #        deixar de caber no banco.
     armazenamento: ${FOTO_ARMAZENAMENTO:local}
     diretorio: ${FOTO_DIRETORIO:./dados/fotos}
     # 4 MB, e nao 5. O upload passa pelo servidor do site, e a funcao da Vercel

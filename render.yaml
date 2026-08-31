@@ -155,22 +155,30 @@ services:
         sync: false
 
       # ---- Fotos ----
-      # ATENÇÃO: "local", e isto é TEMPORÁRIO.
+      # No BANCO, e nao em disco nem em bucket.
       #
-      # No Render o disco do container é efêmero: com "local", TODA FOTO DE PET
-      # SOME a cada deploy. Está assim só para a pilha subir antes de o bucket
-      # existir — com "s3" e as chaves em branco, a aplicação nem inicia.
+      # O disco do container e efemero: com "local", toda foto de pet sumia a
+      # cada publicacao. E a foto e o que faz quem achou o animal reconhecer
+      # que e o bicho certo — perde-la nao e perder um enfeite.
       #
-      # TROQUE PARA `s3` ASSIM QUE O BUCKET EXISTIR. A foto é o que faz quem
-      # achou o pet reconhecer o bicho; perdê-la não é perder um enfeite.
+      # "banco" resolve sem conta nova, sem chave nova para vazar e sem custo,
+      # e a conta fecha por dois numeros medidos: as tres variantes de um pet
+      # somam ~28 kB, e o upload ja e recusado acima de 4 MB. Trinta mil pets
+      # cabem em menos de 1 GB.
+      #
+      # O dia em que o volume mudar essa conta, "s3" continua implementado e a
+      # troca e desta variavel — as chaves do R2 ficam no grupo de ambiente.
       - key: FOTO_ARMAZENAMENTO
-        value: local
+        value: banco
+
+      # Usados so quando FOTO_ARMAZENAMENTO=s3. Ficam declarados para a troca
+      # ser de uma variavel so.
+      - key: FOTO_S3_REGIAO
+        value: auto
       - key: FOTO_S3_BUCKET
         sync: false
       - key: FOTO_S3_ENDPOINT
         sync: false
-      - key: FOTO_S3_REGIAO
-        value: auto
       - key: FOTO_S3_CHAVE
         sync: false
       - key: FOTO_S3_SEGREDO

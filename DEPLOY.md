@@ -119,7 +119,32 @@ aplicação **recusa subir** — de propósito: o deploy falha, o Render mantém
 versão anterior no ar, e o erro aparece na hora. A alternativa seria subir
 calado e a pessoa ficar esperando um e-mail de recuperação que nunca sai.
 
-### Fotos no Cloudflare R2
+### Fotos no próprio banco
+
+No Render o disco do container é efêmero: com `FOTO_ARMAZENAMENTO=local`, **toda
+foto de pet some a cada publicação**. A foto é o que faz quem achou o animal
+reconhecer que é o bicho certo.
+
+A escolha é `banco`: os bytes vão para a tabela `fotos_arquivo`, no mesmo MySQL
+que já existe. Sem conta nova, sem chave nova para vazar, sem custo.
+
+**Guardar imagem em banco costuma ser má ideia. Aqui não é, e a conta é
+medida:** as três variantes de um pet somam **~28 kB** (160, 400 e 1200 px em
+JPEG) e o upload já é recusado acima de 4 MB antes do reprocessamento. Trinta
+mil pets cabem em menos de 1 GB.
+
+A tabela é separada de propósito — `pets` é lida em toda listagem do painel, e
+um BLOB na mesma linha faria cada consulta carregar bytes que ninguém pediu.
+
+**Quando isso deixar de valer**, a interface `ArmazenamentoFotos` já existe e a
+troca para object storage é de uma variável só: `FOTO_ARMAZENAMENTO=s3`, com as
+quatro chaves do R2 no grupo de ambiente. O caminho está implementado e testado;
+o que muda é o valor.
+
+Os sinais de que chegou a hora: o backup do banco começar a demorar, ou o plano
+do Aiven encostar no teto de armazenamento.
+
+### Se um dia precisar sair do banco: Cloudflare R2
 
 No Render o disco do container é efêmero: com `FOTO_ARMAZENAMENTO=local`, **toda
 foto de pet some a cada publicação**. A foto é o que faz quem achou o animal
