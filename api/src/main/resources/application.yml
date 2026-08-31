@@ -94,6 +94,11 @@ conectapet:
     # Duas abas renovando ao mesmo tempo derrubariam a sessao de um usuario
     # legitimo sem esta janela: a segunda apresentaria um token ja rotacionado.
     tolerancia-rotacao: PT10S
+  # TEMPORARIO: apaga todos os dados na subida, uma vez.
+  # So age se o valor bater exatamente com o token do codigo. Remover junto
+  # com a classe ResetBancoUmaVez assim que tiver sido usado.
+  reset-banco: ${RESET_BANCO:}
+
   privacidade:
     # Como achar o IP de quem chamou, atras do proxy da hospedagem.
     #
