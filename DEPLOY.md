@@ -119,6 +119,47 @@ aplicação **recusa subir** — de propósito: o deploy falha, o Render mantém
 versão anterior no ar, e o erro aparece na hora. A alternativa seria subir
 calado e a pessoa ficar esperando um e-mail de recuperação que nunca sai.
 
+### Fotos no Cloudflare R2
+
+No Render o disco do container é efêmero: com `FOTO_ARMAZENAMENTO=local`, **toda
+foto de pet some a cada publicação**. A foto é o que faz quem achou o animal
+reconhecer que é o bicho certo — perdê-la não é perder um enfeite.
+
+O R2 dá 10 GB grátis e não cobra saída de dados, que é onde os concorrentes
+pesam.
+
+**1. Na Cloudflare** (dash.cloudflare.com → R2):
+
+- Crie um bucket. Nome sugerido: `conectapet-fotos`
+- Em **Manage R2 API Tokens**, crie um token com permissão de leitura e escrita
+  **só nesse bucket**
+- Guarde três coisas: o *Access Key ID*, o *Secret Access Key* e o **endpoint**,
+  que tem a forma `https://<id-da-conta>.r2.cloudflarestorage.com`
+
+**2. No Render**, grupo `conectapet-admin`:
+
+| Variável | Valor |
+|---|---|
+| `FOTO_S3_BUCKET` | `conectapet-fotos` |
+| `FOTO_S3_ENDPOINT` | `https://<id-da-conta>.r2.cloudflarestorage.com` |
+| `FOTO_S3_CHAVE` | o Access Key ID |
+| `FOTO_S3_SEGREDO` | o Secret Access Key |
+
+**3. Trocar `FOTO_ARMAZENAMENTO` para `s3`** no `render.yaml` — por último.
+
+Com `s3` e qualquer uma das quatro em branco, a aplicação **recusa subir**. É
+de propósito: sem essa checagem ela subiria normal e falharia só na hora do
+upload, com o tutor escolhendo a foto, esperando, e recebendo um erro genérico
+enquanto o problema estava numa variável vazia desde o deploy.
+
+O endpoint entra na checagem por um motivo específico: o R2 não é a AWS. Sem
+ele, o SDK tenta falar com `s3.amazonaws.com` e o erro que volta não menciona
+isso em lugar nenhum.
+
+**O bucket fica privado.** As fotos são servidas pela API, que confere se a tag
+está ativa antes de entregar cada byte — bucket público daria uma URL eterna,
+que continuaria funcionando depois de o tutor desativar o perfil.
+
 ### O plano gratuito do Render não envia e-mail nenhum
 
 **Desde setembro de 2025 o Render bloqueia as portas SMTP 25, 465 e 587 em

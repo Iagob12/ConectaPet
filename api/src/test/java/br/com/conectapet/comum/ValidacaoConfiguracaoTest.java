@@ -18,7 +18,8 @@ class ValidacaoConfiguracaoTest {
                 "https://conectapet.com.br",
                 true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>", "chave-http");
+                "ConectaPet <conta@gmail.com>", "chave-http",
+                "local", "", "", "", "");
     }
 
     @Test
@@ -33,7 +34,8 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("http://localhost:4321/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>", "chave-http");
+                "ConectaPet <conta@gmail.com>", "chave-http",
+                "local", "", "", "", "");
 
         assertThat(v.problemas()).singleElement().asString()
                 .contains("url-publica")
@@ -46,7 +48,8 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "http://localhost:4321", true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>", "chave-http");
+                "ConectaPet <conta@gmail.com>", "chave-http",
+                "local", "", "", "", "");
 
         // A confirmacao de leitura e um fetch do navegador para outra origem.
         // Bloqueada, o tutor nunca e avisado — e nada no servidor registra erro.
@@ -59,7 +62,8 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("http://127.0.0.1:4321/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>", "chave-http");
+                "ConectaPet <conta@gmail.com>", "chave-http",
+                "local", "", "", "", "");
         assertThat(v.problemas()).hasSize(1);
     }
 
@@ -69,7 +73,8 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", false, true, true, "smtp",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>", "chave-http");
+                "ConectaPet <conta@gmail.com>", "chave-http",
+                "local", "", "", "", "");
 
         assertThat(v.problemas()).hasSize(3);
         assertThat(String.join(" ", v.problemas()))
@@ -84,7 +89,8 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "log",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>", "chave-http");
+                "ConectaPet <conta@gmail.com>", "chave-http",
+                "local", "", "", "", "");
 
         // Da para subir de proposito sem provedor durante uma migracao; o aviso
         // no log e que nao pode faltar.
@@ -97,7 +103,8 @@ class ValidacaoConfiguracaoTest {
         var v = new ValidacaoConfiguracao("http://localhost/p/", "http://localhost",
                 "http://localhost", false, true, true, "log",
                 "smtp.gmail.com", "conta@gmail.com", "senha-de-app",
-                "ConectaPet <conta@gmail.com>", "chave-http");
+                "ConectaPet <conta@gmail.com>", "chave-http",
+                "local", "", "", "", "");
 
         // Corrigir um, subir, descobrir o proximo, repetir — seria um ciclo de
         // deploy por variavel errada.
@@ -111,7 +118,8 @@ class ValidacaoConfiguracaoTest {
                 "https://conectapet.com.br",
                 "https://conectapet.com.br",
                 true, false, false, "smtp",
-                host, usuario, senha, remetente, "chave-http");
+                host, usuario, senha, remetente, "chave-http",
+                "local", "", "", "", "");
     }
 
     @Test
@@ -161,7 +169,8 @@ class ValidacaoConfiguracaoTest {
         ValidacaoConfiguracao v = new ValidacaoConfiguracao(
                 "https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "http",
-                "", "", "", "ConectaPet <c@gmail.com>", "");
+                "", "", "", "ConectaPet <c@gmail.com>", "",
+                "local", "", "", "", "");
         assertThat(v.problemas()).anyMatch(e -> e.contains("EMAIL_HTTP_CHAVE"));
     }
 
@@ -174,7 +183,41 @@ class ValidacaoConfiguracaoTest {
         ValidacaoConfiguracao v = new ValidacaoConfiguracao(
                 "https://conectapet.com.br/p/", "https://conectapet.com.br",
                 "https://conectapet.com.br", true, false, false, "http",
-                "", "", "", "ConectaPet <c@gmail.com>", "chave-de-api");
+                "", "", "", "ConectaPet <c@gmail.com>", "chave-de-api",
+                "local", "", "", "", "");
         assertThat(v.problemas()).isEmpty();
+    }
+
+    /** Igual ao de producao, com os campos de foto sob controle. */
+    private ValidacaoConfiguracao comFoto(String modo, String bucket, String chave,
+                                          String segredo, String endpoint) {
+        return new ValidacaoConfiguracao(
+                "https://conectapet.com.br/p/", "https://conectapet.com.br",
+                "https://conectapet.com.br", true, false, false, "http",
+                "", "", "", "ConectaPet <c@gmail.com>", "chave-de-api",
+                modo, bucket, chave, segredo, endpoint);
+    }
+
+    @Test
+    @DisplayName("s3 sem bucket, chave, segredo ou endpoint e recusado na subida")
+    void s3Incompleto() {
+        // Sem isto o ArmazenamentoS3 sobe normal e so falha na hora do upload:
+        // o tutor escolhe a foto, espera, e recebe um erro generico — enquanto
+        // o problema esta numa variavel em branco desde o deploy.
+        final String E = "https://abc.r2.cloudflarestorage.com";
+        assertThat(comFoto("s3", "", "k", "s", E).problemas()).anyMatch(x -> x.contains("FOTO_S3_BUCKET"));
+        assertThat(comFoto("s3", "b", "", "s", E).problemas()).anyMatch(x -> x.contains("FOTO_S3_CHAVE"));
+        assertThat(comFoto("s3", "b", "k", "", E).problemas()).anyMatch(x -> x.contains("FOTO_S3_SEGREDO"));
+        assertThat(comFoto("s3", "b", "k", "s", "").problemas()).anyMatch(x -> x.contains("FOTO_S3_ENDPOINT"));
+    }
+
+    @Test
+    @DisplayName("s3 completo sobe, e local nao exige nada disso")
+    void s3CompletoELocal() {
+        assertThat(comFoto("s3", "conectapet-fotos", "chave", "segredo",
+                           "https://abc.r2.cloudflarestorage.com").problemas()).isEmpty();
+        // Em "local" as variaveis de S3 nao existem, e exigi-las seria pedir
+        // configuracao para um caminho que nao vai ser usado.
+        assertThat(comFoto("local", "", "", "", "").problemas()).isEmpty();
     }
 }

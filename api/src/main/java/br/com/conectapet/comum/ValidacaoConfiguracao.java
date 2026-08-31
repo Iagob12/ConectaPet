@@ -44,6 +44,11 @@ public class ValidacaoConfiguracao {
     private final String smtpSenha;
     private final String remetente;
     private final String emailHttpChave;
+    private final String armazenamentoFoto;
+    private final String fotoBucket;
+    private final String fotoChave;
+    private final String fotoSegredo;
+    private final String fotoEndpoint;
 
     public ValidacaoConfiguracao(
             @Value("${conectapet.tag.url-publica}") String urlPublicaTag,
@@ -57,7 +62,12 @@ public class ValidacaoConfiguracao {
             @Value("${spring.mail.username:}") String smtpUsuario,
             @Value("${spring.mail.password:}") String smtpSenha,
             @Value("${conectapet.email.remetente:}") String remetente,
-            @Value("${conectapet.email.http.chave:}") String emailHttpChave) {
+            @Value("${conectapet.email.http.chave:}") String emailHttpChave,
+            @Value("${conectapet.foto.armazenamento:local}") String armazenamentoFoto,
+            @Value("${conectapet.foto.s3.bucket:}") String fotoBucket,
+            @Value("${conectapet.foto.s3.chave:}") String fotoChave,
+            @Value("${conectapet.foto.s3.segredo:}") String fotoSegredo,
+            @Value("${conectapet.foto.s3.endpoint:}") String fotoEndpoint) {
         this.urlPublicaTag = urlPublicaTag;
         this.urlSite = urlSite;
         this.corsOrigens = corsOrigens;
@@ -70,6 +80,11 @@ public class ValidacaoConfiguracao {
         this.smtpSenha = smtpSenha;
         this.remetente = remetente;
         this.emailHttpChave = emailHttpChave;
+        this.armazenamentoFoto = armazenamentoFoto;
+        this.fotoBucket = fotoBucket;
+        this.fotoChave = fotoChave;
+        this.fotoSegredo = fotoSegredo;
+        this.fotoEndpoint = fotoEndpoint;
     }
 
     @PostConstruct
@@ -170,6 +185,30 @@ public class ValidacaoConfiguracao {
             }
             if (remetente.isBlank()) {
                 erros.add("EMAIL_PROVEDOR=http mas EMAIL_REMETENTE esta vazio.");
+            }
+        }
+
+
+        // Mesma regra do e-mail, e pelo mesmo motivo: sem credencial o
+        // ArmazenamentoS3 sobe normal e so falha na hora do upload. O tutor
+        // escolhe a foto, espera, e recebe um erro generico — enquanto o
+        // problema esta numa variavel em branco desde o deploy.
+        if ("s3".equalsIgnoreCase(armazenamentoFoto)) {
+            if (fotoBucket.isBlank()) {
+                erros.add("FOTO_ARMAZENAMENTO=s3 mas FOTO_S3_BUCKET esta vazio.");
+            }
+            if (fotoChave.isBlank()) {
+                erros.add("FOTO_ARMAZENAMENTO=s3 mas FOTO_S3_CHAVE esta vazia.");
+            }
+            if (fotoSegredo.isBlank()) {
+                erros.add("FOTO_ARMAZENAMENTO=s3 mas FOTO_S3_SEGREDO esta vazio.");
+            }
+            // O Cloudflare R2 nao e a AWS: sem endpoint o SDK tenta falar com
+            // s3.amazonaws.com, e o erro que volta nao menciona isso.
+            if (fotoEndpoint.isBlank()) {
+                erros.add("FOTO_ARMAZENAMENTO=s3 mas FOTO_S3_ENDPOINT esta vazio. "
+                        + "Para Cloudflare R2: https://<id-da-conta>.r2.cloudflarestorage.com "
+                        + "(deixe vazio so se o bucket for da AWS de verdade).");
             }
         }
 
