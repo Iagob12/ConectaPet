@@ -110,6 +110,16 @@ conectapet:
     # sozinha, errar para mais da uma chave que o atacante escolhe, e os dois
     # casos significam "nenhum limite", em silencio.
     proxies-confiaveis: ${PROXIES_CONFIAVEIS:-1}
+    # Liga uma linha de log por requisicao com a FORMA da cadeia do
+    # X-Forwarded-For. TEMPORARIO — desligue quando a topologia estiver
+    # definida.
+    #
+    # Precisa existir AQUI. O Spring nao adivinha que DIAGNOSTICO_PROXY se
+    # refere a esta propriedade: sem esta linha ele procuraria por
+    # CONECTAPET_PRIVACIDADE_DIAGNOSTICOPROXY, e a variavel definida na
+    # hospedagem simplesmente nao faria efeito nenhum — que foi o que
+    # aconteceu, e custou algumas horas procurando o problema no lugar errado.
+    diagnostico-proxy: ${DIAGNOSTICO_PROXY:false}
     ip-pimenta: ${IP_PIMENTA}
   site:
     # Base dos links que saem por e-mail. Errado aqui, o link de redefinir
