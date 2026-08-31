@@ -134,6 +134,14 @@ services:
       - key: EMAIL_REMETENTE
         value: "ConectaPet <conectapet.contato@gmail.com>"
 
+      # Para onde vai a resposta de quem apertar "responder" num e-mail nosso.
+      #
+      # E o mesmo endereco do remetente, e isso e proposital: um aviso de "sua
+      # tag foi lida" faz a pessoa querer responder na hora. Sem isto, a
+      # resposta ia para o vazio.
+      - key: EMAIL_RESPONDER_PARA
+        value: conectapet.contato@gmail.com
+
       # ---- SMTP (inativo enquanto EMAIL_PROVEDOR=http) ----
       # Ficam declarados para a troca ser so mudar EMAIL_PROVEDOR, caso o
       # servico vire pago. SMTP_SENHA continua no grupo de ambiente.

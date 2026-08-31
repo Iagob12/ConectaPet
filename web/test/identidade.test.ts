@@ -110,3 +110,38 @@ describe('contraste dos botões que um estranho aperta na rua', () => {
     });
   }
 });
+
+describe('canais de contato', () => {
+  const html = readFileSync('src/landing.html', 'utf8');
+
+  it('o que promete WhatsApp leva ao WhatsApp', () => {
+    // Passou despercebido numa auditoria minha: o botão "Falar com a gente no
+    // WhatsApp" apontava para #faq, e os links de rede social apontavam para
+    // #topo. Como são âncoras válidas, uma checagem de "link quebrado" aprova
+    // as duas — o defeito é o destino não corresponder ao rótulo.
+    for (const m of html.matchAll(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)) {
+      const [, destino, dentro] = m;
+      const texto = dentro.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (/whatsapp/i.test(texto)) {
+        expect(destino, `"${texto}" deveria abrir o WhatsApp`).toMatch(/^https:\/\/wa\.me\//);
+      }
+      if (/^e-?mail$|fale conosco/i.test(texto)) {
+        expect(destino, `"${texto}" deveria abrir o e-mail`).toMatch(/^mailto:/);
+      }
+    }
+  });
+
+  it('o número e o e-mail são os oficiais', () => {
+    expect(html).toContain('https://wa.me/5567984360414');
+    expect(html).toContain('mailto:conectapet.contato@gmail.com');
+  });
+
+  it('todo ícone usado existe no sprite', () => {
+    // Criei o link de e-mail apontando para um #i-mail que não existia.
+    // Ícone ausente não quebra a página: some, calado.
+    const usados = [...html.matchAll(/<use href="#(i-[a-z-]+)"/g)].map((m) => m[1]);
+    const definidos = new Set([...html.matchAll(/<symbol id="(i-[a-z-]+)"/g)].map((m) => m[1]));
+    const faltando = [...new Set(usados)].filter((i) => !definidos.has(i));
+    expect(faltando, 'ícones usados mas não definidos').toEqual([]);
+  });
+});
