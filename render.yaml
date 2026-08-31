@@ -93,17 +93,15 @@ services:
         sync: false
 
       # ---- E-mail ----
-      # ATENCAO: ainda "log", e isso significa que NADA e entregue — nem aviso
-      # de leitura da tag, nem link de recuperar senha.
+      # LIGADO. O tutor e avisado quando alguem le a tag, a recuperacao de
+      # senha funciona e a verificacao de e-mail fecha.
       #
-      # Trocar para "smtp" e o ULTIMO passo, e so depois que SMTP_USUARIO,
-      # SMTP_SENHA e EMAIL_REMETENTE existirem no grupo de ambiente. Com
-      # "smtp" e qualquer um deles vazio, a aplicacao RECUSA subir — de
-      # proposito. O deploy falha, o Render mantem a versao anterior no ar, e o
-      # erro aparece na hora, em vez de a pessoa ficar esperando um e-mail de
-      # recuperacao que nunca sai.
+      # Com "smtp" e host, usuario, senha ou remetente em branco, a aplicacao
+      # RECUSA subir — de proposito. O deploy falha, o Render mantem a versao
+      # anterior no ar, e o erro aparece na hora, em vez de a pessoa ficar
+      # esperando um e-mail de recuperacao que nunca sai.
       - key: EMAIL_PROVEDOR
-        value: log
+        value: smtp
 
       # O servidor e a conta do Gmail. Nada aqui e segredo.
       #
