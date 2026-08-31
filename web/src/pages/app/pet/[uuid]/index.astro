@@ -91,7 +91,8 @@ if (q.has('falhou') && !aviso) aviso = 'Não consegui concluir. Tente de novo.';
 
   <!-- Modo perdido em primeiro lugar: e a acao urgente, e quem chega aqui as
        pressas nao pode ter que rolar a tela atras dela. -->
-  <section class="cartao">
+  <section class={tag?.modoPerdido ? 'cartao cartao--alerta' : 'cartao'}>
+    {tag?.modoPerdido && <p class="cartao__estado">Pet perdido</p>}
     <h2 class="cartao__titulo">{tag?.modoPerdido ? 'Modo perdido ligado' : 'Modo perdido'}</h2>
     <p class="cartao__nota">
       {tag?.modoPerdido

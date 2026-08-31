@@ -234,7 +234,33 @@ input[aria-invalid="true"]{border-color:var(--alert-600)}
 
 .pilha{display:flex;flex-direction:column;gap:16px}
 .cartao + .cartao{margin-top:16px}
-.cartao__titulo{font-size:19px;font-weight:700;color:var(--navy-900);margin:0 0 4px}
+/* Título de cartão em Poppins, como os da vitrine. Em Inter ele ficava
+   indistinguível do parágrafo abaixo, e a tela virava uma parede de texto. */
+.cartao__titulo{
+  font:700 20px/1.25 var(--font-title);color:var(--navy-900);
+  margin:0 0 4px;letter-spacing:-.01em;
+}
+
+/* Variantes de cartão. Antes eram todos caixas brancas iguais empilhadas, sem
+   hierarquia nenhuma — inclusive o de modo perdido, que é o mais urgente da
+   tela e ficava com o mesmo peso do de foto.
+
+   O fundo é tingido, e a borda navy e a sombra dura continuam: é o mesmo
+   cartão, com um tom por trás dizendo do que se trata. */
+.cartao--alerta{background:var(--alert-50);border-color:var(--alert-600)}
+.cartao--alerta .cartao__titulo{color:var(--alert-600)}
+.cartao--calmo{background:var(--teal-100)}
+.cartao--areia{background:var(--sand-100)}
+
+/* Faixa de estado no topo do cartão: um rótulo curto, em caixa alta, que diz
+   a situação antes do título ser lido. */
+.cartao__estado{
+  display:inline-flex;align-items:center;gap:6px;
+  font:700 12px/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;
+  padding:6px 10px;border-radius:var(--radius-full);margin-bottom:10px;
+  background:var(--alert-600);color:#fff;
+}
+.cartao__estado--calmo{background:var(--teal-700)}
 .cartao__nota{font-size:15px;margin:0 0 16px}
 
 .etiqueta{
