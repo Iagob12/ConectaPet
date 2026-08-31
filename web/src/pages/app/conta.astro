@@ -133,7 +133,7 @@ const reenviado = Astro.url.searchParams.has('verificacao');
   </form>
 
   <section class="cartao">
-    <h2 class="cartao__titulo">E-mail e plano</h2>
+    <h2 class="cartao__titulo">E-mail</h2>
     <ul class="lista-limpa">
       <li class="item">
         <p class="item__quando">E-mail</p>
@@ -153,10 +153,6 @@ const reenviado = Astro.url.searchParams.has('verificacao');
           Trocar o e-mail muda a forma de recuperar a conta, então ainda não é
           feito por aqui — fale com a gente.
         </p>
-      </li>
-      <li class="item">
-        <p class="item__quando">Plano</p>
-        <p class="item__oque">{conta.plano === 'PLUS' ? 'Plus' : 'Free'}</p>
       </li>
     </ul>
   </section>

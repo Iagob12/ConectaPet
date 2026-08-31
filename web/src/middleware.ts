@@ -93,6 +93,22 @@ function aplicarCabecalhosDeSeguranca(resposta: Response) {
   por('X-Frame-Options', 'DENY');
   por('Permissions-Policy', 'camera=(), microphone=(), payment=()');
 
+  // Nada de cache, por padrão.
+  //
+  // As telas do painel não mandavam Cache-Control nenhum, e a Vercel aplicava
+  // "public, max-age=0" — em páginas que mostram o telefone e a foto do pet de
+  // uma pessoa, atrás de uma sessão. "public" autoriza intermediários a
+  // guardar isso.
+  //
+  // E era o que fazia o modo perdido parecer não desligar: o tutor desligava,
+  // a página redirecionava, e ao voltar o navegador reapresentava a cópia
+  // antiga, ainda com o alerta. A ação tinha funcionado; a tela é que mentia.
+  //
+  // Quem precisa de outra política define a sua e esta não sobrescreve: a
+  // vitrine se declara pública e revalidável, e a tela de resgate já vinha
+  // com no-store próprio.
+  por('Cache-Control', 'no-store');
+
   // A API entra na politica porque o NAVEGADOR fala com ela direto em dois
   // pontos: a foto do pet (img-src) e a confirmacao de leitura (connect-src).
   // Sem esses dois, a foto some da tela de resgate e o tutor deixa de ser

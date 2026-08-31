@@ -159,11 +159,12 @@ conectapet:
     origens: ${CORS_ORIGENS:http://localhost:4321}
   planos:
     # Plus vencido nao esconde contato: o teto so bloqueia ADICIONAR mais.
-    # O numero do Plus veio como [X] na copy e segue pendente de dado real.
-    free:
-      teto-contatos: 1
-    plus:
-      teto-contatos: 5
+    # Um teto so: nao ha plano pago nesta versao.
+    #
+    # Era 1 no Free e 5 no Plus. Limitar a um unico contato de emergencia e
+    # economizar no lugar errado — se o tutor nao atende, o segundo numero e a
+    # diferenca entre o pet voltar e nao voltar.
+    teto-contatos: 5
   limites:
     # Piso de tempo das rotas publicas de tag. Sem ele, a diferenca de latencia
     # entre "existe" e "nao existe" reintroduz a enumeracao que os dois codigos

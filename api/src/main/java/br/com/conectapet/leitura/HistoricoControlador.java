@@ -1,7 +1,5 @@
 package br.com.conectapet.leitura;
 
-import br.com.conectapet.assinatura.Assinatura;
-import br.com.conectapet.assinatura.AssinaturaRepositorio;
 import br.com.conectapet.pet.Pet;
 import br.com.conectapet.pet.PetServico;
 import br.com.conectapet.seguranca.UsuarioAtual;
@@ -21,14 +19,12 @@ public class HistoricoControlador {
 
     private final LeituraRepositorio leituras;
     private final PetServico petServico;
-    private final AssinaturaRepositorio assinaturas;
     private final UsuarioAtual usuarioAtual;
 
     public HistoricoControlador(LeituraRepositorio leituras, PetServico petServico,
-                                AssinaturaRepositorio assinaturas, UsuarioAtual usuarioAtual) {
+                                UsuarioAtual usuarioAtual) {
         this.leituras = leituras;
         this.petServico = petServico;
-        this.assinaturas = assinaturas;
         this.usuarioAtual = usuarioAtual;
     }
 
@@ -42,44 +38,44 @@ public class HistoricoControlador {
 
         // Teto de 100 por pagina, mesmo que peçam mais.
         int limite = Math.min(Math.max(tamanho, 1), 100);
-        boolean plus = assinaturas.findFirstByUsuarioIdOrderByIdDesc(u.id())
-                .filter(Assinatura::plusVigente).isPresent();
 
         Page<Leitura> page = leituras.findByPetIdOrderByOcorridaEmDesc(
                 pet.getId(), PageRequest.of(Math.max(pagina, 0), limite));
 
-        List<LeituraDto> conteudo = page.getContent().stream().map(l -> montar(l, plus)).toList();
+        List<LeituraDto> conteudo = page.getContent().stream().map(this::montar).toList();
         return new PaginaDto(conteudo, page.getNumber(), page.getSize(), page.getTotalElements());
     }
 
     /**
-     * No plano Free o histórico existe, mas localizacao e detalhe vem vazios com
-     * `disponivelNoPlano: false` — a interface mostra o recurso bloqueado com o
-     * que ele entrega, em vez de esconder que ele existe.
+     * Tudo o que foi registrado, para todo mundo.
+     *
+     * Cidade, regiao e coordenadas ficavam nulas fora do plano Plus. Numa
+     * primeira versao isso e o pior corte possivel: onde a tag foi lida e
+     * justamente a informacao que ajuda a encontrar o pet, e cobrar por ela e
+     * cobrar pelo momento em que a pessoa mais precisa. Enquanto nao houver
+     * plano pago, nada aqui e escondido.
      */
-    private LeituraDto montar(Leitura l, boolean plus) {
+    private LeituraDto montar(Leitura l) {
         return new LeituraDto(
                 l.getUuid(),
                 l.getOcorridaEm(),
                 l.getOrigem().name(),
-                plus ? l.getCidade() : null,
-                plus ? l.getRegiao() : null,
-                plus ? l.getPais() : null,
+                l.getCidade(),
+                l.getRegiao(),
+                l.getPais(),
                 l.isLocalizacaoCompartilhada(),
-                plus ? l.getLatitude() : null,
-                plus ? l.getLongitude() : null,
-                plus ? l.getPrecisaoM() : null,
+                l.getLatitude(),
+                l.getLongitude(),
+                l.getPrecisaoM(),
                 l.getMensagemDeQuemEncontrou(),
-                l.getTelefoneDeQuemEncontrou(),
-                plus);
+                l.getTelefoneDeQuemEncontrou());
     }
 
     public record LeituraDto(UUID uuid, Instant ocorridaEm, String origem,
                              String cidade, String regiao, String pais,
                              boolean localizacaoCompartilhada,
                              BigDecimal latitude, BigDecimal longitude, Integer precisaoM,
-                             String mensagemDeQuemEncontrou, String telefoneDeQuemEncontrou,
-                             boolean disponivelNoPlano) {}
+                             String mensagemDeQuemEncontrou, String telefoneDeQuemEncontrou) {}
 
     public record PaginaDto(List<LeituraDto> conteudo, int pagina, int tamanho, long total) {}
 }

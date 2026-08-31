@@ -153,6 +153,50 @@ class PerfilPetIT extends TesteIntegracao {
                 .allMatch(t -> t.getStatus() == StatusTag.MODO_PERDIDO);
     }
 
+
+    @Test
+    @DisplayName("desligar o modo perdido volta a tag para ATIVA e limpa o alerta publico")
+    void modoPerdidoDesliga() {
+        // O teste que faltava. So havia cobertura para LIGAR, e o caminho de
+        // volta e o que o tutor usa no melhor dia da historia — quando o pet
+        // aparece. Ele nao pode ficar preso no alerta.
+        Pet nina = petServico.criar(pet("Nina"), tagDaAna.getUuid(), ana);
+
+        petServico.definirModoPerdido(nina.getUuid(), true, ana);
+        assertThat(tags.findByPetId(nina.getId()))
+                .allMatch(Tag::isModoPerdido)
+                .allMatch(t -> t.getStatus() == StatusTag.MODO_PERDIDO);
+
+        petServico.definirModoPerdido(nina.getUuid(), false, ana);
+
+        assertThat(tags.findByPetId(nina.getId()))
+                .as("a flag precisa voltar a false")
+                .noneMatch(Tag::isModoPerdido)
+                .as("e o estado precisa voltar para ATIVA, nao ficar em MODO_PERDIDO")
+                .allMatch(t -> t.getStatus() == StatusTag.ATIVA);
+    }
+
+    @Test
+    @DisplayName("ligar e desligar varias vezes nao trava em nenhum dos dois estados")
+    void modoPerdidoAlternaVarias() {
+        // O relato foi de que \"desativa e meio que mantem ativado\". Alternar
+        // varias vezes e o jeito de pegar um estado que so falha na segunda
+        // volta.
+        Pet nina = petServico.criar(pet("Nina"), tagDaAna.getUuid(), ana);
+
+        for (int i = 0; i < 3; i++) {
+            petServico.definirModoPerdido(nina.getUuid(), true, ana);
+            assertThat(tags.findByPetId(nina.getId()))
+                    .as("volta %d: deveria estar perdido", i)
+                    .allMatch(Tag::isModoPerdido);
+
+            petServico.definirModoPerdido(nina.getUuid(), false, ana);
+            assertThat(tags.findByPetId(nina.getId()))
+                    .as("volta %d: deveria ter voltado ao normal", i)
+                    .noneMatch(Tag::isModoPerdido);
+        }
+    }
+
     @Test
     @DisplayName("modo perdido em pet sem tag devolve 409")
     void modoPerdidoSemTag() {
@@ -218,20 +262,27 @@ class PerfilPetIT extends TesteIntegracao {
     // ---- Teto de contatos --------------------------------------------------
 
     @Test
-    @DisplayName("plano Free barra o segundo contato de emergencia")
-    void tetoDoPlanoFree() {
+    @DisplayName("todo mundo pode cadastrar cinco contatos de emergencia")
+    void tetoDeContatos() {
+        // Era 1 no plano Free e 5 no Plus. Nao ha mais plano pago: limitar a um
+        // unico contato e economizar no lugar errado, porque se o tutor nao
+        // atende, o segundo numero e a diferenca entre o pet voltar e nao voltar.
         Pet nina = petServico.criar(pet("Nina"), tagDaAna.getUuid(), ana);
 
-        ContatoEmergencia primeiro = new ContatoEmergencia();
-        primeiro.setNome("Carlos");
-        primeiro.setTelefone("+5511977770000");
-        petServico.adicionarContato(nina.getUuid(), primeiro, ana);
+        for (int i = 1; i <= 5; i++) {
+            ContatoEmergencia c = new ContatoEmergencia();
+            c.setNome("Contato " + i);
+            c.setTelefone("+551197777000" + i);
+            petServico.adicionarContato(nina.getUuid(), c, ana);
+        }
 
-        ContatoEmergencia segundo = new ContatoEmergencia();
-        segundo.setNome("Marina");
-        segundo.setTelefone("+5511966660000");
+        ContatoEmergencia sexto = new ContatoEmergencia();
+        sexto.setNome("Excedente");
+        sexto.setTelefone("+5511966660000");
 
-        assertThatThrownBy(() -> petServico.adicionarContato(nina.getUuid(), segundo, ana))
+        // O teto continua existindo: sem nenhum, um perfil publico poderia
+        // virar uma lista de telefones de tamanho arbitrario.
+        assertThatThrownBy(() -> petServico.adicionarContato(nina.getUuid(), sexto, ana))
                 .isInstanceOf(ProblemaException.class)
                 .extracting(e -> ((ProblemaException) e).tipo())
                 .isEqualTo(TipoErro.LIMITE_PLANO);

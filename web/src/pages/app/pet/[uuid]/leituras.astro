@@ -22,7 +22,6 @@ const ultimaPagina = Math.max(0, Math.ceil(dados.total / dados.tamanho) - 1);
 
 // O plano não esconde que o recurso existe: mostra o que ele entrega e o que
 // falta para destravá-lo.
-const bloqueado = leituras.length > 0 && !leituras[0].disponivelNoPlano;
 ---
 
 <Painel titulo={`Leituras de ${rp.dados!.nome}`} voltar={{ href: `/app/pet/${uuid}`, texto: rp.dados!.nome }} aba="pets">
@@ -69,15 +68,6 @@ const bloqueado = leituras.length > 0 && !leituras[0].disponivelNoPlano;
         ))}
       </ul>
 
-      {bloqueado && (
-        <div class="bloqueado">
-          <p style="margin:0 0 4px"><strong>A cidade de cada leitura fica no plano Plus.</strong></p>
-          <p style="margin:0">
-            O histórico continua completo aqui; o que o Plus acrescenta é onde,
-            aproximadamente, cada leitura aconteceu.
-          </p>
-        </div>
-      )}
     </section>
   )}
 

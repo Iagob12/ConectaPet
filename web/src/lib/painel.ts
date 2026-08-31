@@ -5,7 +5,10 @@ export type Conta = {
   telefonePrincipalExibicao: string | null; telefonePrincipalE164: string | null;
   telefoneSecundarioExibicao: string | null; telefoneSecundarioE164: string | null;
   whatsappExibicao: string | null; whatsappE164: string | null;
-  emailVerificado: boolean; papel: string; plano: 'FREE' | 'PLUS';
+  emailVerificado: boolean; papel: string;
+  /** Sempre 'FREE' nesta versao: nao ha plano pago. O campo fica para o dia
+   *  em que houver, mas nenhuma tela decide nada com ele. */
+  plano: string;
   limiteContatos: number;
 };
 
@@ -45,7 +48,6 @@ export type Leitura = {
   localizacaoCompartilhada: boolean;
   latitude: string | null; longitude: string | null; precisaoM: number | null;
   mensagemDeQuemEncontrou: string | null; telefoneDeQuemEncontrou: string | null;
-  disponivelNoPlano: boolean;
 };
 
 /**

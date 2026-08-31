@@ -1,7 +1,5 @@
 package br.com.conectapet.pet;
 
-import br.com.conectapet.assinatura.Assinatura;
-import br.com.conectapet.assinatura.AssinaturaRepositorio;
 import br.com.conectapet.comum.erro.ProblemaException;
 import br.com.conectapet.comum.erro.TipoErro;
 import br.com.conectapet.seguranca.UsuarioAutenticado;
@@ -27,27 +25,22 @@ public class PetServico {
     private final ContatoRepositorio contatos;
     private final TagRepositorio tags;
     private final UsuarioRepositorio usuarios;
-    private final AssinaturaRepositorio assinaturas;
     private final br.com.conectapet.auditoria.AuditoriaServico auditoria;
     private final int tetoContatosFree;
-    private final int tetoContatosPlus;
 
     public PetServico(PetRepositorio pets, PetSaudeRepositorio saudes,
                       VisibilidadeRepositorio visibilidades, ContatoRepositorio contatos,
-                      TagRepositorio tags, UsuarioRepositorio usuarios, AssinaturaRepositorio assinaturas,
+                      TagRepositorio tags, UsuarioRepositorio usuarios,
                       br.com.conectapet.auditoria.AuditoriaServico auditoria,
-                      @Value("${conectapet.planos.free.teto-contatos}") int tetoContatosFree,
-                      @Value("${conectapet.planos.plus.teto-contatos}") int tetoContatosPlus) {
+                      @Value("${conectapet.planos.teto-contatos}") int tetoContatosFree) {
         this.pets = pets;
         this.saudes = saudes;
         this.visibilidades = visibilidades;
         this.contatos = contatos;
         this.tags = tags;
         this.usuarios = usuarios;
-        this.assinaturas = assinaturas;
         this.auditoria = auditoria;
         this.tetoContatosFree = tetoContatosFree;
-        this.tetoContatosPlus = tetoContatosPlus;
     }
 
     // ---- Posse -------------------------------------------------------------
@@ -251,14 +244,15 @@ public class PetServico {
     }
 
     /**
-     * Plus vencido nao apaga nem esconde contatos ja cadastrados: eles seguem
-     * visiveis ao publico. O que fica bloqueado e adicionar mais.
+     * Um teto so, igual para todo mundo.
+     *
+     * Era 1 contato no Free e 5 no Plus. Numa primeira versao, limitar a um
+     * unico contato de emergencia e economizar no lugar errado: se o tutor
+     * nao atende, o segundo numero e a diferenca entre o pet voltar e nao
+     * voltar. Enquanto nao houver plano pago, todo mundo tem o teto cheio.
      */
     private int tetoContatos(Long usuarioId) {
-        return assinaturas.findFirstByUsuarioIdOrderByIdDesc(usuarioId)
-                .filter(Assinatura::plusVigente)
-                .map(a -> tetoContatosPlus)
-                .orElse(tetoContatosFree);
+        return tetoContatosFree;
     }
 
     // ---- Modo perdido ------------------------------------------------------

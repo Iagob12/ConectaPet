@@ -1,7 +1,5 @@
 package br.com.conectapet.conta;
 
-import br.com.conectapet.assinatura.Assinatura;
-import br.com.conectapet.assinatura.AssinaturaRepositorio;
 import br.com.conectapet.comum.erro.ProblemaException;
 import br.com.conectapet.comum.erro.TipoErro;
 import br.com.conectapet.comum.util.Telefone;
@@ -29,29 +27,24 @@ import java.util.UUID;
 public class ContaControlador {
 
     private final UsuarioRepositorio usuarios;
-    private final AssinaturaRepositorio assinaturas;
     private final UsuarioAtual usuarioAtual;
     private final br.com.conectapet.autenticacao.VerificacaoEmailServico verificacao;
     private final ContaServico contaServico;
     private final org.springframework.security.crypto.password.PasswordEncoder encoder;
-    private final int tetoContatosFree;
-    private final int tetoContatosPlus;
+    private final int tetoContatos;
 
-    public ContaControlador(UsuarioRepositorio usuarios, AssinaturaRepositorio assinaturas,
+    public ContaControlador(UsuarioRepositorio usuarios,
                             UsuarioAtual usuarioAtual,
                             br.com.conectapet.autenticacao.VerificacaoEmailServico verificacao,
                             ContaServico contaServico,
                             org.springframework.security.crypto.password.PasswordEncoder encoder,
-                            @org.springframework.beans.factory.annotation.Value("${conectapet.planos.free.teto-contatos}") int tetoContatosFree,
-                            @org.springframework.beans.factory.annotation.Value("${conectapet.planos.plus.teto-contatos}") int tetoContatosPlus) {
+                            @org.springframework.beans.factory.annotation.Value("${conectapet.planos.teto-contatos}") int tetoContatos) {
         this.usuarios = usuarios;
-        this.assinaturas = assinaturas;
         this.usuarioAtual = usuarioAtual;
         this.verificacao = verificacao;
         this.contaServico = contaServico;
         this.encoder = encoder;
-        this.tetoContatosFree = tetoContatosFree;
-        this.tetoContatosPlus = tetoContatosPlus;
+        this.tetoContatos = tetoContatos;
     }
 
     @GetMapping
@@ -125,12 +118,13 @@ public class ContaControlador {
     }
 
     private ContaResposta montar(Usuario u) {
-        boolean plus = assinaturas.findFirstByUsuarioIdOrderByIdDesc(u.getId())
-                .filter(Assinatura::plusVigente).isPresent();
-        String plano = plus ? "PLUS" : "FREE";
+        // Nao ha plano pago nesta versao: todo mundo tem tudo. O campo
+        // continua na resposta para o painel nao precisar mudar de forma
+        // quando houver, mas hoje ele so tem um valor possivel.
+        String plano = "FREE";
         // O teto sai daqui para o painel poder avisar ANTES do preenchimento.
         // Descobrir o limite so ao salvar e perder o que a pessoa digitou.
-        int limiteContatos = plus ? tetoContatosPlus : tetoContatosFree;
+        int limiteContatos = tetoContatos;
 
         return new ContaResposta(u.getUuid(), u.getEmail(), u.getNome(),
                 Telefone.paraExibicao(u.getTelefonePrincipal()), u.getTelefonePrincipal(),

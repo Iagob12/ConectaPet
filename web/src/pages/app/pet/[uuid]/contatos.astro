@@ -74,7 +74,6 @@ const contatos = (rc.dados ?? []).slice().sort((a, b) => a.ordem - b.ordem);
 // O limite vem do servidor, nao chumbado aqui. Mostrar so ao salvar fazia a
 // pessoa preencher o formulario inteiro para descobrir que nao cabia.
 const limite = rme.dados?.limiteContatos ?? 0;
-const plus = rme.dados?.plano === 'PLUS';
 const lotado = limite > 0 && contatos.length >= limite;
 const palavra = limite === 1 ? 'contato' : 'contatos';
 
@@ -162,9 +161,7 @@ if (q.has('falhou') && !erro) erro = 'Não consegui remover. Tente de novo.';
     <section class="cartao">
       <h2 class="cartao__titulo">Você já usou seu limite de {limite} {palavra}</h2>
       <p class="cartao__nota" style="margin-bottom:0">
-        {plus
-          ? 'Para colocar outra pessoa, remova um contato da lista acima.'
-          : 'O plano Free guarda um contato de emergência. Remova o atual para trocar, ou passe para o Plus se quiser mais de um.'}
+        Para colocar outra pessoa, remova um contato da lista acima.
       </p>
     </section>
   ) : (
