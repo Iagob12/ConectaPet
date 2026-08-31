@@ -105,31 +105,37 @@ services:
       - key: EMAIL_PROVEDOR
         value: log
 
-      # O servidor do Gmail. Nao e segredo, entao fica versionado.
+      # O servidor e a conta do Gmail. Nada aqui e segredo.
       #
-      # A conta e a senha NAO ficam aqui: SMTP_USUARIO e EMAIL_REMETENTE
-      # carregam um e-mail pessoal, e este repositorio e publico. Os tres
-      # moram no grupo de ambiente "conectapet-admin".
+      # SMTP_USUARIO e EMAIL_REMETENTE ficam versionados porque
+      # conectapet.contato@gmail.com e uma conta DO PRODUTO, nao pessoal: ela
+      # vai no campo "De" de todo e-mail que sai, entao ja e publica por
+      # construcao. Esconde-la num painel nao protegeria nada e ainda tiraria
+      # do code review o endereco que os clientes veem.
       #
-      # No Gmail, SMTP_SENHA e uma SENHA DE APP (16 caracteres, gerada em
-      # myaccount.google.com/apppasswords), nunca a senha da conta. Ela exige
-      # a verificacao em duas etapas ligada, e pode ser revogada sozinha sem
-      # mexer no acesso da pessoa.
+      # SMTP_SENHA e a unica que fica de fora, no grupo de ambiente. No Gmail
+      # ela e uma SENHA DE APP (16 caracteres, gerada em
+      # myaccount.google.com/apppasswords), nunca a senha da conta: exige a
+      # verificacao em duas etapas ligada e pode ser revogada sozinha, sem
+      # mexer no acesso de ninguem.
+      #
+      # O remetente PRECISA ser o mesmo endereco de SMTP_USUARIO — o Gmail
+      # recusa ou reescreve um "De" que nao seja a conta autenticada, e a
+      # aplicacao checa isso na subida.
       #
       # Limite do Gmail gratuito: cerca de 500 destinatarios por dia. Cabe
-      # folgado no comeco. Quando houver dominio proprio, migrar para Resend ou
-      # SES melhora entregabilidade e tira esse teto — e a troca e so de host,
-      # usuario e senha, porque o EnvioEmailSmtp nao sabe qual provedor esta do
-      # outro lado.
+      # folgado no comeco. Com dominio proprio, Resend ou SES tiram esse teto e
+      # melhoram a entregabilidade — e a troca e so de host, usuario e senha,
+      # porque o EnvioEmailSmtp nao sabe qual provedor esta do outro lado.
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORTA
         value: "587"
       - key: SMTP_USUARIO
-        sync: false
-      - key: SMTP_SENHA
-        sync: false
+        value: conectapet.contato@gmail.com
       - key: EMAIL_REMETENTE
+        value: "ConectaPet <conectapet.contato@gmail.com>"
+      - key: SMTP_SENHA
         sync: false
 
       # ---- Fotos ----

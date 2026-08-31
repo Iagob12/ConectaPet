@@ -90,26 +90,27 @@ Ligar o Gmail é configuração, não código.
 Nunca a senha da conta. Uma senha de app é revogável sozinha, e vazando ela não
 dá acesso ao e-mail de ninguém — só permissão de enviar.
 
-1. Ligue a **verificação em duas etapas** em https://myaccount.google.com/security
-   (o Google só oferece senha de app com ela ligada)
+1. Entre em **conectapet.contato@gmail.com** e ligue a **verificação em duas
+   etapas** em https://myaccount.google.com/security — o Google só oferece senha
+   de app com ela ligada
 2. Vá em https://myaccount.google.com/apppasswords
 3. Crie uma para "ConectaPet". São 16 caracteres.
 
-### 2. As três variáveis (você, no Render)
+### 2. A senha, e só ela (você, no Render)
 
-No grupo de ambiente `conectapet-admin` — **não** no painel do serviço, cujo
-formulário mascara todos os valores e apagaria os segredos ao salvar:
+O host, a conta (`conectapet.contato@gmail.com`) e o remetente já estão no
+`render.yaml`: são endereços do produto, aparecem no campo "De" de todo e-mail
+que sai, e portanto já são públicos por construção. Escondê-los num painel não
+protegeria nada e tiraria do code review justamente o endereço que os clientes
+veem.
+
+Falta uma variável, no grupo de ambiente `conectapet-admin` — **não** no painel
+do serviço, cujo formulário mascara todos os valores e apagaria os segredos ao
+salvar:
 
 | Variável | Valor |
 |---|---|
-| `SMTP_USUARIO` | o endereço @gmail.com da conta |
-| `SMTP_SENHA` | a senha de app, sem espaços |
-| `EMAIL_REMETENTE` | `ConectaPet <o-mesmo-endereço@gmail.com>` |
-
-**O remetente precisa ser o mesmo endereço da conta.** O Gmail recusa ou
-reescreve um `From` que não seja a conta autenticada — a aplicação checa isso na
-subida e recusa começar, em vez de deixar sair e-mail com remetente que ninguém
-configurou.
+| `SMTP_SENHA` | a senha de app, 16 caracteres, sem espaços |
 
 ### 3. Ligar (`EMAIL_PROVEDOR=smtp` no `render.yaml`)
 
