@@ -150,17 +150,34 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     .nav-acao--principal:active{transform:translate(2px,2px);box-shadow:none}
     .nav-toggle{
       display:inline-flex;align-items:center;justify-content:center;gap:7px;
+      position:relative;z-index:62;
       min-width:48px;height:48px;padding:0 13px;background:var(--white);
       color:var(--navy-900);border:2px solid var(--navy-900);border-radius:9999px;
       font:600 15px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;cursor:pointer;
     }
     .nav-toggle:hover{background:var(--navy-900);color:#fff}
-    .nav-toggle .icone-fechar{display:none}
-    .nav-toggle[aria-expanded="true"] .icone-menu{display:none}
-    .nav-toggle[aria-expanded="true"] .icone-fechar{display:block}
-    .nav-drawer{background:var(--white);border-top:1px solid var(--gray-300);padding:0 20px}
+    .nav-toggle__icone{position:relative;width:22px;height:22px;flex:none}
+    .nav-toggle__icone svg{
+      position:absolute;inset:0;
+      transition:opacity .18s ease,transform .22s cubic-bezier(.22,1,.36,1);
+    }
+    .nav-toggle .icone-menu{opacity:1;transform:rotate(0) scale(1)}
+    .nav-toggle .icone-fechar{display:block;opacity:0;transform:rotate(-75deg) scale(.72)}
+    .nav-toggle[aria-expanded="true"] .icone-menu{opacity:0;transform:rotate(75deg) scale(.72)}
+    .nav-toggle[aria-expanded="true"] .icone-fechar{opacity:1;transform:rotate(0) scale(1)}
+    .nav-drawer{
+      position:fixed;inset:0;z-index:61;background:rgba(34,49,58,.42);
+      opacity:0;visibility:hidden;transition:opacity .22s ease,visibility 0s linear .22s;
+    }
     .nav-drawer[hidden]{display:none}
-    .nav-drawer__conteudo{max-width:520px;margin:0 auto;padding:8px 0 20px}
+    .nav-drawer[data-aberto="true"]{opacity:1;visibility:visible;transition-delay:0s}
+    .nav-drawer__conteudo{
+      width:min(390px,88vw);height:100%;margin:0 0 0 auto;padding:76px 24px 20px;
+      overflow-y:auto;background:var(--white);box-shadow:-12px 0 28px rgba(34,49,58,.18);
+      transform:translateX(100%);transition:transform .22s ease;
+    }
+    .nav-drawer[data-aberto="true"] .nav-drawer__conteudo{transform:translateX(0)}
+    body.menu-aberto{overflow:hidden}
     .nav-drawer__lista{list-style:none;margin:0;padding:0}
     .nav-drawer__lista a{
       display:flex;align-items:center;min-height:52px;padding:8px 4px;
@@ -290,14 +307,16 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
       <button class="nav-toggle" type="button" id="menu-btn" aria-expanded="false"
               aria-controls="menu-mobile">
-        <svg class="icone-menu" width="22" height="22" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-          <path d="M4 7h16M4 12h16M4 17h16" />
-        </svg>
-        <svg class="icone-fechar" width="22" height="22" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18" />
-        </svg>
+        <span class="nav-toggle__icone" aria-hidden="true">
+          <svg class="icone-menu" width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          <svg class="icone-fechar" width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </span>
         <span>Menu</span>
       </button>
     </div>
@@ -454,16 +473,26 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     // sendo navegavel se a API do perfil falhar.
     const botaoMenu = document.getElementById('menu-btn');
     const menuMobile = document.getElementById('menu-mobile');
+    let menuTimer;
     const definirMenu = (aberto) => {
       if (!botaoMenu || !menuMobile) return;
+      window.clearTimeout(menuTimer);
       botaoMenu.setAttribute('aria-expanded', String(aberto));
-      menuMobile.hidden = !aberto;
+      document.body.classList.toggle('menu-aberto', aberto);
+      if (aberto) {
+        menuMobile.hidden = false;
+        window.requestAnimationFrame(() => menuMobile.setAttribute('data-aberto', 'true'));
+        return;
+      }
+      menuMobile.removeAttribute('data-aberto');
+      menuTimer = window.setTimeout(() => { menuMobile.hidden = true; }, 230);
     };
     if (botaoMenu && menuMobile) {
       botaoMenu.addEventListener('click', () =>
         definirMenu(botaoMenu.getAttribute('aria-expanded') !== 'true'));
       menuMobile.addEventListener('click', (evento) => {
-        if (evento.target instanceof Element && evento.target.closest('a')) definirMenu(false);
+        if (evento.target === menuMobile ||
+            (evento.target instanceof Element && evento.target.closest('a'))) definirMenu(false);
       });
       document.addEventListener('keydown', (evento) => {
         if (evento.key === 'Escape' && botaoMenu.getAttribute('aria-expanded') === 'true') {
