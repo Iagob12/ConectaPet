@@ -116,7 +116,9 @@ function aplicarCabecalhosDeSeguranca(resposta: Response) {
   const api = apiPublica();
   const politica = [
     "default-src 'self'",
-    ("img-src 'self' data: " + api).trim(),
+    // blob: permite que o editor mostre, somente neste navegador, a foto que
+    // a propria pessoa acabou de escolher. A URL temporaria e revogada ao sair.
+    ("img-src 'self' data: " + api + " blob:").trim(),
     ("connect-src 'self' " + api).trim(),
     // 'unsafe-inline' e uma concessao honesta: o Astro embute estilo e script
     // na pagina, e nonce por requisicao exigiria reescrever o build. O ganho

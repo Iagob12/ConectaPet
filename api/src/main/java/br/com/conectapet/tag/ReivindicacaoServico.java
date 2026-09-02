@@ -63,13 +63,10 @@ public class ReivindicacaoServico {
     /**
      * Reivindicacao pelo codigo da URL, sem segredo adicional.
      *
-     * Decisao do produto: quem encosta o celular numa tag sem perfil cria a
-     * conta e assume a tag ali mesmo. O codigo de ativacao impresso deixou de
-     * ser exigido — o fluxo curto foi escolhido sabendo do custo, que e a
-     * janela entre a fabrica e a entrega: NFC atravessa papelao, entao quem
-     * manuseia a encomenda fechada consegue ler a tag e se cadastrar antes do
-     * cliente. A protecao que resta e operacional (marcar enviada, e o 409
-     * abaixo, que ao menos torna o roubo visivel para quem receber a caixa).
+     * O codigo publico continua sendo a prova usada pelo produto, mas abrir o
+     * link nao chama mais este metodo. A reivindicacao agora roda dentro da
+     * transacao do botao final, junto com a criacao do pet; assim uma falha no
+     * perfil tambem desfaz a troca de dono.
      *
      * O hash do codigo de ativacao continua gravado e o CSV continua a emiti-lo:
      * voltar a exigi-lo e mudanca de codigo, sem migracao nem reimpressao.
@@ -87,7 +84,9 @@ public class ReivindicacaoServico {
 
         verificarLimites(codigoPublico, ipHash);
 
-        Optional<Tag> achada = tags.findByCodigoPublico(codigoPublico);
+        // A reivindicacao faz parte da confirmacao atomica do cadastro. O lock
+        // impede duas confirmacoes simultaneas de assumirem a mesma NFC.
+        Optional<Tag> achada = tags.findByCodigoPublicoParaAtualizar(codigoPublico);
 
         if (achada.isEmpty()) {
             registro.falha(codigoPublico, ipHash);
@@ -95,6 +94,15 @@ public class ReivindicacaoServico {
         }
 
         Tag tag = achada.get();
+
+        // Recuperacao de cadastros iniciados pela versao antiga: ela assumia a
+        // tag antes de pedir os dados do pet. O mesmo tutor pode terminar o que
+        // comecou, mas outra conta continua recebendo o 409 normal.
+        if (tag.getStatus() == StatusTag.REIVINDICADA
+                && tag.pertenceA(usuario.id())
+                && tag.getPetId() == null) {
+            return tag;
+        }
 
         // Sem o codigo de ativacao, este 409 passou a ser alcancavel por quem
         // so digitou um codigo publico valido. Nao e vazamento novo: a pagina

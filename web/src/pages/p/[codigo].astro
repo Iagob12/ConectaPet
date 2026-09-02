@@ -102,7 +102,7 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   <title>{ativo ? `${pet.nome} — ConectaPet` : 'ConectaPet'}</title>
   <style>
     :root {
-      --teal-500:#2FA8A5; --teal-700:#1D6B69; --teal-100:#D9F0EF;
+      --teal-500:#2FA8A5; --teal-600:#248785; --teal-700:#1D6B69; --teal-100:#D9F0EF;
       --orange-500:#F0A02E; --orange-100:#FCEBD2;
       --navy-900:#22313A; --navy-700:#3B4E59;
       --white:#FFFFFF; --sand-100:#FAF3E7; --gray-300:#D6D2C9;
@@ -115,7 +115,67 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
       /* Sem moldura: cada pixel serve ao botao de ligar. */
       font:400 17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     }
-    .marca-topo{height:6px;background:var(--teal-500)}
+    /* O mesmo cabecalho funcional da pagina inicial, mas sempre sobre fundo
+       branco: nesta tela o topo nao flutua sobre o hero. */
+    .site-header{
+      position:sticky;top:0;z-index:60;background:var(--white);
+      border-bottom:1px solid var(--gray-300);box-shadow:0 4px 12px rgba(34,49,58,.08);
+    }
+    .nav-wrap{
+      max-width:1180px;min-height:68px;margin:0 auto;padding:8px 20px;
+      display:flex;align-items:center;gap:16px;
+    }
+    .site-brand{
+      display:inline-flex;align-items:center;gap:10px;min-height:44px;
+      margin-right:auto;text-decoration:none;color:inherit;
+    }
+    .site-brand img{width:46px;height:auto;flex:none}
+    .site-brand__texto{display:flex;flex-direction:column;line-height:1}
+    .site-brand__nome{font:800 20px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+      letter-spacing:-.02em;color:var(--navy-900)}
+    .site-brand__nome span{color:var(--teal-600)}
+    .site-brand__slogan{font-size:11px;color:var(--navy-700);margin-top:4px;letter-spacing:.02em}
+    .nav-principal,.nav-acoes{display:none}
+    .nav-lista{display:flex;align-items:center;gap:2px;list-style:none;margin:0;padding:0}
+    .nav-lista a,.nav-acao{
+      display:inline-flex;align-items:center;justify-content:center;min-height:44px;
+      padding:0 13px;border-radius:9999px;color:var(--navy-900);
+      text-decoration:none;font-size:15px;font-weight:600;white-space:nowrap;
+    }
+    .nav-lista a:hover,.nav-acao:hover{background:var(--teal-100);color:var(--teal-700)}
+    .nav-acao--principal{
+      background:var(--teal-500);border:2px solid var(--navy-900);
+      box-shadow:2px 2px 0 var(--navy-900);padding-inline:18px;
+    }
+    .nav-acao--principal:active{transform:translate(2px,2px);box-shadow:none}
+    .nav-toggle{
+      display:inline-flex;align-items:center;justify-content:center;gap:7px;
+      min-width:48px;height:48px;padding:0 13px;background:var(--white);
+      color:var(--navy-900);border:2px solid var(--navy-900);border-radius:9999px;
+      font:600 15px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;cursor:pointer;
+    }
+    .nav-toggle:hover{background:var(--navy-900);color:#fff}
+    .nav-toggle .icone-fechar{display:none}
+    .nav-toggle[aria-expanded="true"] .icone-menu{display:none}
+    .nav-toggle[aria-expanded="true"] .icone-fechar{display:block}
+    .nav-drawer{background:var(--white);border-top:1px solid var(--gray-300);padding:0 20px}
+    .nav-drawer[hidden]{display:none}
+    .nav-drawer__conteudo{max-width:520px;margin:0 auto;padding:8px 0 20px}
+    .nav-drawer__lista{list-style:none;margin:0;padding:0}
+    .nav-drawer__lista a{
+      display:flex;align-items:center;min-height:52px;padding:8px 4px;
+      border-bottom:1px solid var(--gray-300);color:var(--navy-900);
+      text-decoration:none;font-weight:600;
+    }
+    .nav-drawer__lista a:hover{color:var(--teal-700)}
+    .nav-drawer__acoes{display:grid;gap:10px;padding-top:16px}
+    .nav-drawer__acoes .nav-acao{border:2px solid var(--navy-900)}
+    @media (min-width:1024px){
+      .nav-principal{display:block}
+      .nav-acoes{display:flex;align-items:center;gap:4px}
+      .nav-toggle{display:none}
+      .nav-drawer{display:none!important}
+    }
     .folha{max-width:520px;margin:0 auto;padding:0 20px 40px}
 
     /* 1. Faixa de alerta */
@@ -172,14 +232,8 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     .recado{margin-top:16px;padding:14px 16px;background:var(--teal-100);
       border:2px solid var(--navy-900);border-radius:20px;color:var(--navy-900)}
 
-    /* 8. Marca, discreta */
-    /* A marca fica no rodape, e nao no topo, de proposito: o topo pertence
-       ao alerta e aos botoes de ligar. Aqui ela serve a quem ja resolveu o
-       problema e quer saber que servico e este — e com loading="lazy" ela nem
-       disputa banda com a foto do pet, que e o que a pessoa precisa ver.
-       width e height explicitos para a chegada dela nao empurrar a tela. */
+    /* 8. Assinatura discreta depois que o resgate foi resolvido. */
     .rodape{margin-top:32px;text-align:center;font-size:14px;color:var(--navy-700)}
-    .rodape img{display:block;margin:0 auto 8px}
 
     .aviso{margin-top:24px;text-align:center}
     .aviso h1{font-size:24px;color:var(--navy-900);margin:0 0 12px}
@@ -209,7 +263,60 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   </style>
 </head>
 <body>
-  <div class="marca-topo"></div>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="site-brand" href="/" aria-label="ConectaPet — ir para a página inicial">
+        <img src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
+             width="46" height="42" alt="" decoding="async" />
+        <span class="site-brand__texto">
+          <span class="site-brand__nome">Conecta<span>Pet</span></span>
+          <span class="site-brand__slogan">Aproxima e Protege</span>
+        </span>
+      </a>
+
+      <nav class="nav-principal" aria-label="Menu principal">
+        <ul class="nav-lista">
+          <li><a href="/#como-funciona">Como funciona</a></li>
+          <li><a href="/#petshops">Para petshops</a></li>
+          <li><a href="/#faq">Ajuda</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-acoes">
+        <a class="nav-acao" href="/ativar">Ativar minha tag</a>
+        <a class="nav-acao" href="/entrar">Entrar</a>
+        <a class="nav-acao nav-acao--principal" href="/#chamada-final">Quero minha tag</a>
+      </div>
+
+      <button class="nav-toggle" type="button" id="menu-btn" aria-expanded="false"
+              aria-controls="menu-mobile">
+        <svg class="icone-menu" width="22" height="22" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+        <svg class="icone-fechar" width="22" height="22" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+        <span>Menu</span>
+      </button>
+    </div>
+
+    <div class="nav-drawer" id="menu-mobile" hidden>
+      <nav class="nav-drawer__conteudo" aria-label="Menu principal (celular)">
+        <ul class="nav-drawer__lista">
+          <li><a href="/#como-funciona">Como funciona</a></li>
+          <li><a href="/#petshops">Para petshops</a></li>
+          <li><a href="/#faq">Ajuda</a></li>
+        </ul>
+        <div class="nav-drawer__acoes">
+          <a class="nav-acao" href="/ativar">Ativar minha tag</a>
+          <a class="nav-acao" href="/entrar">Entrar</a>
+          <a class="nav-acao nav-acao--principal" href="/#chamada-final">Quero minha tag</a>
+        </div>
+      </nav>
+    </div>
+  </header>
   <main class="folha">
 
     {ativo && perdido && (
@@ -333,8 +440,6 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     ) : null}
 
     <p class="rodape">
-      <img src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x" width="56" height="51"
-           alt="" loading="lazy" decoding="async" />
       ConectaPet · Aproxima e Protege
     </p>
   </main>
@@ -342,6 +447,29 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   {/* API_PUBLICA, nao API: este script roda no NAVEGADOR de quem achou o pet,
       e o nome interno do container nao existe para ele. */}
   <script define:vars={{ codigo, API: API_PUBLICA }}>
+    // O cabecalho e o mesmo da vitrine, inclusive no celular. Ele continua
+    // sendo navegavel se a API do perfil falhar.
+    const botaoMenu = document.getElementById('menu-btn');
+    const menuMobile = document.getElementById('menu-mobile');
+    const definirMenu = (aberto) => {
+      if (!botaoMenu || !menuMobile) return;
+      botaoMenu.setAttribute('aria-expanded', String(aberto));
+      menuMobile.hidden = !aberto;
+    };
+    if (botaoMenu && menuMobile) {
+      botaoMenu.addEventListener('click', () =>
+        definirMenu(botaoMenu.getAttribute('aria-expanded') !== 'true'));
+      menuMobile.addEventListener('click', (evento) => {
+        if (evento.target instanceof Element && evento.target.closest('a')) definirMenu(false);
+      });
+      document.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape' && botaoMenu.getAttribute('aria-expanded') === 'true') {
+          definirMenu(false);
+          botaoMenu.focus();
+        }
+      });
+    }
+
     // A unica coisa nesta pagina que depende de JavaScript.
     //
     // Dois papeis: confirmar que quem abriu e gente (o beacon e a UNICA entrada

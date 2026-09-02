@@ -14,39 +14,16 @@ let dica: string | null = null;
 let codigoPublico = guardado;
 
 /**
- * Assume a tag para quem está logado.
+ * Guarda o código sem assumir a tag.
  *
- * Chamada de dois lugares: automaticamente, quando o código já veio da URL da
- * tag e a pessoa acabou de criar a conta; e pelo formulário abaixo, quando ela
- * chegou aqui sem código e digitou o dele.
+ * Ler a NFC, abrir o link ou avançar desta tela não pode bloquear a tag. A
+ * reivindicação acontece somente no último POST, junto com a criação do pet.
  */
-async function reivindicar(codigo: string) {
-  const r = await Astro.locals.api('/api/tags/reivindicar', {
-    metodo: 'POST',
-    corpo: { codigoPublico: codigo },
+function continuar(codigo: string) {
+  Astro.cookies.set('cp_ativando', codigo, {
+    path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7,
   });
-
-  if (r.ok) {
-    Astro.cookies.set('cp_ativando', codigo, {
-      path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7,
-    });
-    return verDepois('/ativar/pet');
-  }
-
-  // Cada estado pede uma ação diferente de quem está do outro lado.
-  if (r.status === 409) {
-    erro = 'Esta tag já tem dono.';
-    dica = 'Se você a recebeu de outra pessoa, peça a ela um código de transferência — é assim que a tag muda de titular.';
-  } else if (r.status === 423) {
-    erro = 'Muitas tentativas seguidas.';
-    dica = 'Por segurança, aguarde uma hora antes de tentar de novo.';
-  } else if (r.status === 400 || r.status === 404) {
-    erro = 'Não encontrei esta tag.';
-    dica = 'Confira o código impresso nela. São 10 caracteres.';
-  } else {
-    erro = r.erro;
-  }
-  return null;
+  return verDepois('/ativar/pet');
 }
 
 if (Astro.request.method === 'POST') {
@@ -72,13 +49,11 @@ if (Astro.request.method === 'POST') {
   } else if (codigoPublico.length !== 10) {
     erro = 'O código da tag tem 10 caracteres.';
   } else {
-    const resposta = await reivindicar(codigoPublico);
-    if (resposta) return resposta;
+    return continuar(codigoPublico);
   }
 } else if (guardado && !caractereInvalido(guardado) && guardado.length === 10) {
-  // O código já veio da tag: não há o que perguntar. Assume e segue.
-  const resposta = await reivindicar(guardado);
-  if (resposta) return resposta;
+  // O código já veio da NFC: não há o que perguntar e ainda nada é vinculado.
+  return continuar(guardado);
 }
 ---
 
@@ -105,7 +80,7 @@ if (Astro.request.method === 'POST') {
       <p class="ajuda">Sem 0, O, I, 1, L nem U — esses nunca aparecem nos nossos códigos.</p>
     </div>
 
-    <button class="btn btn--principal" type="submit">Ativar minha tag</button>
+    <button class="btn btn--principal" type="submit">Continuar</button>
   </form>
 
   <p class="rodape-link">

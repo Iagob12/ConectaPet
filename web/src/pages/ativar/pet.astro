@@ -2,15 +2,15 @@
 export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
-import { normalizarCodigo } from '../../lib/api';
+import { normalizarCodigo, caractereInvalido } from '../../lib/api';
 
 const sessao = await Astro.locals.api('/api/me');
 if (!sessao.ok) return Astro.redirect('/ativar');
 
 const codigo = normalizarCodigo(Astro.cookies.get('cp_ativando')?.value);
-const tags = await Astro.locals.api<any[]>('/api/tags');
-const tag = tags.dados?.find((t) => t.codigoPublico === codigo);
-if (!tag) return Astro.redirect('/ativar/codigo');
+if (!codigo || codigo.length !== 10 || caractereInvalido(codigo)) {
+  return Astro.redirect('/ativar/codigo');
+}
 
 let erro: string | null = null;
 let campos: Record<string, string> = {};
@@ -33,22 +33,24 @@ if (Astro.request.method === 'POST') {
     estado: String(d.get('estado') ?? '').toUpperCase(),
   };
 
-  // Salva neste passo. Um formulário longo que perde tudo ao errar um campo é
-  // onde o cadastro morre.
-  const r = await Astro.locals.api<any>('/api/pets', {
+  // Esta é a única chamada que consome a NFC. Backend cria pet, reivindica e
+  // vincula a tag na mesma transação; qualquer erro desfaz as três ações.
+  const r = await Astro.locals.api<any>('/api/tags/confirmar-cadastro', {
     metodo: 'POST',
     corpo: {
+      codigoPublico: codigo,
       nome: form.nome,
       especie: form.especie,
       raca: form.raca || null,
       cidade: form.cidade || null,
       estado: form.estado || null,
-      tagUuid: tag.uuid,
     },
   });
 
   if (r.ok) return Astro.redirect('/ativar/pronto', 303);
-  erro = r.erro;
+  erro = r.status === 409
+    ? 'Esta tag foi configurada por outra pessoa enquanto você preenchia os dados. Se ela é sua, use um código de transferência.'
+    : r.erro;
   campos = r.campos;
 }
 ---
@@ -61,7 +63,10 @@ if (Astro.request.method === 'POST') {
   </p>
 
   <p class="aviso aviso--calmo">
-    <span>Tag <strong>{codigo}</strong> ativada. Falta o perfil.</span>
+    <span>
+      A tag <strong>{codigo}</strong> ainda não foi vinculada. Ela só será
+      confirmada quando você terminar este formulário.
+    </span>
   </p>
 
   {erro && <p class="aviso" role="alert">{erro}</p>}
@@ -101,7 +106,7 @@ if (Astro.request.method === 'POST') {
              placeholder="SP" style="max-width:120px" />
     </div>
 
-    <button class="btn btn--principal" type="submit">Salvar e continuar</button>
+    <button class="btn btn--principal" type="submit">Confirmar cadastro do pet</button>
   </form>
 </Base>
 

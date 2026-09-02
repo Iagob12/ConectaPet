@@ -119,13 +119,43 @@ if (q.has('falhou') && !aviso) aviso = 'Não consegui concluir. Tente de novo.';
         A localização gravada pela câmera é apagada no envio — a foto não entrega onde vocês moram.
       </p>
     </div>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" id="form-foto">
       <input type="hidden" name="acao" value="foto-enviar" />
       <div class="campo">
         <label for="arquivo">Escolher imagem</label>
         <input id="arquivo" type="file" name="arquivo" accept="image/jpeg,image/png,image/webp" required />
       </div>
-      <button class="btn btn--principal" type="submit">Enviar foto</button>
+
+      <!-- Editor. Fica escondido até haver imagem escolhida, e some por
+           completo sem JavaScript: aí o envio continua funcionando como antes,
+           com o recorte central feito pelo servidor. -->
+      <div class="editor" id="editor" hidden>
+        <p class="cartao__nota" style="margin:0 0 8px">
+          Arraste para escolher o que aparece. É este recorte que quem achar seu pet vai ver.
+        </p>
+        <div class="editor__quadro" id="quadro" tabindex="0"
+             role="group"
+             aria-label="Enquadramento da foto. Use as setas para mover e mais ou menos para aproximar.">
+          <canvas id="tela">Prévia do enquadramento da foto.</canvas>
+        </div>
+        <div class="editor__controles">
+          <label class="editor__zoom">
+            Aproximar
+            <input id="zoom" type="range" min="100" max="400" value="100" step="1"
+                   aria-label="Aproximar a imagem" />
+          </label>
+          <div class="editor__botoes">
+            <button class="btn btn--secundario" type="button" id="girar">Girar</button>
+            <button class="btn btn--secundario" type="button" id="recomecar">Recomeçar</button>
+          </div>
+        </div>
+        <p class="editor__ajuda">
+          Pelo teclado: setas movem, <kbd>+</kbd> e <kbd>−</kbd> aproximam, <kbd>R</kbd> gira.
+        </p>
+        <p class="editor__estado" id="estado-editor" role="status" aria-live="polite"></p>
+      </div>
+
+      <button class="btn btn--principal" id="enviar-foto" type="submit">Enviar foto</button>
     </form>
     {pet.temFoto && (
       <form method="POST">
@@ -182,3 +212,8 @@ if (q.has('falhou') && !aviso) aviso = 'Não consegui concluir. Tente de novo.';
     </section>
   )}
 </Painel>
+
+<script>
+  import { iniciarEditorFoto } from '../../../../lib/editor-foto';
+  iniciarEditorFoto();
+</script>

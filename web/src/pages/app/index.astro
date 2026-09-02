@@ -106,7 +106,7 @@ const feito = q.has('recebida') ? 'Tag recebida. O perfil dela já está aqui.'
       <article class="cartao">
         <h2 class="cartao__titulo">Tag {t.codigoPublico}</h2>
         <p class="cartao__nota">Ativada, mas ainda sem perfil. Quem encontrar o pet não vê nada.</p>
-        <a class="btn btn--principal" href="/ativar/pet">Cadastrar o pet</a>
+        <a class="btn btn--principal" href={`/ativar?codigo=${t.codigoPublico}`}>Continuar o cadastro</a>
       </article>
     ))}
   </div>

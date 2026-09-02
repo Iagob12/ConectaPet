@@ -336,3 +336,34 @@ table.dados td.url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-
 
 a.copiar{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:44px}
 .copiar{min-height:44px}
+
+/* ---- Editor de foto -------------------------------------------------------
+   A pessoa escolhe o enquadramento antes de enviar. Sem isso, o recorte era
+   decidido pelo servidor no centro da imagem — e o pet raramente esta bem no
+   centro da foto.
+
+   O quadro e 4:3 porque e a proporcao que a tela de resgate usa. Mostrar aqui
+   um recorte diferente do que vai aparecer la seria mentir para quem edita. */
+.editor{display:none}
+.editor[data-ativo="1"]{display:block}
+.editor__quadro{
+  position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;
+  border:2px solid var(--navy-900);border-radius:var(--radius-md);
+  background:var(--navy-900);touch-action:none;cursor:grab;
+}
+.editor__quadro::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(90deg,transparent 33.1%,rgba(255,255,255,.5) 33.3%,rgba(255,255,255,.5) 33.6%,transparent 33.8%,transparent 66.2%,rgba(255,255,255,.5) 66.4%,rgba(255,255,255,.5) 66.7%,transparent 66.9%),
+    linear-gradient(transparent 33.1%,rgba(255,255,255,.5) 33.3%,rgba(255,255,255,.5) 33.6%,transparent 33.8%,transparent 66.2%,rgba(255,255,255,.5) 66.4%,rgba(255,255,255,.5) 66.7%,transparent 66.9%);
+}
+.editor__quadro:active{cursor:grabbing}
+.editor__quadro canvas{display:block;width:100%;height:100%}
+.editor__quadro:focus-visible{outline:3px solid var(--teal-500);outline-offset:3px}
+.editor__controles{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:12px}
+.editor__zoom{flex:1;min-width:160px;display:flex;align-items:center;gap:8px}
+.editor__zoom input{flex:1;min-height:44px;accent-color:var(--teal-600)}
+.editor__botoes{display:flex;gap:8px;flex-wrap:wrap}
+.editor__botoes .btn{width:auto;min-height:44px;padding:8px 16px;font-size:15px}
+.editor__ajuda{font-size:14px;color:var(--navy-700);margin:8px 0 0}
+.editor__estado{min-height:22px;font-size:14px;font-weight:600;color:var(--teal-700);margin:4px 0 16px}

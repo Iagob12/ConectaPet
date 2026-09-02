@@ -41,6 +41,17 @@ describe('página de resgate — a tela mais importante', () => {
     expect(html).toContain('wa.me/5511988887777');
   });
 
+  it('mostra o cabeçalho do site com navegação no computador e no celular', async () => {
+    const html = await (await pegar(`/p/${ATIVA}`)).text();
+
+    expect(html).toContain('class="site-header"');
+    expect(html).toContain('href="/#como-funciona"');
+    expect(html).toContain('href="/ativar"');
+    expect(html).toContain('href="/entrar"');
+    expect(html).toContain('id="menu-btn"');
+    expect(html).toContain('id="menu-mobile"');
+  });
+
   it('tem um h1, e ele é o nome do pet', async () => {
     // Sem h1, quem usa leitor de tela chega numa página sem título e com
     // <h2> soltos — a lista de cabeçalhos, que é como essas pessoas se
@@ -249,6 +260,7 @@ describe('cabeçalhos de segurança', () => {
     const csp = (await pegar(`/p/${ATIVA}`)).headers.get('content-security-policy') ?? '';
     const origemApi = `http://127.0.0.1:${api.porta}`;
     expect(csp).toContain(`img-src 'self' data: ${origemApi}`);
+    expect(csp).toContain('blob:');
     expect(csp).toContain(`connect-src 'self' ${origemApi}`);
   });
 

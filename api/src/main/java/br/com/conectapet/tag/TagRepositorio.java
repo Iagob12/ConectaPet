@@ -2,9 +2,12 @@ package br.com.conectapet.tag;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +16,15 @@ import java.util.UUID;
 public interface TagRepositorio extends JpaRepository<Tag, Long> {
 
     Optional<Tag> findByCodigoPublico(String codigoPublico);
+
+    /**
+     * A confirmacao final precisa serializar duas pessoas que tentem concluir a
+     * mesma tag ao mesmo tempo. Sem o lock, ambas poderiam ler CRIADA antes de
+     * uma delas gravar e a ultima transacao acabaria trocando o dono.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select t from Tag t where t.codigoPublico = :codigoPublico")
+    Optional<Tag> findByCodigoPublicoParaAtualizar(@Param("codigoPublico") String codigoPublico);
 
     Optional<Tag> findByUuid(UUID uuid);
 

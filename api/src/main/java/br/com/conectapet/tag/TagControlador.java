@@ -3,12 +3,16 @@ package br.com.conectapet.tag;
 import br.com.conectapet.comum.erro.ProblemaException;
 import br.com.conectapet.comum.erro.TipoErro;
 import br.com.conectapet.comum.util.Hashes;
+import br.com.conectapet.pet.Especie;
+import br.com.conectapet.pet.Pet;
 import br.com.conectapet.seguranca.UsuarioAtual;
 import br.com.conectapet.seguranca.UsuarioAutenticado;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +26,7 @@ public class TagControlador {
 
     private final TagRepositorio tags;
     private final br.com.conectapet.pet.PetRepositorio pets;
-    private final ReivindicacaoServico reivindicacao;
+    private final AtivacaoCadastroServico ativacaoCadastro;
     private final TransferenciaServico transferencia;
     private final br.com.conectapet.auditoria.AuditoriaServico auditoria;
     private final UsuarioAtual usuarioAtual;
@@ -32,7 +36,7 @@ public class TagControlador {
     private final java.time.Duration validadeTransferencia;
 
     public TagControlador(TagRepositorio tags, br.com.conectapet.pet.PetRepositorio pets,
-                          ReivindicacaoServico reivindicacao,
+                          AtivacaoCadastroServico ativacaoCadastro,
                           TransferenciaServico transferencia,
                           br.com.conectapet.auditoria.AuditoriaServico auditoria, UsuarioAtual usuarioAtual,
                           @Value("${conectapet.tag.url-publica}") String urlPublica,
@@ -41,7 +45,7 @@ public class TagControlador {
                           @Value("${conectapet.transferencia.validade}") java.time.Duration validadeTransferencia) {
         this.tags = tags;
         this.pets = pets;
-        this.reivindicacao = reivindicacao;
+        this.ativacaoCadastro = ativacaoCadastro;
         this.transferencia = transferencia;
         this.auditoria = auditoria;
         this.usuarioAtual = usuarioAtual;
@@ -77,11 +81,29 @@ public class TagControlador {
         return TagResposta.de(t, urlPublica, petUuid);
     }
 
-    @PostMapping("/reivindicar")
-    public TagResposta reivindicar(@Valid @RequestBody ReivindicarEntrada dto, HttpServletRequest req) {
+    /**
+     * A NFC so ganha dono aqui, junto com a criacao do pet. A transacao do
+     * servico garante que um erro no perfil devolve a tag ao estado anterior.
+     */
+    @PostMapping("/confirmar-cadastro")
+    @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public ConfirmarCadastroResposta confirmarCadastro(@Valid @RequestBody ConfirmarCadastroEntrada dto,
+                                                        HttpServletRequest req) {
         UsuarioAutenticado u = usuarioAtual.obrigatorio();
-        Tag tag = reivindicacao.reivindicar(dto.codigoPublico(), u, ipHash(req));
-        return montar(tag);
+        AtivacaoCadastroServico.Resultado resultado = ativacaoCadastro.confirmar(
+                dto.codigoPublico(), dto.paraPet(), u, ipHash(req));
+        return new ConfirmarCadastroResposta(montar(resultado.tag()), resultado.pet().getUuid());
+    }
+
+    /**
+     * Clientes antigos nao podem continuar consumindo uma tag antes do perfil.
+     * Manter a rota com um erro explicito evita que uma versao em cache repita
+     * justamente o comportamento que este fluxo corrige.
+     */
+    @PostMapping("/reivindicar")
+    public void reivindicarSemPerfil() {
+        throw new ProblemaException(TipoErro.ESTADO_INVALIDO,
+                "Finalize os dados do pet para confirmar esta tag.");
     }
 
     @PostMapping("/{uuid}/desativar")
@@ -151,12 +173,30 @@ public class TagControlador {
 
     // ---- DTOs --------------------------------------------------------------
 
-    /** So o codigo que vem na URL da tag. O de ativacao deixou de ser exigido. */
-    public record ReivindicarEntrada(
+    /** Dados essenciais que precisam existir antes de a NFC ganhar dono. */
+    public record ConfirmarCadastroEntrada(
             @NotBlank
             @Pattern(regexp = "^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{10}$",
-                     message = "O codigo da tag tem 10 caracteres e nao usa 0, O, I, 1, L nem U")
-            String codigoPublico) {}
+                      message = "O codigo da tag tem 10 caracteres e nao usa 0, O, I, 1, L nem U")
+            String codigoPublico,
+            @NotBlank @Size(max = 60) String nome,
+            @NotNull Especie especie,
+            @Size(max = 60) String raca,
+            @Size(max = 80) String cidade,
+            @Size(min = 2, max = 2) String estado) {
+
+        Pet paraPet() {
+            Pet pet = new Pet();
+            pet.setNome(nome);
+            pet.setEspecie(especie);
+            pet.setRaca(raca);
+            pet.setCidade(cidade);
+            pet.setEstado(estado == null ? null : estado.toUpperCase());
+            return pet;
+        }
+    }
+
+    public record ConfirmarCadastroResposta(TagResposta tag, UUID petUuid) {}
 
     public record AceitarEntrada(
             @NotBlank
