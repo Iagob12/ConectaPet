@@ -1,0 +1,34 @@
+name: Manter API ativa
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/manter-api-ativa.yml]
+  schedule:
+    # O Render gratuito hiberna depois de 15 minutos sem trafego. Usamos
+    # minutos fora da virada da hora, quando os agendamentos do GitHub tendem
+    # a enfrentar menos fila.
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: manter-api-ativa
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Acordar e conferir a API
+        shell: bash
+        run: |
+          curl --fail --show-error --silent \
+            --retry 6 \
+            --retry-all-errors \
+            --retry-delay 10 \
+            --connect-timeout 15 \
+            --max-time 90 \
+            https://conectapet-api-e6ub.onrender.com/actuator/health

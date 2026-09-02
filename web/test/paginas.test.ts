@@ -128,6 +128,10 @@ describe('quando a API cai', () => {
     expect(html).not.toContain('Verifique sua conexão');
     // Com o código anotado, o resgate continua possível.
     expect(html).toContain(ATIVA);
+    // Se o agendamento atrasar e o Render dormir, a visita acorda a API e a
+    // propria pagina tenta de novo sem exigir que a pessoa entenda o problema.
+    expect(html).toContain('Estamos acordando o serviço');
+    expect(html).toContain('window.location.reload()');
   });
 
   it('API travada não deixa a página carregando para sempre', async () => {

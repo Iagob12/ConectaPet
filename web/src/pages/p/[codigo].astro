@@ -427,6 +427,9 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
           O problema é do nosso lado, não do seu celular. Já tentamos duas
           vezes automaticamente.
         </p>
+        <p id="reconexao" class="reconexao" aria-live="polite" hidden>
+          Estamos acordando o serviço e tentaremos novamente em instantes.
+        </p>
         <p class="codigo-tag">
           <span>Anote o código desta tag</span>
           <strong>{codigo}</strong>
@@ -446,7 +449,7 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
   {/* API_PUBLICA, nao API: este script roda no NAVEGADOR de quem achou o pet,
       e o nome interno do container nao existe para ele. */}
-  <script define:vars={{ codigo, API: API_PUBLICA }}>
+  <script define:vars={{ codigo, API: API_PUBLICA, falhou }}>
     // O cabecalho e o mesmo da vitrine, inclusive no celular. Ele continua
     // sendo navegavel se a API do perfil falhar.
     const botaoMenu = document.getElementById('menu-btn');
@@ -468,6 +471,25 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
           botaoMenu.focus();
         }
       });
+    }
+
+    // O agendamento externo evita quase todos os repousos do Render gratuito,
+    // mas o GitHub pode atrasar uma execucao. Se isso acontecer, a primeira
+    // visita ja acorda a API e esta pagina se recupera sozinha. O limite evita
+    // recarregar indefinidamente durante uma indisponibilidade real.
+    const chaveReconexao = `conectapet-reconexao-${codigo}`;
+    if (falhou) {
+      const total = Number(sessionStorage.getItem(chaveReconexao) ?? '0');
+      const reconexao = document.getElementById('reconexao');
+      if (total < 8) {
+        sessionStorage.setItem(chaveReconexao, String(total + 1));
+        if (reconexao) reconexao.hidden = false;
+        window.setTimeout(() => window.location.reload(), 10_000);
+      } else {
+        sessionStorage.removeItem(chaveReconexao);
+      }
+    } else {
+      sessionStorage.removeItem(chaveReconexao);
     }
 
     // A unica coisa nesta pagina que depende de JavaScript.

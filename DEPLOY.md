@@ -37,6 +37,14 @@ uns 50 segundos para acordar. Nesse tempo, quem encostou o celular na tag vê
 "nossos servidores não responderam". Para um produto de resgate, o plano pago é
 o mínimo viável.
 
+Enquanto o projeto permanecer no plano gratuito, o workflow
+`.github/workflows/manter-api-ativa.yml` consulta a sonda de saúde a cada 10
+minutos. Isso evita o repouso na operação normal sem mudar o plano. É uma
+proteção de melhor esforço: o GitHub pode atrasar ou descartar um agendamento e
+desativa workflows agendados de repositórios públicos após 60 dias sem nenhuma
+atividade. A página pública também tenta recarregar sozinha caso uma dessas
+lacunas deixe a API dormir.
+
 **As fotos precisam de bucket aqui.** No Render o disco do container é efêmero:
 `FOTO_ARMAZENAMENTO=local` perderia as fotos a cada deploy. Por isso o
 `render.yaml` já vem com `s3`.
