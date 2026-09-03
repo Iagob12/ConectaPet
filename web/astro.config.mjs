@@ -12,7 +12,7 @@ import vercel from '@astrojs/vercel';
  */
 function adaptador() {
   return process.env.ALVO_DEPLOY === 'vercel'
-    ? vercel()
+    ? vercel({ webAnalytics: { enabled: true } })
     : node({ mode: 'standalone' });
 }
 
