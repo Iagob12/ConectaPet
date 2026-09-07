@@ -177,12 +177,25 @@ export function caractereInvalido(codigo: string): string | null {
  * voltava para a tela de login logo apos criar a conta.
  */
 export function redirecionarCom(destino: string, cookies: string[]): Response {
-  const headers = new Headers({ Location: destino });
+  const headers = new Headers({ Location: destinoInterno(destino) });
   for (const c of cookies) headers.append('Set-Cookie', c);
   return new Response(null, { status: 303, headers });
 }
 
+/** Aceita somente caminhos deste site, fechando redirecionamentos de phishing. */
+export function destinoInterno(destino: string): string {
+  if (!destino.startsWith('/') || destino.startsWith('//') || destino.includes('\\')) return '/app';
+  try {
+    const base = new URL('https://conectapet.invalid');
+    const resolvida = new URL(destino, base);
+    if (resolvida.origin !== base.origin) return '/app';
+    return resolvida.pathname + resolvida.search + resolvida.hash;
+  } catch {
+    return '/app';
+  }
+}
+
 /** 303 apos POST: tira o formulario do historico e um F5 nao reenvia. */
 export function verDepois(destino: string): Response {
-  return new Response(null, { status: 303, headers: { Location: destino } });
+  return new Response(null, { status: 303, headers: { Location: destinoInterno(destino) } });
 }

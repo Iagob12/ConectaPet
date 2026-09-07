@@ -301,5 +301,24 @@ it('a política não bloqueia as fontes que a landing carrega', async () => {
     expect(r.headers.get('x-content-type-options')).toBe('nosniff');
     expect(r.headers.get('content-security-policy')).toContain("object-src 'none'");
     expect(r.headers.get('content-security-policy')).toContain("form-action 'self'");
+    expect(r.headers.get('cross-origin-opener-policy')).toBe('same-origin');
+    expect(r.headers.get('x-permitted-cross-domain-policies')).toBe('none');
+  });
+
+  it('recusa formulário enviado por outro site', async () => {
+    const r = await pegar('/sair', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        origin: 'https://site-malicioso.example',
+        'sec-fetch-site': 'cross-site',
+      },
+      body: '',
+    });
+
+    expect(r.status).toBe(403);
+    expect(await r.text()).toMatch(
+      /Origem da requisição não permitida|Cross-site POST form submissions are forbidden/,
+    );
   });
 });

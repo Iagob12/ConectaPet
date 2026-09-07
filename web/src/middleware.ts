@@ -16,6 +16,21 @@ const REFRESH = 'cp_refresh';
  * final — inclusive quando a pagina responde com um redirect proprio.
  */
 export const onRequest = defineMiddleware(async (ctx, next) => {
+  // Formulários autenticados usam cookies HttpOnly. SameSite=Lax já barra a
+  // maioria dos POSTs vindos de outro site, mas não deve ser a única linha de
+  // defesa: navegadores antigos e ambientes que tratam subdomínios de forma
+  // diferente ainda podem enviar o cookie. Origin e Sec-Fetch-Site são sinais
+  // produzidos pelo navegador e impedem que outra página acione operações em
+  // nome do tutor (CSRF).
+  if (requisicaoDeOutroSite(ctx.request, ctx.url)) {
+    const negada = new Response('Origem da requisição não permitida.', {
+      status: 403,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+    aplicarCabecalhosDeSeguranca(negada);
+    return negada;
+  }
+
   let cookie = ctx.request.headers.get('cookie');
   const novos: string[] = [];
   let renovando: Promise<boolean> | null = null;
@@ -62,6 +77,21 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
   return resposta;
 });
 
+function requisicaoDeOutroSite(requisicao: Request, url: URL): boolean {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(requisicao.method.toUpperCase())) return false;
+
+  const contexto = requisicao.headers.get('sec-fetch-site');
+  if (contexto === 'cross-site') return true;
+
+  const origem = requisicao.headers.get('origin');
+  if (!origem || origem === 'null') return origem === 'null';
+  try {
+    return new URL(origem).origin !== url.origin;
+  } catch {
+    return true;
+  }
+}
+
 /**
  * Cabecalhos de seguranca da resposta.
  *
@@ -91,7 +121,9 @@ function aplicarCabecalhosDeSeguranca(resposta: Response) {
   por('X-Content-Type-Options', 'nosniff');
   por('Referrer-Policy', 'strict-origin-when-cross-origin');
   por('X-Frame-Options', 'DENY');
-  por('Permissions-Policy', 'camera=(), microphone=(), payment=()');
+  por('Permissions-Policy', 'camera=(), microphone=(), payment=(), usb=(), browsing-topics=()');
+  por('X-Permitted-Cross-Domain-Policies', 'none');
+  por('Cross-Origin-Opener-Policy', 'same-origin');
 
   // Nada de cache, por padrão.
   //

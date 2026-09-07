@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   ALFABETO, normalizarCodigo, caractereInvalido,
-  mesclarCookies, temCookie, redirecionarCom, verDepois,
+  mesclarCookies, temCookie, redirecionarCom, destinoInterno, verDepois,
 } from '../src/lib/api';
 import { quando, dia, texto, marcado } from '../src/lib/painel';
 
@@ -80,6 +80,14 @@ describe('redirecionamentos', () => {
     // 303 força a próxima requisição a ser GET: tira o formulário do histórico
     // e um F5 não reenvia o cadastro.
     expect(verDepois('/app/conta?salvo=1').status).toBe(303);
+  });
+
+  it('não deixa o login redirecionar para outro site', () => {
+    expect(destinoInterno('/app/pet/abc?aba=dados')).toBe('/app/pet/abc?aba=dados');
+    expect(destinoInterno('https://site-falso.example/roubar')).toBe('/app');
+    expect(destinoInterno('//site-falso.example/roubar')).toBe('/app');
+    expect(destinoInterno('/\\site-falso.example/roubar')).toBe('/app');
+    expect(destinoInterno('javascript:alert(1)')).toBe('/app');
   });
 });
 

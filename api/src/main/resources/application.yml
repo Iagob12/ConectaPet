@@ -184,6 +184,10 @@ conectapet:
     leitura-publica-por-minuto: 30
     registro-leitura-por-minuto: 10
     lista-espera-por-hora: 5
+    # Criar conta grava no banco e dispara e-mail. Sem um teto próprio, um robô
+    # poderia usar a API como gerador de spam e encher a tabela de usuários.
+    cadastro-por-hora: 10
+    teto-baldes: 50000
   leitura:
     # Aproximacoes repetidas do mesmo celular nao viram uma enxurrada de push.
     janela-dedup: PT10M
