@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.4.13</version>
+    <version>4.1.1</version>
     <relativePath/>
   </parent>
 
@@ -19,9 +19,9 @@
 
   <properties>
     <java.version>21</java.version>
-    <jjwt.version>0.12.6</jjwt.version>
+    <jjwt.version>0.13.0</jjwt.version>
     <bucket4j.version>8.10.1</bucket4j.version>
-    <springdoc.version>2.7.0</springdoc.version>
+    <springdoc.version>3.1.0</springdoc.version>
   </properties>
 
   <dependencies>
@@ -60,7 +60,7 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
-      <version>2.29.45</version>
+      <version>2.54.12</version>
       <exclusions>
         <!-- O SDK traz Netty para o cliente assincrono; usamos o sincrono com
              Apache HTTP, e sem isto sobem duas pilhas de rede no jar. -->
@@ -128,7 +128,7 @@
     <dependency>
       <groupId>com.twelvemonkeys.imageio</groupId>
       <artifactId>imageio-webp</artifactId>
-      <version>3.12.0</version>
+      <version>3.14.0</version>
     </dependency>
 
     <!-- Faz o Spring ler o .env, que ate agora so o docker-compose lia.
@@ -136,7 +136,7 @@
     <dependency>
       <groupId>me.paulschwarz</groupId>
       <artifactId>spring-dotenv</artifactId>
-      <version>4.0.0</version>
+      <version>5.1.0</version>
     </dependency>
 
     <!-- Testes: MySQL real via Testcontainers. H2 nao serve porque collation e
