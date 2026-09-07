@@ -55,6 +55,14 @@
 }
 *,*::before,*::after{box-sizing:border-box}
 
+.pular-conteudo{
+  position:fixed;z-index:1000;top:8px;left:12px;transform:translateY(-160%);
+  padding:10px 16px;border:2px solid var(--navy-900);border-radius:var(--radius-full);
+  background:var(--white);color:var(--navy-900);font-weight:700;text-decoration:none;
+  box-shadow:var(--shadow-hard);
+}
+.pular-conteudo:focus{transform:translateY(0)}
+
 /* ---- A folha de papel -----------------------------------------------------
    O mesmo desenho da vitrine: um fundo quente por fora, e o conteúdo dentro de
    uma folha arredondada. Era isto que faltava — o painel tinha uma faixa e uma
@@ -120,6 +128,7 @@ body{
 .topo--admin .marca__nome{color:#fff}
 .topo--admin .marca__slogan{color:var(--navy-300)}
 .folha{max-width:520px;margin:0 auto;padding:24px 20px 48px}
+.folha--painel-largo{max-width:1040px}
 
 /* ---- As ondas da marca ----------------------------------------------------
    O mesmo motivo do símbolo e da vitrine, onde ele separa dois blocos. Aqui
@@ -234,6 +243,7 @@ input[aria-invalid="true"]{border-color:var(--alert-600)}
 
 .pilha{display:flex;flex-direction:column;gap:16px}
 .cartao + .cartao{margin-top:16px}
+.pilha > .cartao + .cartao{margin-top:0}
 /* Título de cartão em Poppins, como os da vitrine. Em Inter ele ficava
    indistinguível do parágrafo abaixo, e a tela virava uma parede de texto. */
 .cartao__titulo{
@@ -312,8 +322,8 @@ textarea:focus{outline:3px solid var(--teal-500);outline-offset:2px}
 
 /* ---- Administrativo ----------------------------------------------------- */
 
-.folha--larga{max-width:900px}
-.metricas{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.folha--larga{max-width:1120px}
+.metricas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:24px}
 .metrica{background:var(--white);border:2px solid var(--navy-900);border-radius:16px;padding:14px 16px}
 .metrica dt{font-size:14px;color:var(--navy-700);margin:0}
 .metrica dd{font-size:26px;font-weight:700;color:var(--navy-900);margin:2px 0 0;letter-spacing:-.02em}
@@ -322,6 +332,8 @@ textarea:focus{outline:3px solid var(--teal-500);outline-offset:2px}
 table.dados{border-collapse:collapse;width:100%;font-size:15px}
 table.dados th,table.dados td{text-align:left;padding:10px 12px;border-bottom:2px solid var(--gray-300);white-space:nowrap}
 table.dados th{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--navy-700)}
+table.dados thead{background:var(--white)}
+table.dados th{position:sticky;top:0;z-index:1}
 table.dados tbody tr:nth-child(even){background:var(--sand-100)}
 table.dados td.codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;font-weight:600;color:var(--navy-900)}
 table.dados td.url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;white-space:normal;word-break:break-all;min-width:230px}
@@ -367,3 +379,62 @@ a.copiar{display:inline-flex;align-items:center;justify-content:center;text-deco
 .editor__botoes .btn{width:auto;min-height:44px;padding:8px 16px;font-size:15px}
 .editor__ajuda{font-size:14px;color:var(--navy-700);margin:8px 0 0}
 .editor__estado{min-height:22px;font-size:14px;font-weight:600;color:var(--teal-700);margin:4px 0 16px}
+
+/* ---- Visões gerais ------------------------------------------------------- */
+.cabecalho-pagina{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+  margin-bottom:24px;
+}
+.cabecalho-pagina h1{margin-bottom:8px}
+.cabecalho-pagina .sub{margin-bottom:0}
+.sobretitulo{
+  margin:0 0 6px;color:var(--teal-700);font-size:13px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.resumo-painel{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:none;margin:0;
+  padding:10px 14px;border:2px solid var(--navy-900);border-radius:var(--radius-full);
+  background:var(--white);color:var(--navy-900);font-size:14px;
+}
+.resumo-painel strong{font:800 22px/1 var(--font-display)}
+.resumo-painel span{padding-left:10px;border-left:2px solid var(--gray-300)}
+.pagina-pets .pilha{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.pagina-pets .pilha > .cartao:only-child{grid-column:1/-1;max-width:620px}
+.atalhos-painel{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:28px;
+}
+.atalhos-painel a{
+  min-height:96px;padding:16px;border:2px solid var(--navy-900);border-radius:var(--radius-lg);
+  background:var(--sand-100);color:var(--navy-900);text-decoration:none;
+  transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.atalhos-painel a:hover{background:var(--white);transform:translateY(-2px);box-shadow:var(--shadow-hard)}
+.atalhos-painel strong,.atalhos-painel span{display:block}
+.atalhos-painel strong{font:700 17px/1.25 var(--font-title)}
+.atalhos-painel span{margin-top:5px;color:var(--navy-700);font-size:14px;line-height:1.4}
+.conta-grade{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.9fr);gap:20px;align-items:start}
+.conta-grade__lateral{display:flex;flex-direction:column;gap:16px}
+.conta-grade__lateral > .cartao + .cartao{margin-top:0}
+.pagina-conta > .perigo{margin-top:20px}
+
+@media (max-width:760px){
+  .folha--painel-largo{max-width:620px}
+  .pagina-pets .pilha,.atalhos-painel,.conta-grade{grid-template-columns:1fr}
+  .pagina-pets .pilha > .cartao:only-child{grid-column:auto;max-width:none}
+  .metricas{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cabecalho-pagina{align-items:flex-start;flex-direction:column;gap:12px}
+}
+@media (max-width:480px){
+  .moldura{padding:8px}
+  .topo{padding:10px 14px}
+  .folha{padding:22px 20px 40px}
+  .barra__menu{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+  .barra__menu a{justify-content:center;padding-inline:6px;text-align:center}
+  .metricas{grid-template-columns:1fr 1fr}
+  .metrica{padding:12px}
+  .metrica dd{font-size:23px}
+  .resumo-painel{border-radius:var(--radius-lg)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}

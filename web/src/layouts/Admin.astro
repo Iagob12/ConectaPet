@@ -2,7 +2,7 @@
 interface Props {
   titulo: string;
   voltar?: { href: string; texto: string };
-  aba?: 'lotes' | 'tags';
+  aba?: 'lotes' | 'tags' | 'emails';
 }
 const { titulo, voltar, aba } = Astro.props;
 
@@ -26,6 +26,7 @@ import '../styles/base.css';
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </head>
 <body>
+<a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
 <div class="moldura">
 <div class="folha-papel">
   <header class="barra topo topo--admin">
@@ -40,10 +41,11 @@ import '../styles/base.css';
     <nav class="barra__menu" aria-label="Administrativo">
       <a href="/admin" aria-current={aba === 'lotes' ? 'page' : undefined}>Lotes</a>
       <a href="/admin/tags" aria-current={aba === 'tags' ? 'page' : undefined}>Tags</a>
+      <a href="/admin/emails" aria-current={aba === 'emails' ? 'page' : undefined}>E-mails</a>
       <a href="/sair">Sair</a>
     </nav>
   </header>
-  <main class="folha folha--larga">
+  <main class="folha folha--larga" id="conteudo" tabindex="-1">
     {voltar && <a class="voltar" href={voltar.href}>&larr; {voltar.texto}</a>}
     <slot />
   </main>

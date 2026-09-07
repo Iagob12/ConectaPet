@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +32,14 @@ public class NotificacaoServico {
     private final NotificacaoRepositorio repo;
     private final Map<Notificacao.Canal, CanalEnvio> canais;
     private final ObjectMapper json;
+    private final String provedorEmail;
 
-    public NotificacaoServico(NotificacaoRepositorio repo, List<CanalEnvio> canais, ObjectMapper json) {
+    public NotificacaoServico(NotificacaoRepositorio repo, List<CanalEnvio> canais, ObjectMapper json,
+                              @Value("${conectapet.email.provedor:log}") String provedorEmail) {
         this.repo = repo;
         this.canais = canais.stream().collect(Collectors.toMap(CanalEnvio::canal, c -> c));
         this.json = json;
+        this.provedorEmail = provedorEmail;
     }
 
     /** Enfileira. Participa da transacao de quem chamou, de proposito. */
@@ -117,4 +121,37 @@ public class NotificacaoServico {
 
     private static final java.util.regex.Pattern EMAIL =
             java.util.regex.Pattern.compile("([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9.-]+)");
+
+    /**
+     * Diagnóstico sem destinatários nem conteúdo das mensagens. Só o admin
+     * enxerga isto; é o mínimo necessário para uma falha de entrega deixar de
+     * depender do painel do provedor ou de acesso direto ao banco.
+     */
+    @Transactional(readOnly = true)
+    public ResumoFila resumoFila() {
+        List<FalhaRecente> falhas = repo.findTop5ByStatusOrderByCriadoEmDesc(Notificacao.Status.FALHOU)
+                .stream()
+                .map(n -> new FalhaRecente(n.getTipo(), n.getTentativas(), n.getUltimoErro(), n.getCriadoEm()))
+                .toList();
+        return new ResumoFila(
+                provedorEmail,
+                repo.countByStatus(Notificacao.Status.PENDENTE),
+                repo.countByStatus(Notificacao.Status.ENVIADA),
+                repo.countByStatus(Notificacao.Status.FALHOU),
+                falhas);
+    }
+
+    /**
+     * Reabre apenas falhas dos últimos dois dias. Mensagens antigas podem
+     * carregar links expirados e alertas de leitura fora de contexto.
+     */
+    @Transactional
+    public int reprocessarFalhasRecentes() {
+        Instant agora = Instant.now();
+        return repo.reabrirFalhasRecentes(agora.minus(Duration.ofDays(2)), agora);
+    }
+
+    public record ResumoFila(String provedor, long pendentes, long enviadas, long falhas,
+                             List<FalhaRecente> falhasRecentes) {}
+    public record FalhaRecente(Notificacao.Tipo tipo, int tentativas, String erro, Instant criadaEm) {}
 }

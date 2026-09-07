@@ -4,8 +4,11 @@ interface Props {
   /** Quando presente, vira o link "voltar" no topo do conteudo. */
   voltar?: { href: string; texto: string };
   aba?: 'pets' | 'conta';
+  /** Telas de visão geral aproveitam o desktop; formulários continuam focados. */
+  largura?: 'normal' | 'larga';
+  classe?: string;
 }
-const { titulo, voltar, aba } = Astro.props;
+const { titulo, voltar, aba, largura = 'normal', classe = '' } = Astro.props;
 
 import '../styles/base.css';
 ---
@@ -28,6 +31,7 @@ import '../styles/base.css';
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </head>
 <body>
+<a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
 <div class="moldura">
 <div class="folha-papel">
   <header class="barra topo">
@@ -45,7 +49,7 @@ import '../styles/base.css';
       <a href="/sair">Sair</a>
     </nav>
   </header>
-  <main class="folha">
+  <main class:list={['folha', largura === 'larga' && 'folha--painel-largo', classe]} id="conteudo" tabindex="-1">
     {voltar && <a class="voltar" href={voltar.href}>&larr; {voltar.texto}</a>}
     <slot />
   </main>

@@ -6,6 +6,7 @@ import br.com.conectapet.comum.erro.TipoErro;
 import br.com.conectapet.comum.util.Hashes;
 import br.com.conectapet.seguranca.UsuarioAtual;
 import br.com.conectapet.seguranca.UsuarioAutenticado;
+import br.com.conectapet.notificacao.NotificacaoServico;
 import br.com.conectapet.tag.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -48,13 +49,15 @@ public class AdminControlador {
     private final String urlPublica;
     private final String ipPimenta;
     private final br.com.conectapet.seguranca.IpDoCliente ipDoCliente;
+    private final NotificacaoServico notificacoes;
 
     public AdminControlador(LoteServico loteServico, LoteRepositorio lotes, TagRepositorio tags,
                             MetricasServico metricas, ReautenticacaoServico reautenticacao,
                             AuditoriaServico auditoria, UsuarioAtual usuarioAtual,
                             @Value("${conectapet.tag.url-publica}") String urlPublica,
                             @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
-                              br.com.conectapet.seguranca.IpDoCliente ipDoCliente) {
+                            br.com.conectapet.seguranca.IpDoCliente ipDoCliente,
+                            NotificacaoServico notificacoes) {
         this.loteServico = loteServico;
         this.lotes = lotes;
         this.tags = tags;
@@ -65,6 +68,7 @@ public class AdminControlador {
         this.urlPublica = urlPublica;
         this.ipPimenta = ipPimenta;
         this.ipDoCliente = ipDoCliente;
+        this.notificacoes = notificacoes;
     }
 
     // ---- Reautenticacao ----------------------------------------------------
@@ -195,6 +199,18 @@ public class AdminControlador {
         Instant fim = (ate == null ? LocalDate.now() : ate)
                 .plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
         return metricas.calcular(inicio, fim);
+    }
+
+    // ---- Entrega de e-mails -----------------------------------------------
+
+    @GetMapping("/notificacoes/resumo")
+    public NotificacaoServico.ResumoFila resumoNotificacoes() {
+        return notificacoes.resumoFila();
+    }
+
+    @PostMapping("/notificacoes/reprocessar")
+    public Map<String, Integer> reprocessarNotificacoes() {
+        return Map.of("reabertas", notificacoes.reprocessarFalhasRecentes());
     }
 
     // ---- Apoio -------------------------------------------------------------

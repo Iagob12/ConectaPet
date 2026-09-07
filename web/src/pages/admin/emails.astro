@@ -1,0 +1,78 @@
+---
+export const prerender = false;
+
+import Admin from '../../layouts/Admin.astro';
+import { exigirAdmin, type ResumoNotificacoes } from '../../lib/admin';
+import { quando } from '../../lib/painel';
+import { verDepois } from '../../lib/api';
+
+const porta = await exigirAdmin(Astro);
+if ('resposta' in porta) return porta.resposta;
+
+let erro: string | null = null;
+if (Astro.request.method === 'POST') {
+  const r = await Astro.locals.api<{ reabertas: number }>('/api/admin/notificacoes/reprocessar', {
+    metodo: 'POST',
+  });
+  if (r.ok) return verDepois(`/admin/emails?reabertas=${r.dados?.reabertas ?? 0}`);
+  erro = r.erro;
+}
+
+const r = await Astro.locals.api<ResumoNotificacoes>('/api/admin/notificacoes/resumo');
+const fila = r.dados;
+const reabertas = Astro.url.searchParams.get('reabertas');
+---
+
+<Admin titulo="Entrega de e-mails" aba="emails">
+  <h1>Entrega de <span>e-mails</span></h1>
+  <p class="sub">Confirmações de cadastro, recuperação de senha e avisos de leitura passam por esta fila.</p>
+
+  {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
+  {r.erro && <p class="aviso" role="alert"><span>Não foi possível consultar a fila: {r.erro}</span></p>}
+  {reabertas !== null && (
+    <p class="sucesso" role="status"><span>{reabertas} {reabertas === '1' ? 'mensagem reaberta' : 'mensagens reabertas'} para nova tentativa.</span></p>
+  )}
+
+  {fila && (
+    <>
+      {fila.provedor === 'log' && (
+        <p class="aviso" role="alert"><span><strong>O envio real está desligado.</strong><br />A API está apenas registrando as mensagens no log.</span></p>
+      )}
+      <dl class="metricas metricas--email">
+        <div class="metrica"><dt>Provedor</dt><dd class="metrica__texto">{fila.provedor === 'http' ? 'API HTTP' : fila.provedor.toUpperCase()}</dd></div>
+        <div class="metrica"><dt>Aguardando</dt><dd>{fila.pendentes}</dd></div>
+        <div class="metrica"><dt>Enviados</dt><dd>{fila.enviadas}</dd></div>
+        <div class="metrica"><dt>Falhas</dt><dd>{fila.falhas}</dd></div>
+      </dl>
+
+      {fila.falhasRecentes.length > 0 ? (
+        <section class="cartao cartao--alerta">
+          <h2 class="cartao__titulo">Falhas recentes</h2>
+          <p class="cartao__nota">O destinatário e o conteúdo nunca aparecem aqui.</p>
+          <ul class="lista-limpa">
+            {fila.falhasRecentes.map((f) => (
+              <li class="item">
+                <p class="item__oque"><strong>{f.tipo.replaceAll('_', ' ')}</strong> · {quando(f.criadaEm)}</p>
+                <p class="item__quando">{f.erro ?? 'O provedor não informou o motivo.'}</p>
+              </li>
+            ))}
+          </ul>
+          <form method="POST">
+            <button class="btn btn--principal" type="submit">Tentar novamente as falhas recentes</button>
+          </form>
+        </section>
+      ) : (
+        <section class="cartao cartao--calmo">
+          <h2 class="cartao__titulo">Nenhuma falha registrada</h2>
+          <p class="cartao__nota" style="margin-bottom:0">A fila não desistiu de nenhuma entrega.</p>
+        </section>
+      )}
+    </>
+  )}
+</Admin>
+
+<style>
+  .metricas--email{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .metrica__texto{font-size:20px!important}
+  @media(max-width:700px){.metricas--email{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>

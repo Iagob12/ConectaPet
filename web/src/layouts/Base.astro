@@ -27,6 +27,7 @@ import '../styles/base.css';
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </head>
 <body>
+<a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
 <div class="moldura">
 <div class="folha-papel">
   <header class="topo">
@@ -39,7 +40,7 @@ import '../styles/base.css';
       </span>
     </a>
   </header>
-  <main class="folha">
+  <main class="folha" id="conteudo" tabindex="-1">
     {passo && (
       <div class="passos" role="progressbar" aria-valuenow={passo.atual}
            aria-valuemin="1" aria-valuemax={passo.total}

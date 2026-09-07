@@ -17,4 +17,20 @@ public interface NotificacaoRepositorio extends JpaRepository<Notificacao, Long>
             order by n.processarApos asc
            """)
     List<Notificacao> pendentes(@Param("agora") Instant agora, Pageable limite);
+
+    long countByStatus(Notificacao.Status status);
+
+    List<Notificacao> findTop5ByStatusOrderByCriadoEmDesc(Notificacao.Status status);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("""
+           update Notificacao n
+              set n.status = br.com.conectapet.notificacao.Notificacao$Status.PENDENTE,
+                  n.tentativas = 0,
+                  n.processarApos = :agora,
+                  n.ultimoErro = null
+            where n.status = br.com.conectapet.notificacao.Notificacao$Status.FALHOU
+              and n.criadoEm >= :desde
+           """)
+    int reabrirFalhasRecentes(@Param("desde") Instant desde, @Param("agora") Instant agora);
 }

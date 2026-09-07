@@ -136,6 +136,15 @@ describe('canais de contato', () => {
     expect(html).toContain('mailto:conectapet.contato@gmail.com');
   });
 
+  it('os CTAs de compra e atacado chegam a uma conversa, sem voltar à própria seção', () => {
+    const comprar = html.match(/<a[^>]+href="([^"]+)"[^>]*>Quero minha tag<\/a>/g) ?? [];
+    expect(comprar.length).toBeGreaterThan(0);
+    expect(comprar.at(-1)).toContain('https://wa.me/5567984360414');
+
+    const atacado = html.match(/<a[^>]+href="([^"]+)"[^>]*>Quero vender ConectaPet<\/a>/)?.[1];
+    expect(atacado).toMatch(/^https:\/\/wa\.me\//);
+  });
+
   it('todo ícone usado existe no sprite', () => {
     // Criei o link de e-mail apontando para um #i-mail que não existia.
     // Ícone ausente não quebra a página: some, calado.

@@ -68,12 +68,17 @@ const salvo = Astro.url.searchParams.has('salvo');
 const reenviado = Astro.url.searchParams.has('verificacao');
 ---
 
-<Painel titulo="Minha conta" aba="conta">
-  <h1>Minha <span>conta</span></h1>
-  <p class="sub">
-    Estes telefones são os que aparecem na página do seu pet, quando você deixa
-    cada um deles visível.
-  </p>
+<Painel titulo="Minha conta" aba="conta" largura="larga" classe="pagina-conta">
+  <div class="cabecalho-pagina">
+    <div>
+      <p class="sobretitulo">Dados do tutor</p>
+      <h1>Minha <span>conta</span></h1>
+      <p class="sub">
+        Estes telefones são os que aparecem na página do seu pet, quando você deixa
+        cada um deles visível.
+      </p>
+    </div>
+  </div>
 
   {salvo && <p class="sucesso" role="status"><span>Dados salvos.</span></p>}
   {reenviado && (
@@ -95,7 +100,10 @@ const reenviado = Astro.url.searchParams.has('verificacao');
   )}
   {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
 
-  <form class="cartao" method="POST">
+  <div class="conta-grade">
+  <form class="cartao conta-grade__perfil" method="POST">
+    <h2 class="cartao__titulo">Dados de contato</h2>
+    <p class="cartao__nota">Mantenha estes dados atualizados para quem encontrar seu pet conseguir falar com você.</p>
     <div class="campo">
       <label for="nome">Seu nome</label>
       <input id="nome" name="nome" required minlength="2" maxlength="120" value={v.nome}
@@ -132,6 +140,7 @@ const reenviado = Astro.url.searchParams.has('verificacao');
     <button class="btn btn--principal" type="submit">Salvar</button>
   </form>
 
+  <div class="conta-grade__lateral">
   <section class="cartao">
     <h2 class="cartao__titulo">E-mail</h2>
     <ul class="lista-limpa">
@@ -170,6 +179,8 @@ const reenviado = Astro.url.searchParams.has('verificacao');
       <p class="erro-campo" style="margin-top:12px">Não consegui gerar o arquivo. Tente de novo.</p>
     )}
   </section>
+  </div>
+  </div>
 
   <section class="cartao perigo">
     <h2 class="cartao__titulo" style="color:#fff">Encerrar minha conta</h2>

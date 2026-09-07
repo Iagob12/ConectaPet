@@ -209,6 +209,12 @@ describe('vitrine e telas públicas', () => {
     }
   });
 
+  it('as telas de formulário permitem pular direto para o conteúdo', async () => {
+    const html = await (await pegar('/entrar')).text();
+    expect(html).toContain('href="#conteudo">Pular para o conteúdo</a>');
+    expect(html).toContain('<main class="folha" id="conteudo" tabindex="-1">');
+  });
+
   it('formulário da própria origem passa', async () => {
     // Trava o bug que só aparecia no build de produção: sem os hosts
     // permitidos configurados, o Astro calculava a origem como

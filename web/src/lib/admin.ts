@@ -20,6 +20,14 @@ export type Metricas = {
 
 export type Elevacao = { token: string; expiraEm: string };
 
+export type ResumoNotificacoes = {
+  provedor: string;
+  pendentes: number;
+  enviadas: number;
+  falhas: number;
+  falhasRecentes: Array<{ tipo: string; tentativas: number; erro: string | null; criadaEm: string }>;
+};
+
 export const STATUS_TAG: Record<string, string> = {
   CRIADA: 'Criada',
   ENVIADA: 'Enviada',

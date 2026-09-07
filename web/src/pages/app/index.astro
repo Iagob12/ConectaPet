@@ -36,8 +36,20 @@ const feito = q.has('recebida') ? 'Tag recebida. O perfil dela já está aqui.'
   : null;
 ---
 
-<Painel titulo="Meus pets" aba="pets">
-  <h1>Meus <span>pets</span></h1>
+<Painel titulo="Meus pets" aba="pets" largura="larga" classe="pagina-pets">
+  <div class="cabecalho-pagina">
+    <div>
+      <p class="sobretitulo">Painel do tutor</p>
+      <h1>Meus <span>pets</span></h1>
+      <p class="sub">Gerencie os perfis, as tags e o modo perdido em um só lugar.</p>
+    </div>
+    {(pets.length > 0 || semPerfil.length > 0) && (
+      <p class="resumo-painel" aria-label={`${pets.length} perfis de pet e ${semPerfil.length} tags com cadastro pendente`}>
+        <strong>{pets.length}</strong> {pets.length === 1 ? 'perfil' : 'perfis'}
+        {semPerfil.length > 0 && <span>{semPerfil.length} {semPerfil.length === 1 ? 'cadastro pendente' : 'cadastros pendentes'}</span>}
+      </p>
+    )}
+  </div>
 
   {feito && <p class="sucesso" role="status"><span>{feito}</span></p>}
   {erro && <p class="aviso" role="alert"><span>{erro}</span></p>}
@@ -111,16 +123,22 @@ const feito = q.has('recebida') ? 'Tag recebida. O perfil dela já está aqui.'
     ))}
   </div>
 
-  <p class="rodape-link" style="margin-top:28px">
-    <a class="link" href="/ativar">Ativar uma tag nova</a>
-  </p>
-  <p class="rodape-link" style="margin-top:8px">
-    <a class="link" href="/app/receber">Recebi uma tag de outra pessoa</a>
-  </p>
-
-  {/* Quem administra tambem e tutor: sem este link, a unica forma de achar o
-      administrativo seria decorar o endereco. */}
-  {rme.dados?.papel === 'ADMIN' && (
-    <p class="rodape-link"><a class="link" href="/admin">Ir para o administrativo</a></p>
-  )}
+  <nav class="atalhos-painel" aria-label="Outras ações">
+    <a href="/ativar">
+      <strong>Ativar uma tag nova</strong>
+      <span>Comece o perfil de outro pet.</span>
+    </a>
+    <a href="/app/receber">
+      <strong>Receber uma tag</strong>
+      <span>Use o código enviado por outro tutor.</span>
+    </a>
+    {/* Quem administra tambem e tutor: sem este link, a unica forma de achar o
+        administrativo seria decorar o endereco. */}
+    {rme.dados?.papel === 'ADMIN' && (
+      <a href="/admin">
+        <strong>Administrativo</strong>
+        <span>Gerencie lotes e tags produzidas.</span>
+      </a>
+    )}
+  </nav>
 </Painel>

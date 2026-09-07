@@ -20,7 +20,10 @@ concurrency:
 jobs:
   verificar:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    # Em uma retomada ruim, o Render gratuito já levou pouco mais de três
+    # minutos. O teto antigo cancelava a sonda justamente quando a API estava
+    # terminando de subir, e todas as execuções pareciam falhar para sempre.
+    timeout-minutes: 6
     steps:
       - name: Acordar e conferir a API
         shell: bash
@@ -30,5 +33,5 @@ jobs:
             --retry-all-errors \
             --retry-delay 10 \
             --connect-timeout 15 \
-            --max-time 90 \
+            --max-time 300 \
             https://conectapet-api-e6ub.onrender.com/actuator/health
