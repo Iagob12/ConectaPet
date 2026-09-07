@@ -283,7 +283,9 @@ it('a política não bloqueia as fontes que a landing carrega', async () => {
     const html = await (await pegar('/')).text();
     const csp = (await pegar('/entrar')).headers.get('content-security-policy') ?? '';
 
-    const externos = [...html.matchAll(/<link[^>]+href="(https:\/\/[^"]+)"/g)]
+    // Canonical apenas descreve a URL oficial; nao e um recurso carregado pelo
+    // navegador e, portanto, nao precisa entrar na CSP.
+    const externos = [...html.matchAll(/<link[^>]+rel="(?:preconnect|stylesheet)"[^>]+href="(https:\/\/[^"]+)"/g)]
       .map((m) => new URL(m[1]).origin);
 
     for (const origem of new Set(externos)) {

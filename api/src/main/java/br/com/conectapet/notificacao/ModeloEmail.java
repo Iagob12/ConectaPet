@@ -112,8 +112,12 @@ public class ModeloEmail {
             t.append("\nSe foi você testando a tag, está tudo certo — é assim que ela funciona.\n");
         }
 
+        String previa = perdido
+                ? "Uma leitura acabou de acontecer. Confira os detalhes no painel."
+                : "A página pública do " + pet + " foi aberta agora.";
         return new Mensagem(assunto, rodapeTexto(t.toString()),
-                html(assunto, corpoHtml(t.toString(), "Ver no painel", link)));
+                html("Alerta da tag", assunto, previa,
+                        corpoHtml(t.toString(), "Ver detalhes no painel", link)));
     }
 
     // ---- Conta -------------------------------------------------------------
@@ -132,7 +136,9 @@ public class ModeloEmail {
                 + "Se não foi você quem criou a conta, ignore este e-mail.\n";
 
         return new Mensagem(assunto, rodapeTexto(t),
-                html(assunto, corpoHtml(t, "Confirmar meu e-mail", link)));
+                html("Conta e segurança", assunto,
+                        "Confirme seu endereço e mantenha sua conta ConectaPet protegida.",
+                        corpoHtml(t, "Confirmar meu e-mail", link)));
     }
 
     private Mensagem resetSenha(JsonNode c) {
@@ -153,7 +159,9 @@ public class ModeloEmail {
                 + "valendo e ninguém consegue entrar sem ela.\n";
 
         return new Mensagem(assunto, rodapeTexto(t),
-                html(assunto, corpoHtml(t, "Criar nova senha", link)));
+                html("Conta e segurança", assunto,
+                        "Recebemos um pedido para criar uma nova senha para sua conta.",
+                        corpoHtml(t, "Criar nova senha", link)));
     }
 
     /**
@@ -179,7 +187,9 @@ public class ModeloEmail {
                 + link + "\n";
 
         return new Mensagem(assunto, rodapeTexto(t),
-                html(assunto, corpoHtml(t, "Ver a tag", link)));
+                html("Alerta de segurança", assunto,
+                        "Um código de transferência foi criado para uma das suas tags.",
+                        corpoHtml(t, "Revisar esta tag", link)));
     }
 
     /** Ainda nao e enfileirado por ninguem; o texto existe para quando for. */
@@ -195,7 +205,9 @@ public class ModeloEmail {
                 + "Se não foi você que ativou, fale com a gente imediatamente.\n";
 
         return new Mensagem(assunto, rodapeTexto(t),
-                html(assunto, corpoHtml(t, "Ver meus pets", link)));
+                html("Tag ativada", assunto,
+                        "Sua tag já está pronta para aproximar e proteger.",
+                        corpoHtml(t, "Ver meus pets", link)));
     }
 
     /** Idem: reservado, sem remetente ainda. */
@@ -203,7 +215,10 @@ public class ModeloEmail {
         String link = urlSite + "/app";
         String assunto = "Seu resumo da ConectaPet";
         String t = "Aqui está o resumo da atividade das suas tags.\n\n" + link + "\n";
-        return new Mensagem(assunto, rodapeTexto(t), html(assunto, corpoHtml(t, "Abrir o painel", link)));
+        return new Mensagem(assunto, rodapeTexto(t),
+                html("Resumo das tags", assunto,
+                        "Veja as atividades mais recentes dos seus pets.",
+                        corpoHtml(t, "Abrir o painel", link)));
     }
 
     // ---- Montagem ----------------------------------------------------------
@@ -215,29 +230,58 @@ public class ModeloEmail {
     }
 
     /**
-     * HTML deliberadamente pobre: tabela nenhuma, imagem nenhuma, estilo no
-     * atributo. Cliente de e-mail nao tem cascata confiavel, e imagem remota
-     * vira rastreador de abertura — que aqui nao serve para nada e diz a
-     * terceiros quando o tutor leu um aviso sobre o pet dele.
+     * E-mail transacional com a mesma identidade do produto. O layout usa
+     * tabelas e estilos inline porque ainda sao a opcao mais previsivel entre
+     * Gmail, Outlook e clientes moveis. Nao ha imagem remota: alem de evitar
+     * bloqueios, isso impede que a mensagem vire um rastreador de abertura.
      */
-    private String html(String titulo, String corpo) {
+    private String html(String categoria, String titulo, String previa, String corpo) {
         return """
                 <!doctype html>
                 <html lang="pt-BR"><head><meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1">
+                <meta name="color-scheme" content="light">
+                <meta name="supported-color-schemes" content="light">
                 <title>%s</title></head>
-                <body style="margin:0;padding:24px;background:#FCEBD2;
-                             font:16px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;color:#3B4E59">
-                <div style="max-width:520px;margin:0 auto;background:#fff;border:2px solid #22313A;
-                            border-radius:20px;padding:24px">
-                <p style="margin:0 0 20px;font-weight:700;color:#1D6B69;letter-spacing:-.01em">ConectaPet</p>
-                %s
+                <body style="margin:0;padding:0;background:#FAF3E7;color:#3B4E59;
+                             font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif">
+                <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">
+                  %s&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
                 </div>
-                <p style="max-width:520px;margin:16px auto 0;font-size:13px;color:#3B4E59">
-                ConectaPet · Aproxima e Protege — <a href="%s" style="color:#1D6B69">%s</a>
-                </p>
+                <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" border="0"
+                       style="width:100%%;background:#FAF3E7">
+                  <tr><td align="center" style="padding:28px 14px">
+                    <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" border="0"
+                           style="width:100%%;max-width:600px">
+                      <tr><td style="padding:0 8px 14px">
+                        <a href="%s" style="color:#22313A;text-decoration:none;font-size:21px;
+                           font-weight:800;letter-spacing:-.4px">Conecta<span style="color:#248785">Pet</span></a>
+                        <span style="display:block;margin-top:3px;color:#3B4E59;font-size:12px;letter-spacing:.3px">
+                          Aproxima e Protege
+                        </span>
+                      </td></tr>
+                      <tr><td style="background:#FFFFFF;border:2px solid #22313A;border-radius:22px;
+                                       box-shadow:5px 5px 0 #22313A;overflow:hidden">
+                        <div style="height:7px;background:#2FA8A5;font-size:0;line-height:0">&nbsp;</div>
+                        <div style="padding:30px 30px 26px">
+                          <p style="margin:0 0 10px;color:#1D6B69;font-size:12px;font-weight:800;
+                                    letter-spacing:1.2px;text-transform:uppercase">%s</p>
+                          <h1 style="margin:0 0 22px;color:#22313A;font-size:27px;line-height:1.2;
+                                     letter-spacing:-.6px">%s</h1>
+                          %s
+                        </div>
+                      </td></tr>
+                      <tr><td style="padding:22px 12px 0;text-align:center;color:#65747C;font-size:12px;line-height:1.55">
+                        Este é um e-mail automático de serviço da ConectaPet.<br>
+                        <a href="%s" style="color:#1D6B69;font-weight:700;text-decoration:underline">Acessar a ConectaPet</a>
+                        &nbsp;·&nbsp; Aproxima e Protege
+                      </td></tr>
+                    </table>
+                  </td></tr>
+                </table>
                 </body></html>
-                """.formatted(escapar(titulo), corpo, urlSite, urlSite);
+                """.formatted(escapar(titulo), escapar(previa), escapar(urlSite),
+                        escapar(categoria), escapar(titulo), corpo, escapar(urlSite));
     }
 
     /**
@@ -257,13 +301,18 @@ public class ModeloEmail {
               .append(escapar(limpo).replace("\n", "<br>"))
               .append("</p>");
         }
-        sb.append("<p style=\"margin:24px 0 8px\">")
+        sb.append("<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" ")
+          .append("style=\"margin:26px 0 16px\"><tr><td style=\"border-radius:999px;")
+          .append("background:#2FA8A5;border:2px solid #22313A;box-shadow:3px 3px 0 #22313A\">")
           .append("<a href=\"").append(escapar(link)).append("\" ")
-          .append("style=\"display:inline-block;padding:14px 28px;border-radius:9999px;")
-          .append("background:#2FA8A5;color:#22313A;font-weight:600;text-decoration:none;")
-          .append("border:2px solid #22313A\">").append(escapar(rotulo)).append("</a></p>")
-          .append("<p style=\"margin:0;font-size:13px;word-break:break-all\">")
-          .append(escapar(link)).append("</p>");
+          .append("style=\"display:inline-block;padding:14px 26px;color:#22313A;font-size:16px;")
+          .append("font-weight:700;text-decoration:none\">").append(escapar(rotulo)).append("</a>")
+          .append("</td></tr></table>")
+          .append("<div style=\"margin-top:22px;padding:14px 16px;background:#FCEBD2;border-radius:12px;")
+          .append("color:#3B4E59;font-size:12px;line-height:1.5\">")
+          .append("Se o botão não funcionar, copie e cole este endereço no navegador:<br>")
+          .append("<a href=\"").append(escapar(link)).append("\" style=\"color:#1D6B69;")
+          .append("word-break:break-all\">").append(escapar(link)).append("</a></div>");
         return sb.toString();
     }
 

@@ -115,6 +115,21 @@ class ModeloEmailTest {
     }
 
     @Test
+    @DisplayName("html tem hierarquia de marca, previa e alternativa acessivel")
+    void htmlProfissionalECompativel() {
+        var m = montar(Notificacao.Tipo.RESET_SENHA,
+                "{\"nome\":\"Ana\",\"link\":\"https://conectapet.com.br/redefinir-senha?token=xyz\",\"validadeMinutos\":60}");
+
+        assertThat(m.html())
+                .contains("Conta e segurança")
+                .contains("Recebemos um pedido para criar uma nova senha")
+                .contains("Aproxima e Protege")
+                .contains("Se o botão não funcionar")
+                .contains("role=\"presentation\"")
+                .doesNotContain("<img"); // sem pixel de abertura nem imagem bloqueada
+    }
+
+    @Test
     @DisplayName("nome de pet com HTML nao escapa para dentro da mensagem")
     void escapaNomeDoPet() {
         var m = montar(Notificacao.Tipo.LEITURA_TAG,

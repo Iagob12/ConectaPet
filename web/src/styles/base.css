@@ -54,6 +54,7 @@
   --font-body:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
+::selection{background:var(--teal-100);color:var(--navy-900)}
 
 .pular-conteudo{
   position:fixed;z-index:1000;top:8px;left:12px;transform:translateY(-160%);
@@ -73,7 +74,10 @@
    são iguais porque lá a moldura aparece contra a foto escura do herói; aqui
    não há foto, então a moldura precisa de contraste próprio. */
 body{
-  margin:0;background:var(--sand-100);color:var(--navy-700);
+  margin:0;min-width:320px;background:
+    radial-gradient(circle at 8% 4%,rgba(47,168,165,.09),transparent 24rem),
+    radial-gradient(circle at 94% 96%,rgba(240,160,46,.10),transparent 28rem),
+    var(--sand-100);color:var(--navy-700);
   /* Inter, a mesma da vitrine. Antes era a fonte do sistema, e o efeito era o
      de sair de um site e entrar em outro ao terminar o cadastro. O fallback
      de sistema segue na frente do usuário se a fonte não carregar. */
@@ -83,6 +87,8 @@ body{
 .folha-papel{
   background:var(--orange-100);
   border-radius:var(--radius-sheet);
+  border:1px solid rgba(34,49,58,.08);
+  box-shadow:0 18px 55px rgba(34,49,58,.08);
   /* "clip", e não "hidden": hidden criaria um contexto de rolagem e quebraria
      qualquer position:sticky daqui para a frente. É o corte que arredonda o
      topo da barra sem ela precisar saber que está numa folha. */
@@ -100,6 +106,7 @@ body{
   background:var(--white);
   border-bottom:1px solid var(--gray-300);
   padding:10px 20px;
+  position:relative;z-index:10;
 }
 .marca{
   display:inline-flex;align-items:center;gap:10px;
@@ -121,6 +128,9 @@ body{
    nenhum de identidade. Não vale defender um número ruim por tecnicalidade. */
 .marca__nome span{color:var(--teal-600)}
 .marca__slogan{font-size:12px;color:var(--navy-700);margin-top:5px;letter-spacing:.02em}
+.marca__nome span,.marca img{transition:filter .18s ease,color .18s ease}
+.marca:hover .marca__nome span{color:var(--teal-700)}
+.marca:hover img{filter:saturate(1.08)}
 
 /* No administrativo a barra continua escura, porque a diferença precisa ser
    percebida de relance: a tela aberta não é a do tutor. */
@@ -176,8 +186,11 @@ input,select{
   /* 16px ou mais: abaixo disso o iOS dá zoom sozinho e desalinha a tela */
   font:400 17px/1.4 inherit;color:var(--navy-900);
   background:var(--white);border:2px solid var(--navy-900);border-radius:12px;
+  transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease;
 }
-input:focus,select:focus{outline:3px solid var(--teal-500);outline-offset:2px}
+input:hover,select:hover,textarea:hover{border-color:var(--teal-700)}
+input:focus,select:focus{outline:3px solid var(--teal-500);outline-offset:2px;box-shadow:var(--shadow-xs)}
+input::placeholder,textarea::placeholder{color:#6F777C;opacity:1}
 /* Links e botoes tambem. Antes so os campos tinham foco declarado, e o anel
    padrao do navegador e desenhado com a cor do texto: sobre .btn, que tem
    fundo escuro e borda escura, ele fica praticamente invisivel. Navy com
@@ -194,7 +207,11 @@ input[aria-invalid="true"]{border-color:var(--alert-600)}
   min-height:56px;padding:12px 24px;border-radius:9999px;cursor:pointer;
   border:2px solid var(--navy-900);box-shadow:3px 3px 0 var(--navy-900);
   font:600 17px/1.2 inherit;text-decoration:none;
+  transition:transform .14s ease,box-shadow .14s ease,background-color .14s ease,color .14s ease;
 }
+.btn:hover:not([disabled]){transform:translate(1px,1px);box-shadow:2px 2px 0 var(--navy-900)}
+.btn--principal:hover:not([disabled]){background:var(--teal-600)}
+.btn--secundario:hover:not([disabled]){background:var(--sand-100)}
 .btn:active{transform:translate(3px,3px);box-shadow:none}
 .btn--principal{background:var(--teal-500);color:var(--navy-900)}
 .btn--secundario{background:var(--white);color:var(--navy-900);margin-top:12px}
@@ -311,8 +328,9 @@ input[aria-invalid="true"]{border-color:var(--alert-600)}
 textarea{
   width:100%;min-height:88px;padding:12px 16px;font:400 17px/1.4 inherit;color:var(--navy-900);
   background:var(--white);border:2px solid var(--navy-900);border-radius:12px;resize:vertical;
+  transition:border-color .15s ease,box-shadow .15s ease;
 }
-textarea:focus{outline:3px solid var(--teal-500);outline-offset:2px}
+textarea:focus{outline:3px solid var(--teal-500);outline-offset:2px;box-shadow:var(--shadow-xs)}
 .sucesso{
   display:flex;gap:10px;margin-bottom:20px;padding:14px 16px;border-radius:16px;
   background:var(--teal-100);border:2px solid var(--navy-900);color:var(--navy-900);font-size:16px;
@@ -425,6 +443,7 @@ a.copiar{display:inline-flex;align-items:center;justify-content:center;text-deco
   .cabecalho-pagina{align-items:flex-start;flex-direction:column;gap:12px}
 }
 @media (max-width:480px){
+  body{font-size:16px}
   .moldura{padding:8px}
   .topo{padding:10px 14px}
   .folha{padding:22px 20px 40px}
@@ -434,6 +453,7 @@ a.copiar{display:inline-flex;align-items:center;justify-content:center;text-deco
   .metrica{padding:12px}
   .metrica dd{font-size:23px}
   .resumo-painel{border-radius:var(--radius-lg)}
+  .cartao{padding:18px;box-shadow:3px 3px 0 var(--navy-900)}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
