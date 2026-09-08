@@ -4,18 +4,14 @@
 FROM maven:3.9-eclipse-temurin-21 AS compilacao
 WORKDIR /construcao
 
-# As dependências entram antes do código: enquanto o pom não muda, esta camada
-# fica em cache e o build seguinte não rebaixa a internet inteira de novo.
+# Uma única resolução Maven evita baixar/validar o mesmo grafo duas vezes. No
+# Render gratuito, a antiga etapa `dependency:go-offline` podia consumir todo o
+# tempo de build antes de o empacotamento começar, principalmente quando o POM
+# mudava e o cache era invalidado.
 COPY pom.xml .
-RUN mvn -B dependency:go-offline
-
 COPY src ./src
-# Sem "-o" de propósito. `go-offline` não resolve tudo o que o `package`
-# precisa — o plugin de repackage do Spring Boot e o surefire buscam artefato
-# na hora — e o build offline falharia logo depois de baixar as dependências.
-#
-# Os testes ficam para a esteira de integração contínua, que tem banco.
-# Rodá-los aqui exigiria MySQL dentro do build da imagem.
+# Os testes ficam para a esteira de integração contínua, que tem banco. Rodá-los
+# aqui exigiria MySQL dentro do build da imagem.
 RUN mvn -B package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
