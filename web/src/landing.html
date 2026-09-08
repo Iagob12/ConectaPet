@@ -162,25 +162,23 @@ strong,b{ color:var(--navy-900); font-weight:700; }
 .container{ width:100%; max-width:1200px; margin-inline:auto; padding-inline:20px; }
 @media (min-width:768px){ .container{ padding-inline:32px; } }
 
-.section{ padding-block:var(--section-y); background:var(--white); }
-.section--sand{ background:var(--sand-100); }
-.section--panel{ padding-block:calc(var(--section-y) / 2); }
-
-/* Divisor com as ondas da marca: a faixa de papel que separa dois blocos brancos */
-.divisor{
-  display:flex; justify-content:center; align-items:center;
-  padding-block:var(--sp-8); color:var(--teal-600); opacity:.55;
+.section{
+  position:relative;
+  padding-block:var(--section-y);
+  background:var(--white);
 }
-.divisor svg{ display:block; width:min(300px,52%); height:auto; }
-@media (min-width:900px){ .divisor{ padding-block:var(--sp-12); } }
-
-/* Bloco de chamada final: ondas como marca-d'água */
+.section + .section{ border-top:1px solid rgba(34,49,58,.10); }
+.section--sand{
+  background:
+    radial-gradient(circle at 6% 18%,rgba(47,168,165,.09),transparent 24rem),
+    radial-gradient(circle at 96% 88%,rgba(240,160,46,.11),transparent 26rem),
+    var(--sand-100);
+}
+.section--panel{
+  padding-block:calc(var(--section-y) / 2);
+  background:linear-gradient(135deg,rgba(217,240,239,.38),rgba(252,235,210,.42));
+}
 .panel--soft{ position:relative; overflow:hidden; }
-.panel--soft > *{ position:relative; z-index:1; }
-.panel__ondas{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-42%);
-  width:min(760px,140%); height:auto; color:var(--teal-500); opacity:.3; z-index:0;
-}
 
 
 .grid{ display:grid; gap:var(--sp-6); }
@@ -563,14 +561,8 @@ body.menu-aberto{ overflow:hidden; }
   border-radius:var(--radius-lg); object-fit:cover; object-position:center;
 }
 .problem__caption{ margin:var(--sp-3) 6px 4px; color:var(--navy-700); line-height:1.45; }
-.compat__art{
-  display:none; color:var(--teal-500);
-  border:2px solid var(--navy-900); border-radius:var(--radius-xl);
-  background:var(--teal-100); padding:var(--sp-8);
-}
-@media (min-width:900px){ .compat__art{ display:block; } }
-.compat__art svg{ width:100%; height:auto; }
-.compat__art{ color:var(--teal-600); }
+.compat__content{ max-width:900px; }
+.compat__content .section-head{ max-width:760px; }
 
 /* ==========================================================================
    12. PRODUTOS
@@ -860,17 +852,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
 <defs>
   <clipPath id="clip-dog-head"><ellipse cx="74" cy="54" rx="35" ry="31"/></clipPath>
   <clipPath id="clip-cat-head"><path d="M96 104V82l16 12h32l16-12v22c0 18-12 28-32 28s-32-10-32-28z"/></clipPath>
-
-  <!-- Ondas de NFC extraídas do logotipo (mesmo centro e raios), em traço fino:
-       viram o motivo gráfico da página — divisor de seção e fundo do bloco final -->
-  <symbol id="nfc-ondas" viewBox="0 62 200 88">
-    <g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-      <path d="M38.2 66.8A70 70 0 0 0 161.8 66.8"/>
-      <path d="M25.8 73.4A84 84 0 0 0 174.2 73.4"/>
-      <path d="M13.5 80A98 98 0 0 0 186.5 80"/>
-      <path d="M1.2 86.6A112 112 0 0 0 198.8 86.6"/>
-    </g>
-  </symbol>
 
   <!-- Versão monocromática para fundos escuros: o traço usa currentColor -->
 </defs>
@@ -1235,8 +1216,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   </section>
 
 
-  <div class="divisor" aria-hidden="true"><svg viewBox="0 62 200 88"><use href="#nfc-ondas"/></svg></div>
-
   <!-- ===== 6. Benefícios ===== -->
   <section class="section" id="beneficios" aria-labelledby="t-beneficios">
     <div class="container">
@@ -1540,11 +1519,9 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   </section>
 
 
-  <div class="divisor" aria-hidden="true"><svg viewBox="0 62 200 88"><use href="#nfc-ondas"/></svg></div>
-
   <!-- ===== 12. Compatibilidade ===== -->
   <section class="section" id="compatibilidade" aria-labelledby="t-compat">
-    <div class="container problem__grid">
+    <div class="container compat__content">
       <div class="section-head reveal">
         <h2 class="title" id="t-compat">
           <span class="l1">Funciona no celular</span>
@@ -1552,9 +1529,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
         </h2>
         <p class="lead">Quase sempre, sim.<span class="rascunho-inline"> Todo iPhone a partir do <span class="ph">[modelo]</span> e a maioria dos Android lançados desde <span class="ph">[ano]</span> leem tags NFC sem precisar de aplicativo.</span> Para os poucos aparelhos que não leem, cada tag também traz um QR Code impresso e um código curto que pode ser digitado no site.</p>
         <p class="mt-6"><a class="btn btn--text" href="#faq">Ver lista de aparelhos compatíveis</a></p>
-      </div>
-      <div class="compat__art reveal" aria-hidden="true">
-        <svg viewBox="0 0 200 120" focusable="false"><use href="#nfc-ondas"/></svg>
       </div>
     </div>
   </section>
@@ -1582,8 +1556,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
     </div>
   </section>
 
-
-  <div class="divisor" aria-hidden="true"><svg viewBox="0 62 200 88"><use href="#nfc-ondas"/></svg></div>
 
   <!-- ===== 14. Perguntas frequentes ===== -->
   <section class="section" id="faq" aria-labelledby="t-faq">
@@ -1715,7 +1687,6 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   <section class="section section--panel" id="chamada-final" aria-labelledby="t-final">
     <div class="container">
       <div class="panel panel--soft reveal center">
-        <svg class="panel__ondas" viewBox="0 62 200 88" aria-hidden="true" focusable="false"><use href="#nfc-ondas"/></svg>
         <h2 class="title title--brand" id="t-final">
           <span class="l1">Coloque na coleira hoje.</span>
           <span class="l2">Espere não precisar nunca.</span>

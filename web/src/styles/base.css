@@ -85,7 +85,10 @@ body{
 }
 .moldura{padding:var(--frame,12px)}
 .folha-papel{
-  background:var(--orange-100);
+  background:
+    radial-gradient(circle at 8% 88%,rgba(47,168,165,.08),transparent 22rem),
+    radial-gradient(circle at 96% 14%,rgba(240,160,46,.10),transparent 24rem),
+    var(--orange-100);
   border-radius:var(--radius-sheet);
   border:1px solid rgba(34,49,58,.08);
   box-shadow:0 18px 55px rgba(34,49,58,.08);
@@ -94,6 +97,8 @@ body{
      topo da barra sem ela precisar saber que está numa folha. */
   overflow:clip;
   min-height:calc(100vh - 2 * var(--frame,12px));
+  display:flex;
+  flex-direction:column;
 }
 /* ---- Cabeçalho ------------------------------------------------------------
    O mesmo da vitrine, e não uma faixa própria: fundo claro, logo colorida,
@@ -137,24 +142,8 @@ body{
 .topo--admin{background:var(--navy-900);border-bottom-color:var(--navy-700)}
 .topo--admin .marca__nome{color:#fff}
 .topo--admin .marca__slogan{color:var(--navy-300)}
-.folha{max-width:520px;margin:0 auto;padding:24px 20px 48px}
+.folha{width:100%;max-width:520px;margin:0 auto;padding:24px 20px 48px;flex:1}
 .folha--painel-largo{max-width:1040px}
-
-/* ---- As ondas da marca ----------------------------------------------------
-   O mesmo motivo do símbolo e da vitrine, onde ele separa dois blocos. Aqui
-   fecha o rodapé da folha.
-
-   É desenho puro, sem informação: aria-hidden no elemento, e nada aqui muda o
-   que um leitor de tela anuncia. Existe para a tela ser reconhecida como desta
-   marca antes de qualquer texto ser lido — que é justamente o que faltava. */
-.ondas{
-  display:flex;justify-content:center;
-  padding:32px 20px 40px;color:var(--teal-600);opacity:.45;
-}
-.ondas svg{display:block;width:min(240px,55%);height:auto}
-@media (prefers-reduced-motion:no-preference){
-  .ondas{transition:opacity .2s ease}
-}
 /* Poppins nos títulos, como na vitrine. clamp() em vez de tamanho fixo: em
    telas de 320px o título de 28px quebrava em três linhas e empurrava o
    formulário para fora da dobra. */
