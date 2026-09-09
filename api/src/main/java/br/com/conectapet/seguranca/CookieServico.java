@@ -30,6 +30,7 @@ public class CookieServico {
 
     public static final String COOKIE_SESSAO = "cp_sessao";
     public static final String COOKIE_REFRESH = "cp_refresh";
+    public static final String COOKIE_PERSISTENCIA = "cp_permanecer";
 
     private final String dominio;
     private final boolean seguro;
@@ -45,6 +46,10 @@ public class CookieServico {
 
     public ResponseCookie sessao(String token, Duration duracao) {
         return montar(COOKIE_SESSAO, token, duracao, "/");
+    }
+
+    public ResponseCookie sessao(String token, Duration duracao, boolean persistir) {
+        return montar(COOKIE_SESSAO, token, persistir ? duracao : null, "/");
     }
 
     /**
@@ -65,9 +70,27 @@ public class CookieServico {
         return montar(COOKIE_REFRESH, token, duracao, caminhoRefresh);
     }
 
+    public ResponseCookie refresh(String token, Duration duracao, boolean persistir) {
+        return montar(COOKIE_REFRESH, token, persistir ? duracao : null, caminhoRefresh);
+    }
+
+    /**
+     * Guarda somente a escolha de persistencia, nunca credenciais. Ela precisa
+     * acompanhar o refresh para a rotacao nao transformar uma sessao temporaria
+     * em permanente. Ausente significa sessao antiga, criada antes desta opcao.
+     */
+    public ResponseCookie persistencia(boolean persistir, Duration duracao) {
+        return montar(COOKIE_PERSISTENCIA, persistir ? "1" : "0",
+                persistir ? duracao : null, "/");
+    }
+
     /** O logout precisa apagar o cookie no mesmo caminho em que ele foi posto. */
     public ResponseCookie limparRefresh() {
         return montar(COOKIE_REFRESH, "", Duration.ZERO, caminhoRefresh);
+    }
+
+    public ResponseCookie limparPersistencia() {
+        return montar(COOKIE_PERSISTENCIA, "", Duration.ZERO, "/");
     }
 
     public ResponseCookie limpar(String nome, String caminho) {
@@ -79,8 +102,10 @@ public class CookieServico {
                 .httpOnly(true)
                 .secure(seguro)
                 .sameSite("Lax")
-                .path(caminho)
-                .maxAge(duracao);
+                .path(caminho);
+        // Sem Max-Age/Expires o navegador apaga o cookie ao encerrar. Isso e o
+        // que torna "Manter conectado" uma escolha real, nao decorativa.
+        if (duracao != null) b.maxAge(duracao);
         if (dominio != null && !dominio.isBlank()) {
             b.domain(dominio);
         }

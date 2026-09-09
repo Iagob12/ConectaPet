@@ -66,7 +66,7 @@ public class AutenticacaoControlador {
         // codigo de ativacao da tag e prova mais forte que um clique em link.
         verificacao.enviar(u);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .headers(comSessao(u))
+                .headers(comSessao(u, dto.manterConectado()))
                 .body(UsuarioResposta.de(u));
     }
 
@@ -93,11 +93,13 @@ public class AutenticacaoControlador {
             throw e;
         }
         limiteLogin.registrarSucesso(dto.email());
-        return ResponseEntity.ok().headers(comSessao(u)).body(UsuarioResposta.de(u));
+        return ResponseEntity.ok().headers(comSessao(u, dto.manterConectado())).body(UsuarioResposta.de(u));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Void> refresh(@CookieValue(name = CookieServico.COOKIE_REFRESH, required = false) String token) {
+    public ResponseEntity<Void> refresh(
+            @CookieValue(name = CookieServico.COOKIE_REFRESH, required = false) String token,
+            @CookieValue(name = CookieServico.COOKIE_PERSISTENCIA, required = false) String persistencia) {
         if (token == null || token.isBlank()) {
             throw new ProblemaException(TipoErro.NAO_AUTENTICADO);
         }
@@ -105,9 +107,13 @@ public class AutenticacaoControlador {
         Usuario u = usuarios.findById(r.usuarioId())
                 .orElseThrow(() -> new ProblemaException(TipoErro.NAO_AUTENTICADO));
 
+        // Ausente preserva o comportamento das sessoes emitidas antes desta
+        // funcionalidade, que ja eram persistentes por 30 dias.
+        boolean manterConectado = !"0".equals(persistencia);
         HttpHeaders h = new HttpHeaders();
-        h.add(HttpHeaders.SET_COOKIE, cookies.sessao(jwt.gerarAcesso(u), props.duracaoAcesso()).toString());
-        h.add(HttpHeaders.SET_COOKIE, cookies.refresh(r.tokenNovo(), props.duracaoRefresh()).toString());
+        h.add(HttpHeaders.SET_COOKIE, cookies.sessao(jwt.gerarAcesso(u), props.duracaoAcesso(), manterConectado).toString());
+        h.add(HttpHeaders.SET_COOKIE, cookies.refresh(r.tokenNovo(), props.duracaoRefresh(), manterConectado).toString());
+        h.add(HttpHeaders.SET_COOKIE, cookies.persistencia(manterConectado, props.duracaoRefresh()).toString());
         return ResponseEntity.ok().headers(h).build();
     }
 
@@ -119,6 +125,7 @@ public class AutenticacaoControlador {
         HttpHeaders h = new HttpHeaders();
         h.add(HttpHeaders.SET_COOKIE, cookies.limpar(CookieServico.COOKIE_SESSAO, "/").toString());
         h.add(HttpHeaders.SET_COOKIE, cookies.limparRefresh().toString());
+        h.add(HttpHeaders.SET_COOKIE, cookies.limparPersistencia().toString());
         return ResponseEntity.noContent().headers(h).build();
     }
 
@@ -150,11 +157,14 @@ public class AutenticacaoControlador {
         recuperacao.redefinir(dto.token(), dto.senha());
     }
 
-    private HttpHeaders comSessao(Usuario u) {
+    private HttpHeaders comSessao(Usuario u, boolean manterConectado) {
         HttpHeaders h = new HttpHeaders();
-        h.add(HttpHeaders.SET_COOKIE, cookies.sessao(jwt.gerarAcesso(u), props.duracaoAcesso()).toString());
         h.add(HttpHeaders.SET_COOKIE,
-                cookies.refresh(servico.emitirRefresh(u.getId()), props.duracaoRefresh()).toString());
+                cookies.sessao(jwt.gerarAcesso(u), props.duracaoAcesso(), manterConectado).toString());
+        h.add(HttpHeaders.SET_COOKIE,
+                cookies.refresh(servico.emitirRefresh(u.getId()), props.duracaoRefresh(), manterConectado).toString());
+        h.add(HttpHeaders.SET_COOKIE,
+                cookies.persistencia(manterConectado, props.duracaoRefresh()).toString());
         return h;
     }
 
@@ -164,9 +174,11 @@ public class AutenticacaoControlador {
             @NotBlank @Email String email,
             @NotBlank @Size(min = 10, max = 100, message = "A senha precisa de ao menos 10 caracteres") String senha,
             @NotBlank @Size(min = 2, max = 120) String nome,
-            String telefonePrincipal) {}
+            String telefonePrincipal,
+            boolean manterConectado) {}
 
-    public record LoginEntrada(@NotBlank @Email String email, @NotBlank String senha) {}
+    public record LoginEntrada(@NotBlank @Email String email, @NotBlank String senha,
+                               boolean manterConectado) {}
 
     public record EmailEntrada(@NotBlank @Email String email) {}
 

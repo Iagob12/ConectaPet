@@ -2,11 +2,13 @@
 export const prerender = false;
 
 import Base from '../layouts/Base.astro';
+import CampoSenha from '../components/CampoSenha.astro';
 import { chamar, redirecionarCom } from '../lib/api';
 
 const next = Astro.url.searchParams.get('next') || '/app';
 let erro: string | null = null;
 let email = '';
+let manterConectado = false;
 
 if (Astro.request.method === 'POST') {
   let dados: FormData;
@@ -19,12 +21,13 @@ if (Astro.request.method === 'POST') {
   }
   email = String(dados.get('email') ?? '');
   const senha = String(dados.get('senha') ?? '');
+  manterConectado = dados.has('manterConectado');
 
   // O Render gratuito leva cerca de um minuto para acordar. O teto geral de
   // oito segundos e correto para uma API saudavel, mas aqui fazia o primeiro
   // login falhar enquanto a requisicao ainda estava acordando o servico.
   const r = await chamar('/api/auth/login', {
-    metodo: 'POST', corpo: { email, senha }, tetoMs: 70_000,
+    metodo: 'POST', corpo: { email, senha, manterConectado }, tetoMs: 70_000,
   });
 
   if (r.ok) {
@@ -58,10 +61,14 @@ if (Astro.request.method === 'POST') {
       <input id="email" name="email" type="email" autocomplete="email"
              inputmode="email" required value={email} />
     </div>
-    <div class="campo">
-      <label for="senha">Senha</label>
-      <input id="senha" name="senha" type="password" autocomplete="current-password" required />
-    </div>
+    <CampoSenha autocomplete="current-password" />
+    <label class="manter-conectado">
+      <input name="manterConectado" type="checkbox" value="true" checked={manterConectado} />
+      <span>
+        <strong>Manter conectado</strong>
+        <small>Use somente em um dispositivo pessoal.</small>
+      </span>
+    </label>
     <button class="btn btn--principal" type="submit">Entrar</button>
     <p class="estado-envio" aria-live="polite" hidden>
       Conectando com segurança. O primeiro acesso pode levar até um minuto.

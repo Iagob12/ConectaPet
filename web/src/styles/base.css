@@ -180,6 +180,27 @@ input,select{
 input:hover,select:hover,textarea:hover{border-color:var(--teal-700)}
 input:focus,select:focus{outline:3px solid var(--teal-500);outline-offset:2px;box-shadow:var(--shadow-xs)}
 input::placeholder,textarea::placeholder{color:#6F777C;opacity:1}
+.senha-controle{position:relative}
+.senha-controle input{padding-right:58px}
+.senha-alternar{
+  position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  width:42px;height:42px;padding:9px;display:grid;place-items:center;
+  border:0;border-radius:10px;background:transparent;color:var(--navy-700);cursor:pointer;
+}
+.senha-alternar:hover{background:var(--teal-100);color:var(--navy-900)}
+.senha-alternar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.senha-alternar svg[hidden]{display:none}
+.manter-conectado{
+  display:flex;align-items:flex-start;gap:12px;margin:-2px 0 20px;padding:12px;
+  border-radius:12px;color:var(--navy-900);cursor:pointer;
+}
+.manter-conectado:hover{background:var(--teal-100)}
+.manter-conectado input[type="checkbox"]{
+  width:22px;height:22px;min-height:0;flex:none;margin:1px 0 0;accent-color:var(--teal-700);
+}
+.manter-conectado span{display:flex;flex-direction:column;line-height:1.35}
+.manter-conectado strong{font-size:16px}
+.manter-conectado small{font-size:13px;color:var(--navy-700);margin-top:2px}
 /* Links e botoes tambem. Antes so os campos tinham foco declarado, e o anel
    padrao do navegador e desenhado com a cor do texto: sobre .btn, que tem
    fundo escuro e borda escura, ele fica praticamente invisivel. Navy com

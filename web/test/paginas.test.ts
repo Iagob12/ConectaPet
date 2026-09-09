@@ -254,6 +254,13 @@ describe('vitrine e telas públicas', () => {
     expect(r.status).toBe(400);
   });
 
+  it.each(['/entrar', '/criar-conta'])('%s permite revelar a senha e escolher a persistência', async (caminho) => {
+    const html = await (await pegar(caminho)).text();
+    expect(html).toContain('aria-label="Mostrar senha"');
+    expect(html).toContain('name="manterConectado"');
+    expect(html).toContain('Manter conectado');
+  });
+
   it('API fora do ar não acusa senha incorreta', async () => {
     await api.derrubar();
     const r = await pegar('/entrar', {

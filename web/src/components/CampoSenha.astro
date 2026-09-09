@@ -1,0 +1,55 @@
+---
+interface Props {
+  id?: string;
+  autocomplete: 'current-password' | 'new-password';
+  minlength?: number;
+  ajuda?: string;
+  erro?: string;
+}
+
+const {
+  id = 'senha', autocomplete, minlength, ajuda, erro,
+} = Astro.props;
+---
+
+<div class="campo" data-campo-senha>
+  <label for={id}>Senha</label>
+  <div class="senha-controle">
+    <input id={id} name="senha" type="password" autocomplete={autocomplete}
+           minlength={minlength} required aria-invalid={erro ? 'true' : undefined} />
+    <button class="senha-alternar" type="button" aria-label="Mostrar senha"
+            aria-controls={id} aria-pressed="false">
+      <svg data-icone-mostrar viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+        <circle cx="12" cy="12" r="2.7" />
+      </svg>
+      <svg data-icone-ocultar viewBox="0 0 24 24" aria-hidden="true" hidden>
+        <path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c6 0 9.5 6 9.5 6a15.7 15.7 0 0 1-2.7 3.3M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6c1.5 0 2.9-.4 4.1-1M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+      </svg>
+    </button>
+  </div>
+  {ajuda && <p class="ajuda">{ajuda}</p>}
+  {erro && <p class="erro-campo">{erro}</p>}
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-campo-senha]').forEach((campo) => {
+    if (campo.dataset.preparado === '1') return;
+    campo.dataset.preparado = '1';
+    const entrada = campo.querySelector<HTMLInputElement>('input');
+    const botao = campo.querySelector<HTMLButtonElement>('.senha-alternar');
+    const mostrar = campo.querySelector<SVGElement>('[data-icone-mostrar]');
+    const ocultar = campo.querySelector<SVGElement>('[data-icone-ocultar]');
+    if (!entrada || !botao) return;
+
+    botao.addEventListener('click', () => {
+      const visivel = entrada.type === 'text';
+      entrada.type = visivel ? 'password' : 'text';
+      botao.setAttribute('aria-pressed', String(!visivel));
+      botao.setAttribute('aria-label', visivel ? 'Mostrar senha' : 'Ocultar senha');
+      if (mostrar) mostrar.hidden = !visivel;
+      if (ocultar) ocultar.hidden = visivel;
+      entrada.focus({ preventScroll: true });
+    });
+  });
+</script>

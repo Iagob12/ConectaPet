@@ -2,12 +2,14 @@
 export const prerender = false;
 
 import Base from '../layouts/Base.astro';
+import CampoSenha from '../components/CampoSenha.astro';
 import { chamar, redirecionarCom } from '../lib/api';
 
 const next = Astro.url.searchParams.get('next') || '/app';
 let erro: string | null = null;
 let campos: Record<string, string> = {};
 let form = { nome: '', email: '', telefonePrincipal: '' };
+let manterConectado = false;
 
 if (Astro.request.method === 'POST') {
   let d: FormData;
@@ -24,10 +26,11 @@ if (Astro.request.method === 'POST') {
     telefonePrincipal: String(d.get('telefone') ?? ''),
   };
   const senha = String(d.get('senha') ?? '');
+  manterConectado = d.has('manterConectado');
 
   const r = await chamar('/api/auth/registrar', {
     metodo: 'POST',
-    corpo: { ...form, senha },
+    corpo: { ...form, senha, manterConectado },
   });
 
   if (r.ok) {
@@ -74,13 +77,16 @@ if (Astro.request.method === 'POST') {
       <p class="ajuda">É este número que quem achar seu pet vai ver.</p>
     </div>
 
-    <div class="campo">
-      <label for="senha">Senha</label>
-      <input id="senha" name="senha" type="password" autocomplete="new-password"
-             minlength="10" required />
-      <p class="ajuda">Ao menos 10 caracteres.</p>
-      {campos.senha && <p class="erro-campo">{campos.senha}</p>}
-    </div>
+    <CampoSenha autocomplete="new-password" minlength={10}
+                ajuda="Ao menos 10 caracteres." erro={campos.senha} />
+
+    <label class="manter-conectado">
+      <input name="manterConectado" type="checkbox" value="true" checked={manterConectado} />
+      <span>
+        <strong>Manter conectado</strong>
+        <small>Use somente em um dispositivo pessoal.</small>
+      </span>
+    </label>
 
     <button class="btn btn--principal" type="submit">Criar conta</button>
   </form>
