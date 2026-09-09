@@ -3,16 +3,33 @@ package br.com.conectapet.autenticacao;
 import br.com.conectapet.comum.erro.ProblemaException;
 import br.com.conectapet.comum.erro.TipoErro;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GoogleIdentidadeServicoTest {
+
+    @Test
+    void springCriaServicoComConstrutorDeProducao() {
+        try (AnnotationConfigApplicationContext contexto = new AnnotationConfigApplicationContext()) {
+            contexto.getEnvironment().getPropertySources().addFirst(new MapPropertySource(
+                    "google-teste",
+                    Map.of("conectapet.google.client-id", "cliente-web")
+            ));
+            contexto.register(GoogleIdentidadeServico.class);
+            contexto.refresh();
+
+            assertThat(contexto.getBean(GoogleIdentidadeServico.class)).isNotNull();
+        }
+    }
 
     private Jwt token(boolean emailVerificado) {
         Instant agora = Instant.now();

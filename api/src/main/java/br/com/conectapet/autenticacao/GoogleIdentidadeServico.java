@@ -26,6 +26,7 @@ public class GoogleIdentidadeServico {
     private final String clientId;
     private final JwtDecoder decoder;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public GoogleIdentidadeServico(@Value("${conectapet.google.client-id:}") String clientId) {
         this(clientId, criarDecoder(clientId));
     }
