@@ -535,6 +535,65 @@ body.menu-aberto{ overflow:hidden; }
 .trustbar__item span{ grid-column:2; grid-row:2; font-size:14px; line-height:1.5; color:var(--navy-700); }
 .trustbar + .section{ padding-top:var(--sp-12); }
 
+/* Guia de ativacao para quem chegou pelo QR Code do cartao. Ele aparece antes
+   da explicacao comercial porque resolve a tarefa mais urgente desse publico:
+   encontrar o link exclusivo que esta gravado no proprio chaveiro. */
+.setup{
+  background:
+    radial-gradient(circle at 4% 14%,rgba(47,168,165,.12),transparent 24rem),
+    radial-gradient(circle at 96% 88%,rgba(240,160,46,.12),transparent 26rem),
+    var(--sand-100);
+}
+.setup__shell{
+  display:grid; gap:var(--sp-8); align-items:center;
+  padding:clamp(24px,5vw,48px);
+  background:var(--white); border:2px solid var(--navy-900);
+  border-radius:var(--radius-xl); box-shadow:var(--shadow-hard);
+}
+.setup__eyebrow{
+  display:inline-flex; align-items:center; gap:8px; width:fit-content;
+  margin:0 0 var(--sp-3); padding:7px 12px;
+  border-radius:var(--radius-full); background:var(--teal-100);
+  color:var(--teal-700); font-size:13px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase;
+}
+.setup__lead{ margin-top:var(--sp-4); max-width:58ch; }
+.setup__steps{ display:grid; gap:var(--sp-3); margin-top:var(--sp-8); list-style:none; }
+.setup__step{
+  display:grid; grid-template-columns:44px minmax(0,1fr); gap:var(--sp-3);
+  align-items:start; padding:var(--sp-4);
+  border:1px solid var(--gray-300); border-radius:var(--radius-md);
+  background:var(--white);
+}
+.setup__num{
+  display:grid; place-items:center; width:40px; height:40px;
+  border-radius:50%; background:var(--teal-600); color:#fff;
+  font-family:var(--font-title); font-size:18px; font-weight:800;
+}
+.setup__step h3{ margin:1px 0 3px; font-size:18px; line-height:1.25; }
+.setup__step p{ margin:0; font-size:15px; line-height:1.5; }
+.setup__tip{
+  margin-top:var(--sp-4); padding:var(--sp-4);
+  border-left:4px solid var(--orange-500); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  background:var(--orange-100); font-size:14px; line-height:1.55;
+}
+.setup__visual{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:320px; padding:var(--sp-8);
+  border-radius:var(--radius-lg); background:var(--teal-100); text-align:center;
+}
+.setup__visual svg{ width:min(290px,100%); height:auto; }
+.setup__visual strong{ display:block; margin-top:var(--sp-4); font-size:20px; }
+.setup__visual span{ display:block; max-width:28ch; margin-top:4px; font-size:14px; }
+@media (min-width:900px){
+  .setup__shell{ grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr); gap:var(--sp-12); }
+}
+@media (max-width:639px){
+  .setup__shell{ padding:20px; }
+  .setup__visual{ min-height:240px; padding:var(--sp-6); }
+  .setup__visual svg{ width:min(220px,90%); }
+}
+
 /* ==========================================================================
    10. COMO FUNCIONA / BENEFÍCIOS
    ========================================================================== */
@@ -1061,7 +1120,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
 
       <nav class="nav__primary" aria-label="Menu principal">
         <ul class="nav__list">
-          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#configurar-tag">Configurar tag</a></li>
           <li><a href="#petshops">Para petshops</a></li>
           <li><a href="#faq">Ajuda</a></li>
         </ul>
@@ -1085,7 +1144,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
     <div class="drawer" id="menu-mobile" hidden>
       <nav class="container" aria-label="Menu principal (celular)">
         <ul class="drawer__list">
-          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#configurar-tag">Configurar tag</a></li>
           <li><a href="#petshops">Para petshops</a></li>
           <li><a href="#faq">Ajuda</a></li>
         </ul>
@@ -1114,7 +1173,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
         <p class="lead">A ConectaPet é uma tag NFC para coleira. Quem encontrar seu pet só encosta o celular na tag e vê seus dados de contato na hora — sem app, sem cadastro, sem ligar pra ninguém antes.</p>
         <div class="btn-row">
           <a class="btn btn--primary" href="#chamada-final">Quero minha tag</a>
-          <a class="btn btn--secondary" href="#como-funciona">Ver como funciona</a>
+          <a class="btn btn--secondary" href="#configurar-tag">Como configurar</a>
         </div>
         <p class="hero__micro">Sem mensalidade obrigatória · Funciona em iPhone e Android<span class="rascunho-inline"> · Envio em até <span class="ph">[X]</span> dias úteis</span></p>
       </div>
@@ -1149,7 +1208,58 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
     </div>
   </section>
 
-  <!-- ===== 4. Como funciona ===== -->
+  <!-- ===== 4. Configurar a tag recebida ===== -->
+  <section class="section setup" id="configurar-tag" aria-labelledby="t-configurar">
+    <div class="container">
+      <div class="setup__shell reveal">
+        <div>
+          <p class="setup__eyebrow">
+            <svg width="18" height="18" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg>
+            Já recebeu seu chaveiro?
+          </p>
+          <h2 class="title title--plain" id="t-configurar">
+            <span class="l1">Para configurar, comece pelo chaveiro.</span>
+            <span class="l2">É só aproximar o celular.</span>
+          </h2>
+          <p class="lead setup__lead"><strong>O QR Code do cartão trouxe você até esta orientação.</strong> O link exclusivo para cadastrar seu pet está gravado no chaveiro ConectaPet.</p>
+
+          <ol class="setup__steps">
+            <li class="setup__step">
+              <span class="setup__num" aria-hidden="true">1</span>
+              <div>
+                <h3>Desbloqueie o celular</h3>
+                <p>No Android, confirme também se a função NFC está ativada.</p>
+              </div>
+            </li>
+            <li class="setup__step">
+              <span class="setup__num" aria-hidden="true">2</span>
+              <div>
+                <h3>Encoste o celular no chaveiro</h3>
+                <p>Aproxime a parte de trás do aparelho — geralmente a região superior — e segure por 2 a 3 segundos.</p>
+              </div>
+            </li>
+            <li class="setup__step">
+              <span class="setup__num" aria-hidden="true">3</span>
+              <div>
+                <h3>Abra o aviso e conclua o cadastro</h3>
+                <p>Toque na notificação ConectaPet, preencha os dados do tutor e do pet e finalize em <strong>“Confirmar cadastro do pet”</strong>.</p>
+              </div>
+            </li>
+          </ol>
+
+          <p class="setup__tip"><strong>Não apareceu o aviso?</strong> Retire capas muito grossas, mova o chaveiro devagar pela parte traseira do celular e tente novamente.</p>
+        </div>
+
+        <div class="setup__visual" role="img" aria-label="Ilustração de um celular sendo aproximado da tag ConectaPet">
+          <svg viewBox="0 0 200 160" aria-hidden="true" focusable="false"><use href="#ill-step3"/></svg>
+          <strong>Aproxime. Toque. Cadastre.</strong>
+          <span>Você não precisa instalar aplicativo para ativar sua tag.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 5. Como funciona ===== -->
   <section class="section" id="como-funciona" aria-labelledby="t-como">
     <div class="container">
       <div class="section-head reveal">
@@ -1759,7 +1869,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
             <h2 class="footer__title">Ajuda</h2>
             <ul class="footer__list">
               <li><span class="footer__soon">Central de atendimento</span></li>
-              <li><a href="#como-funciona">Como ativar a tag</a></li>
+            <li><a href="#configurar-tag">Como ativar a tag</a></li>
               <li><span class="footer__soon">Rastrear meu pedido</span></li>
               <li><a href="#faq">Trocas e devoluções</a></li>
               <li><a href="mailto:conectapet.contato@gmail.com">Fale conosco</a></li>
