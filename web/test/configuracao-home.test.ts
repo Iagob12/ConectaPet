@@ -18,4 +18,17 @@ describe('orientacao de configuracao na pagina inicial', () => {
   it('oferece a orientacao pelo menu principal e pelo menu do celular', () => {
     expect(html.match(/href="#configurar-tag"/g)?.length).toBeGreaterThanOrEqual(3);
   });
+
+  it('separa claramente quem ja recebeu a tag de quem ainda quer conhecer o produto', () => {
+    expect(html).toContain('Já recebi meu chaveiro');
+    expect(html).toContain('Quero proteger meu pet');
+    expect(html).toContain('href="#como-funciona"');
+  });
+
+  it('usa imagens especificas para o resgate e para a aproximacao NFC', () => {
+    expect(html).toContain('/imagens/home-resgate-conectapet.webp');
+    expect(html).toContain('/imagens/home-ativacao-nfc.webp');
+    expect(html).toContain('Parte superior de trás de um celular próxima à tag ConectaPet');
+    expect(html).not.toContain('data:image');
+  });
 });
