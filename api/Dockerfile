@@ -36,8 +36,7 @@ EXPOSE 8080
 
 # O container é saudável quando o Actuator responde. Sem isso, o orquestrador
 # manda tráfego para uma aplicação que ainda está subindo o Flyway.
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD-SHELL wget -qO- "http://127.0.0.1:${PORT:-8080}/actuator/health" || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 CMD wget -qO- "http://127.0.0.1:${PORT:-8080}/actuator/health" || exit 1
 
 # MaxRAMPercentage em vez de -Xmx fixo: o container pode ganhar ou perder
 # memória sem alguém lembrar de acertar um número aqui.

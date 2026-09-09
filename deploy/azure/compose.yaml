@@ -1,0 +1,33 @@
+services:
+  api:
+    image: conectapet-api:current
+    restart: unless-stopped
+    env_file:
+      - /etc/conectapet/api.env
+    mem_limit: 700m
+    mem_reservation: 512m
+    expose:
+      - "8080"
+    volumes:
+      - fotos:/app/dados/fotos
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      DOMINIO_API: ${DOMINIO_API:?defina o nome DNS publico da API}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  fotos:
+  caddy_data:
+  caddy_config:
