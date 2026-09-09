@@ -254,6 +254,15 @@ describe('vitrine e telas públicas', () => {
     expect(r.status).toBe(400);
   });
 
+  it('oferece login oficial do Google sem retirar o acesso por senha', async () => {
+    const html = await (await pegar('/entrar')).text();
+    expect(html).toContain('id="google-signin"');
+    expect(html).toContain('https://accounts.google.com/gsi/client');
+    expect(html).toContain('name="credencialGoogle"');
+    expect(html).toContain('Use a conta Google que tem o mesmo e-mail cadastrado');
+    expect(html).toContain('name="senha"');
+  });
+
   it.each(['/entrar', '/criar-conta'])('%s permite revelar a senha e escolher a persistência', async (caminho) => {
     const html = await (await pegar(caminho)).text();
     expect(html).toContain('aria-label="Mostrar senha"');
@@ -327,10 +336,14 @@ it('a política não bloqueia as fontes que a landing carrega', async () => {
 
   it('as demais páginas também vêm protegidas', async () => {
     const r = await pegar('/entrar');
+    const csp = r.headers.get('content-security-policy') ?? '';
     expect(r.headers.get('x-content-type-options')).toBe('nosniff');
-    expect(r.headers.get('content-security-policy')).toContain("object-src 'none'");
-    expect(r.headers.get('content-security-policy')).toContain("form-action 'self'");
-    expect(r.headers.get('cross-origin-opener-policy')).toBe('same-origin');
+    expect(csp).toContain("object-src 'none'");
+    expect(csp).toContain("form-action 'self'");
+    expect(csp).toContain('script-src');
+    expect(csp).toContain('https://accounts.google.com/gsi/client');
+    expect(csp).toContain('frame-src https://accounts.google.com');
+    expect(r.headers.get('cross-origin-opener-policy')).toBe('same-origin-allow-popups');
     expect(r.headers.get('x-permitted-cross-domain-policies')).toBe('none');
   });
 

@@ -76,6 +76,51 @@ public class AutenticacaoServico {
         return achado.get();
     }
 
+    /**
+     * Vincula uma conta existente a uma identidade Google ja verificada.
+     *
+     * Nao cria conta incompleta: telefone e senha continuam sendo recolhidos no
+     * cadastro normal. Depois do primeiro vinculo, o subject estavel impede que
+     * uma eventual reutilizacao do endereco de e-mail em um Google Workspace
+     * entregue a conta ConectaPet a outra pessoa.
+     */
+    @Transactional
+    public Usuario autenticarGoogle(String email, String subject) {
+        Optional<Usuario> jaVinculado = usuarios.findByGoogleSubjectAndExcluidoEmIsNull(subject);
+        if (jaVinculado.isPresent()) {
+            if (!jaVinculado.get().isAtivo()) {
+                throw new ProblemaException(TipoErro.LOGIN_GOOGLE_INVALIDO);
+            }
+            // O subject identifica a pessoa; o e-mail pode mudar na conta
+            // Google. Nao troca o e-mail cadastrado silenciosamente.
+            return jaVinculado.get();
+        }
+
+        Usuario u = usuarios.findByEmailAndExcluidoEmIsNull(normalizarEmail(email))
+                .orElseThrow(() -> new ProblemaException(TipoErro.CONTA_NAO_ENCONTRADA));
+
+        if (!u.isAtivo()) {
+            throw new ProblemaException(TipoErro.LOGIN_GOOGLE_INVALIDO);
+        }
+        if (u.getGoogleSubject() != null && !u.getGoogleSubject().equals(subject)) {
+            throw new ProblemaException(TipoErro.LOGIN_GOOGLE_INVALIDO);
+        }
+
+        boolean mudou = false;
+        if (u.getGoogleSubject() == null) {
+            u.setGoogleSubject(subject);
+            mudou = true;
+        }
+        if (!u.emailVerificado()) {
+            u.setEmailVerificadoEm(Instant.now());
+            mudou = true;
+        }
+        // O nome cadastrado pela pessoa continua sendo a fonte de verdade. O
+        // nome do Google so serve para validar que o perfil recebido e completo.
+        if (mudou) usuarios.save(u);
+        return u;
+    }
+
     /** Novo login abre uma familia nova de refresh. */
     @Transactional
     public String emitirRefresh(Long usuarioId) {

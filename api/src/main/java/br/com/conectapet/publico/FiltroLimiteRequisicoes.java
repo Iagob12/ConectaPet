@@ -55,6 +55,7 @@ public class FiltroLimiteRequisicoes extends OncePerRequestFilter {
     private final int limiteListaEspera;
     private final int limiteResetSenha;
     private final int limiteCadastro;
+    private final int limiteLoginGoogle;
 
     public FiltroLimiteRequisicoes(
             @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
@@ -64,6 +65,7 @@ public class FiltroLimiteRequisicoes extends OncePerRequestFilter {
             @Value("${conectapet.limites.lista-espera-por-hora:5}") int limiteListaEspera,
             @Value("${conectapet.limites.reset-senha-por-hora:5}") int limiteResetSenha,
             @Value("${conectapet.limites.cadastro-por-hora:10}") int limiteCadastro,
+            @Value("${conectapet.limites.login-google-por-hora:30}") int limiteLoginGoogle,
             @Value("${conectapet.limites.teto-baldes:50000}") int tetoBaldes) {
         this.ipPimenta = ipPimenta;
         this.ipDoCliente = ipDoCliente;
@@ -72,6 +74,7 @@ public class FiltroLimiteRequisicoes extends OncePerRequestFilter {
         this.limiteListaEspera = limiteListaEspera;
         this.limiteResetSenha = limiteResetSenha;
         this.limiteCadastro = limiteCadastro;
+        this.limiteLoginGoogle = limiteLoginGoogle;
         this.tetoBaldes = tetoBaldes;
     }
 
@@ -83,7 +86,8 @@ public class FiltroLimiteRequisicoes extends OncePerRequestFilter {
         // usar o servidor para incomodar quem nem pediu nada.
         return !uri.startsWith("/api/public/")
                 && !uri.equals("/api/auth/esqueci-senha")
-                && !uri.equals("/api/auth/registrar");
+                && !uri.equals("/api/auth/registrar")
+                && !uri.equals("/api/auth/google");
     }
 
     @Override
@@ -98,6 +102,8 @@ public class FiltroLimiteRequisicoes extends OncePerRequestFilter {
             balde = obter("reset:" + ip, limiteResetSenha, Duration.ofHours(1));
         } else if (uri.equals("/api/auth/registrar")) {
             balde = obter("cadastro:" + ip, limiteCadastro, Duration.ofHours(1));
+        } else if (uri.equals("/api/auth/google")) {
+            balde = obter("google:" + ip, limiteLoginGoogle, Duration.ofHours(1));
         } else if (uri.startsWith("/api/public/lista-espera")) {
             balde = obter("espera:" + ip, limiteListaEspera, Duration.ofHours(1));
         } else if (uri.endsWith("/leituras")) {

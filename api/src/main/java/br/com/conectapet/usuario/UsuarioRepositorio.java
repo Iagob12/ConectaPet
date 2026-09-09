@@ -14,6 +14,8 @@ public interface UsuarioRepositorio extends JpaRepository<Usuario, Long> {
     /** O e-mail e normalizado em minusculas na aplicacao, nao no banco. */
     Optional<Usuario> findByEmailAndExcluidoEmIsNull(String email);
 
+    Optional<Usuario> findByGoogleSubjectAndExcluidoEmIsNull(String googleSubject);
+
     Optional<Usuario> findByUuidAndExcluidoEmIsNull(UUID uuid);
 
     boolean existsByEmail(String email);

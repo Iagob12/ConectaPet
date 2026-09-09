@@ -52,6 +52,10 @@ services:
         generateValue: true
       - key: IP_PIMENTA
         generateValue: true
+      # Identificador publico do cliente Web no Google Cloud. Precisa ser o
+      # mesmo configurado na Vercel; nao e o client secret.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
 
       # ---- Endereços ----
       # A aplicação recusa subir se qualquer um apontar para localhost.

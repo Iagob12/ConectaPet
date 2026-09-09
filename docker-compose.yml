@@ -49,6 +49,7 @@ services:
 
       JWT_SEGREDO: ${JWT_SEGREDO:?gere com openssl rand -base64 48}
       IP_PIMENTA: ${IP_PIMENTA:?gere com openssl rand -base64 32}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
 
       # A aplicação recusa subir se qualquer um destes apontar para localhost.
       URL_PUBLICA_TAG: ${URL_PUBLICA_TAG:?o endereco gravado no NFC}
@@ -98,6 +99,7 @@ services:
       # E este é o que vai para o NAVEGADOR — ele busca a foto e confirma a
       # leitura da tag direto na API, então precisa ser alcançável de fora.
       API_URL_PUBLICA: ${URL_API_PUBLICA:?o endereco publico da API}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     expose:
       - "4321"
 

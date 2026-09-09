@@ -146,6 +146,10 @@ conectapet:
     # Base dos links que saem por e-mail. Errado aqui, o link de redefinir
     # senha chega ao cliente apontando para lugar nenhum.
     url: ${URL_SITE:https://conectapet.com.br}
+  google:
+    # ID publico do cliente Web criado no Google Cloud. Sem ele, a rota recusa
+    # o token e o site esconde o botao.
+    client-id: ${GOOGLE_CLIENT_ID:}
   email:
     # "log" registra no console; "smtp" envia de verdade. O padrao e log de
     # proposito: um ambiente que herdasse SMTP por engano mandaria "alguem

@@ -56,6 +56,7 @@ public class SegurancaConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.POST,
                         "/api/auth/registrar", "/api/auth/login", "/api/auth/refresh",
+                        "/api/auth/google",
                         "/api/auth/esqueci-senha", "/api/auth/redefinir-senha",
                         "/api/auth/verificar-email").permitAll()
                 .requestMatchers("/actuator/health", "/docs/**", "/v3/api-docs/**").permitAll()

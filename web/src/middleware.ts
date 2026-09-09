@@ -123,7 +123,10 @@ function aplicarCabecalhosDeSeguranca(resposta: Response) {
   por('X-Frame-Options', 'DENY');
   por('Permissions-Policy', 'camera=(), microphone=(), payment=(), usb=(), browsing-topics=()');
   por('X-Permitted-Cross-Domain-Policies', 'none');
-  por('Cross-Origin-Opener-Policy', 'same-origin');
+  // O popup oficial de login do Google precisa manter a referencia para a
+  // janela que o abriu. Continua isolado de origens comuns, liberando apenas
+  // popups abertos deliberadamente pela pagina.
+  por('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 
   // Nada de cache, por padrão.
   //
@@ -151,11 +154,11 @@ function aplicarCabecalhosDeSeguranca(resposta: Response) {
     // blob: permite que o editor mostre, somente neste navegador, a foto que
     // a propria pessoa acabou de escolher. A URL temporaria e revogada ao sair.
     ("img-src 'self' data: " + api + " blob:").trim(),
-    ("connect-src 'self' " + api).trim(),
+    ("connect-src 'self' " + api + " https://accounts.google.com").trim(),
     // 'unsafe-inline' e uma concessao honesta: o Astro embute estilo e script
     // na pagina, e nonce por requisicao exigiria reescrever o build. O ganho
     // que fica de pe e o que importa aqui — script de OUTRO servidor nao roda.
-    "script-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
     // A landing carrega Inter e Poppins do Google Fonts: a folha vem de
     // fonts.googleapis.com e os arquivos de fonte de fonts.gstatic.com. Sao os
     // dois unicos hosts externos do site inteiro, e estao aqui nominalmente —
@@ -166,6 +169,7 @@ function aplicarCabecalhosDeSeguranca(resposta: Response) {
     // forma visivel nesse caso — so a tipografia inteira muda, em silencio.
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
+    "frame-src https://accounts.google.com",
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'self'",

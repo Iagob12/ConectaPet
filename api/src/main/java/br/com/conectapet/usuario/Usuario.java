@@ -32,6 +32,10 @@ public class Usuario {
     @Column(name = "senha_hash", nullable = false)
     private String senhaHash;
 
+    /** Identidade estavel devolvida pelo Google. O e-mail pode mudar; o sub nao. */
+    @Column(name = "google_subject", unique = true)
+    private String googleSubject;
+
     @Column(nullable = false)
     private String nome;
 

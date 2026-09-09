@@ -11,6 +11,8 @@ public enum TipoErro {
     DADOS_INVALIDOS(HttpStatus.BAD_REQUEST, "dados-invalidos", "Dados invalidos"),
     NAO_AUTENTICADO(HttpStatus.UNAUTHORIZED, "nao-autenticado", "Sessao expirada"),
     CREDENCIAIS_INVALIDAS(HttpStatus.UNAUTHORIZED, "credenciais-invalidas", "E-mail ou senha incorretos"),
+    LOGIN_GOOGLE_INVALIDO(HttpStatus.UNAUTHORIZED, "login-google-invalido", "Nao foi possivel confirmar sua conta Google"),
+    CONTA_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "conta-nao-encontrada", "Ainda nao existe uma conta ConectaPet com este e-mail"),
     NAO_E_DONO(HttpStatus.FORBIDDEN, "nao-e-dono", "Este item nao pertence a voce"),
     SEM_PERMISSAO(HttpStatus.FORBIDDEN, "sem-permissao", "Voce nao tem permissao para isso"),
     EMAIL_NAO_VERIFICADO(HttpStatus.FORBIDDEN, "email-nao-verificado", "Confirme seu e-mail antes de continuar"),

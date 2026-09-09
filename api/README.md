@@ -24,6 +24,7 @@ As variáveis que importam:
 | `MYSQL_ROOT_PASSWORD` / `MYSQL_DATABASE` / `MYSQL_PORT` | Só o Compose usa, ao criar o container |
 | `JWT_SEGREDO` | Assinatura do token. Mínimo 32 bytes |
 | `IP_PIMENTA` | HMAC que pseudonimiza o IP de quem lê a tag |
+| `GOOGLE_CLIENT_ID` | ID público do cliente Web usado para validar o login com Google |
 
 `JWT_SEGREDO` e `IP_PIMENTA` **não têm valor padrão** de propósito: sem eles a aplicação
 se recusa a subir, em vez de rodar com um segredo previsível.

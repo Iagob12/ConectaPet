@@ -3,8 +3,10 @@ interface Props {
   titulo: string;
   /** Toda tela de conta e ativação leva noindex: são páginas de dados pessoais. */
   passo?: { atual: number; total: number };
+  /** Páginas institucionais públicas podem ser indexadas. */
+  indexavel?: boolean;
 }
-const { titulo, passo } = Astro.props;
+const { titulo, passo, indexavel = false } = Astro.props;
 
 import '../styles/base.css';
 ---
@@ -14,7 +16,7 @@ import '../styles/base.css';
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="noindex, nofollow" />
+  <meta name="robots" content={indexavel ? 'index, follow' : 'noindex, nofollow'} />
   <meta name="theme-color" content="#FCEBD2" />
   <meta name="color-scheme" content="light" />
   <title>{titulo} — ConectaPet</title>

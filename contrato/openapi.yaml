@@ -321,6 +321,42 @@ paths:
               schema: { $ref: '#/components/schemas/ProblemDetail' }
         '429': { $ref: '#/components/responses/LimiteExcedido' }
 
+  /api/auth/google:
+    post:
+      tags: [Autenticação]
+      summary: Entrar com Google
+      description: |
+        Valida criptograficamente um ID token emitido para o cliente Web da ConectaPet.
+        O e-mail precisa estar confirmado pelo Google e já existir na ConectaPet. No
+        primeiro acesso, vincula o identificador estável `sub` e confirma o e-mail;
+        acessos seguintes exigem a mesma identidade Google.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoogleEntrada' }
+      responses:
+        '200':
+          description: Autenticado.
+          headers:
+            Set-Cookie: { $ref: '#/components/headers/SetCookieSessao' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '400': { $ref: '#/components/responses/DadosInvalidos' }
+        '401':
+          description: Token inválido, expirado, emitido para outro cliente ou identidade divergente.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '404':
+          description: Ainda não existe uma conta ConectaPet com esse e-mail.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+
   /api/auth/refresh:
     post:
       tags: [Autenticação]
@@ -1527,6 +1563,15 @@ components:
       properties:
         email: { type: string, format: email }
         senha: { type: string, format: password }
+        manterConectado: { type: boolean, default: false }
+
+    GoogleEntrada:
+      type: object
+      required: [credencial]
+      properties:
+        credencial:
+          type: string
+          description: ID token devolvido pelo Google Identity Services.
         manterConectado: { type: boolean, default: false }
 
     EmailEntrada:

@@ -84,7 +84,13 @@ export class SiteEmExecucao {
 
     this.processo = spawn(process.execPath, ['dist/server/entry.mjs'], {
       cwd: new URL('../..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'),
-      env: { ...process.env, HOST: '127.0.0.1', PORT: String(porta), API_URL: urlDaApi },
+      env: {
+        ...process.env,
+        HOST: '127.0.0.1',
+        PORT: String(porta),
+        API_URL: urlDaApi,
+        GOOGLE_CLIENT_ID: 'cliente-teste.apps.googleusercontent.com',
+      },
       stdio: 'ignore',
     });
 

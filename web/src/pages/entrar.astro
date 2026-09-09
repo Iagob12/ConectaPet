@@ -6,6 +6,9 @@ import CampoSenha from '../components/CampoSenha.astro';
 import { chamar, redirecionarCom } from '../lib/api';
 
 const next = Astro.url.searchParams.get('next') || '/app';
+const googleClientId = (typeof process !== 'undefined' ? process.env.GOOGLE_CLIENT_ID : undefined)
+  ?? import.meta.env.PUBLIC_GOOGLE_CLIENT_ID
+  ?? '';
 let erro: string | null = null;
 let email = '';
 let manterConectado = false;
@@ -19,27 +22,41 @@ if (Astro.request.method === 'POST') {
     // para a propria URL fazia um cliente que repete o POST girar sem fim.
     return new Response('Requisicao invalida.', { status: 400 });
   }
-  email = String(dados.get('email') ?? '');
-  const senha = String(dados.get('senha') ?? '');
-  manterConectado = dados.has('manterConectado');
+  const credencialGoogle = String(dados.get('credencialGoogle') ?? '');
+  if (credencialGoogle) {
+    manterConectado = dados.get('manterConectadoGoogle') === 'true';
+    const r = await chamar('/api/auth/google', {
+      metodo: 'POST', corpo: { credencial: credencialGoogle, manterConectado }, tetoMs: 70_000,
+    });
+    if (r.ok) return redirecionarCom(next, r.cookies);
+    erro = r.status === 404
+      ? 'Ainda não existe uma conta ConectaPet com esse e-mail. Crie sua conta primeiro e depois você poderá entrar com o Google.'
+      : r.status === 0 || r.status >= 500
+        ? 'O login com Google está temporariamente indisponível. Tente novamente em instantes.'
+        : 'Não foi possível confirmar sua conta Google. Tente novamente.';
+  } else {
+    email = String(dados.get('email') ?? '');
+    const senha = String(dados.get('senha') ?? '');
+    manterConectado = dados.has('manterConectado');
 
-  // O Render gratuito leva cerca de um minuto para acordar. O teto geral de
-  // oito segundos e correto para uma API saudavel, mas aqui fazia o primeiro
-  // login falhar enquanto a requisicao ainda estava acordando o servico.
-  const r = await chamar('/api/auth/login', {
-    metodo: 'POST', corpo: { email, senha, manterConectado }, tetoMs: 70_000,
-  });
+    // O Render gratuito leva cerca de um minuto para acordar. O teto geral de
+    // oito segundos e correto para uma API saudavel, mas aqui fazia o primeiro
+    // login falhar enquanto a requisicao ainda estava acordando o servico.
+    const r = await chamar('/api/auth/login', {
+      metodo: 'POST', corpo: { email, senha, manterConectado }, tetoMs: 70_000,
+    });
 
-  if (r.ok) {
-    // A API emite os cookies; a pagina so repassa. O token nunca chega perto
-    // de JavaScript do cliente.
-    return redirecionarCom(next, r.cookies);
+    if (r.ok) {
+      // A API emite os cookies; a pagina so repassa. O token nunca chega perto
+      // de JavaScript do cliente.
+      return redirecionarCom(next, r.cookies);
+    }
+    erro = r.status === 0 || r.status >= 500
+      ? 'Nosso sistema está temporariamente indisponível. Sua senha não foi considerada incorreta. Aguarde um instante e tente novamente.'
+      : r.status === 423
+        ? 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.'
+        : 'E-mail ou senha incorretos.';
   }
-  erro = r.status === 0 || r.status >= 500
-    ? 'Nosso sistema está temporariamente indisponível. Sua senha não foi considerada incorreta. Aguarde um instante e tente novamente.'
-    : r.status === 423
-      ? 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.'
-      : 'E-mail ou senha incorretos.';
 }
 ---
 
@@ -54,6 +71,23 @@ if (Astro.request.method === 'POST') {
   <p class="sub">Use o e-mail e a senha da sua conta ConectaPet.</p>
 
   {erro && <p class="aviso" role="alert">{erro}</p>}
+
+  {googleClientId && (
+    <>
+      <section class="google-acesso" aria-labelledby="google-titulo">
+        <h2 id="google-titulo">Acesso rápido</h2>
+        <p>Use a conta Google que tem o mesmo e-mail cadastrado na ConectaPet.</p>
+        <div id="google-signin" data-client-id={googleClientId}></div>
+        <p class="google-acesso__estado" aria-live="polite" hidden>Confirmando sua conta Google…</p>
+      </section>
+      <div class="separador" aria-hidden="true"><span>ou entre com e-mail</span></div>
+      <form id="google-form" method="POST" hidden>
+        <input type="hidden" name="credencialGoogle" value="" />
+        <input type="hidden" name="manterConectadoGoogle" value="false" />
+      </form>
+      <script id="google-client" src="https://accounts.google.com/gsi/client" async defer></script>
+    </>
+  )}
 
   <form class="cartao" method="POST">
     <div class="campo">
@@ -94,6 +128,40 @@ if (Astro.request.method === 'POST') {
     }
     if (estado) estado.hidden = false;
   });
+
+  const destinoGoogle = document.querySelector<HTMLElement>('#google-signin');
+  const scriptGoogle = document.querySelector<HTMLScriptElement>('#google-client');
+  const formularioGoogle = document.querySelector<HTMLFormElement>('#google-form');
+  const estadoGoogle = document.querySelector<HTMLElement>('.google-acesso__estado');
+
+  const iniciarGoogle = () => {
+    const google = (window as any).google;
+    const clientId = destinoGoogle?.dataset.clientId;
+    if (!google?.accounts?.id || !destinoGoogle || !clientId || !formularioGoogle) return;
+    google.accounts.id.initialize({
+      client_id: clientId,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      callback: (resposta: { credential?: string }) => {
+        if (!resposta.credential) return;
+        const credencial = formularioGoogle.querySelector<HTMLInputElement>('[name="credencialGoogle"]');
+        const persistencia = formularioGoogle.querySelector<HTMLInputElement>('[name="manterConectadoGoogle"]');
+        const escolha = document.querySelector<HTMLInputElement>('[name="manterConectado"]');
+        if (!credencial || !persistencia) return;
+        credencial.value = resposta.credential;
+        persistencia.value = escolha?.checked ? 'true' : 'false';
+        if (estadoGoogle) estadoGoogle.hidden = false;
+        formularioGoogle.requestSubmit();
+      },
+    });
+    google.accounts.id.renderButton(destinoGoogle, {
+      type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
+      shape: 'pill', logo_alignment: 'left', width: Math.floor(destinoGoogle.clientWidth),
+    });
+  };
+
+  if ((window as any).google?.accounts?.id) iniciarGoogle();
+  else scriptGoogle?.addEventListener('load', iniciarGoogle, { once: true });
 </script>
 
 <style>
@@ -104,4 +172,19 @@ if (Astro.request.method === 'POST') {
     line-height: 1.45;
     text-align: center;
   }
+  .google-acesso {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    border: 1px solid var(--gray-300);
+    border-radius: 20px;
+    background: rgba(255,255,255,.76);
+    text-align: center;
+  }
+  .google-acesso h2 { margin: 0; color: var(--navy-900); font-size: 18px; }
+  .google-acesso p { margin: 5px auto 14px; max-width: 38ch; font-size: 14px; line-height: 1.45; }
+  #google-signin { width: 100%; min-height: 44px; overflow: hidden; }
+  .google-acesso .google-acesso__estado { margin: 12px 0 0; font-weight: 600; color: var(--teal-700); }
+  .separador { display: flex; align-items: center; gap: 12px; margin: 0 0 20px; color: var(--navy-700); font-size: 13px; }
+  .separador::before,.separador::after { content: ''; height: 1px; flex: 1; background: var(--gray-300); }
+  .separador span { white-space: nowrap; }
 </style>

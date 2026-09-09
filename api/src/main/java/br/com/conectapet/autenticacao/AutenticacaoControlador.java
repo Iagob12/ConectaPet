@@ -31,13 +31,14 @@ public class AutenticacaoControlador {
     private final RecuperacaoSenhaServico recuperacao;
     private final VerificacaoEmailServico verificacao;
     private final LimiteTentativasLogin limiteLogin;
+    private final GoogleIdentidadeServico google;
     private final String ipPimenta;
     private final br.com.conectapet.seguranca.IpDoCliente ipDoCliente;
 
     public AutenticacaoControlador(AutenticacaoServico servico, JwtServico jwt, CookieServico cookies,
                                    PropriedadesJwt props, UsuarioRepositorio usuarios, UsuarioAtual usuarioAtual,
                                    RecuperacaoSenhaServico recuperacao, VerificacaoEmailServico verificacao,
-                                   LimiteTentativasLogin limiteLogin,
+                                   LimiteTentativasLogin limiteLogin, GoogleIdentidadeServico google,
                                    @org.springframework.beans.factory.annotation.Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
                               br.com.conectapet.seguranca.IpDoCliente ipDoCliente) {
         this.servico = servico;
@@ -49,6 +50,7 @@ public class AutenticacaoControlador {
         this.recuperacao = recuperacao;
         this.verificacao = verificacao;
         this.limiteLogin = limiteLogin;
+        this.google = google;
         this.ipPimenta = ipPimenta;
         this.ipDoCliente = ipDoCliente;
     }
@@ -93,6 +95,13 @@ public class AutenticacaoControlador {
             throw e;
         }
         limiteLogin.registrarSucesso(dto.email());
+        return ResponseEntity.ok().headers(comSessao(u, dto.manterConectado())).body(UsuarioResposta.de(u));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<UsuarioResposta> loginGoogle(@Valid @RequestBody GoogleEntrada dto) {
+        GoogleIdentidadeServico.PerfilGoogle perfil = google.verificar(dto.credencial());
+        Usuario u = servico.autenticarGoogle(perfil.email(), perfil.subject());
         return ResponseEntity.ok().headers(comSessao(u, dto.manterConectado())).body(UsuarioResposta.de(u));
     }
 
@@ -179,6 +188,8 @@ public class AutenticacaoControlador {
 
     public record LoginEntrada(@NotBlank @Email String email, @NotBlank String senha,
                                boolean manterConectado) {}
+
+    public record GoogleEntrada(@NotBlank String credencial, boolean manterConectado) {}
 
     public record EmailEntrada(@NotBlank @Email String email) {}
 

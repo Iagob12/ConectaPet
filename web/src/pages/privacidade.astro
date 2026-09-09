@@ -1,0 +1,75 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base titulo="Política de Privacidade" indexavel>
+  <article class="politica">
+    <p class="rotulo">PRIVACIDADE E TRANSPARÊNCIA</p>
+    <h1>Seus dados ajudam a <span>proteger</span> o seu pet.</h1>
+    <p class="sub">
+      Esta política explica, de forma direta, quais informações a ConectaPet usa,
+      por que elas são necessárias e quais escolhas você tem.
+    </p>
+
+    <div class="resumo" aria-label="Resumo da política">
+      <strong>Em resumo:</strong> usamos os dados para identificar seu pet, permitir
+      contato em caso de emergência e manter sua conta segura. Não vendemos dados pessoais.
+    </div>
+
+    <section>
+      <h2>1. Dados que tratamos</h2>
+      <p>Podemos tratar nome, e-mail, telefones e dados de acesso da conta; foto, identificação e informações que você cadastrar sobre o pet; contatos de emergência; e dados enviados por quem informar que encontrou o animal, como mensagem, telefone e localização, quando essa pessoa escolher compartilhá-los.</p>
+      <p>Para segurança e prevenção de abuso, também registramos informações técnicas essenciais, como data e hora de ações e um identificador protegido derivado do endereço IP.</p>
+    </section>
+
+    <section>
+      <h2>2. Como usamos essas informações</h2>
+      <p>Usamos os dados para criar e proteger a conta, ativar e administrar a tag NFC, exibir o perfil público conforme as escolhas do tutor, facilitar o reencontro do pet, enviar mensagens transacionais e de segurança, prestar suporte e prevenir fraude ou uso indevido.</p>
+    </section>
+
+    <section>
+      <h2>3. O que fica público</h2>
+      <p>A pessoa responsável pela conta controla, nas opções de visibilidade, quais dados aparecem ao abrir a tag. Algumas informações de contato precisam estar visíveis para que quem encontrou o pet consiga ajudar. Revise essas opções sempre que seus dados mudarem.</p>
+    </section>
+
+    <section>
+      <h2>4. Login com Google e fornecedores</h2>
+      <p>Ao escolher “Continuar com o Google”, recebemos do Google um identificador da conta, nome, e-mail e a confirmação de que o e-mail foi verificado. Não recebemos sua senha do Google. Usamos serviços de hospedagem, banco de dados, envio de e-mail e monitoramento somente para operar a ConectaPet, sujeitos a contratos e medidas de proteção adequadas.</p>
+    </section>
+
+    <section>
+      <h2>5. Segurança e conservação</h2>
+      <p>Aplicamos controles de acesso, criptografia em trânsito, sessões protegidas, limitação de tentativas e registros de auditoria. Conservamos os dados enquanto a conta estiver ativa ou pelo período necessário para cumprir obrigações e proteger direitos. Dados enviados por quem encontrou um pet são eliminados do histórico operacional em até 90 dias.</p>
+    </section>
+
+    <section>
+      <h2>6. Seus direitos</h2>
+      <p>Você pode pedir confirmação do tratamento, acesso, correção, portabilidade quando aplicável, informação sobre compartilhamento, revisão das permissões e exclusão da conta, observadas as hipóteses legais de conservação. A área “Minha conta” também permite atualizar e exportar informações.</p>
+    </section>
+
+    <section>
+      <h2>7. Contato e atualizações</h2>
+      <p>Para dúvidas ou solicitações sobre privacidade, escreva para <a href="mailto:iagobondesan07@gmail.com">iagobondesan07@gmail.com</a>. Podemos atualizar esta política quando o produto ou a legislação mudar; a versão vigente ficará sempre nesta página.</p>
+      <p class="atualizacao">Última atualização: 9 de setembro de 2026.</p>
+    </section>
+
+    <a class="btn btn--principal voltar" href="/">Voltar para o início</a>
+  </article>
+</Base>
+
+<style>
+  .politica { max-width: 760px; margin: 0 auto; padding-bottom: 2rem; }
+  .rotulo { margin: 0 0 .75rem; color: var(--turquesa-escuro, #087f7c); font-size: .78rem; font-weight: 800; letter-spacing: .08em; }
+  .politica h1 { max-width: 650px; }
+  .resumo { margin: 1.75rem 0 2rem; padding: 1rem 1.1rem; border: 2px solid var(--tinta, #24343b); border-radius: 16px; background: #dff3f1; box-shadow: 4px 4px 0 var(--tinta, #24343b); line-height: 1.6; }
+  .politica section { padding: 1.1rem 0; border-top: 1px solid rgba(36, 52, 59, .2); }
+  .politica h2 { margin: 0 0 .55rem; font-family: 'Poppins', sans-serif; font-size: clamp(1.05rem, 2vw, 1.3rem); }
+  .politica section p { margin: 0 0 .75rem; line-height: 1.7; }
+  .politica a:not(.btn) { color: #006d6b; font-weight: 700; }
+  .atualizacao { color: #526168; font-size: .9rem; }
+  .voltar { display: inline-flex; margin-top: 1rem; }
+  @media (max-width: 560px) {
+    .politica { padding-bottom: 1rem; }
+    .resumo { margin-top: 1.25rem; box-shadow: 3px 3px 0 var(--tinta, #24343b); }
+  }
+</style>

@@ -37,6 +37,13 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
+    <!-- Verifica localmente a assinatura, emissor, validade e audiencia do
+         ID token do Google. As chaves publicas sao buscadas no JWKS oficial e
+         ficam em cache; nenhuma senha Google passa pela ConectaPet. -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
