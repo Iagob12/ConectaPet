@@ -699,8 +699,40 @@ p.product__price,.product__price{
 /* ==========================================================================
    14. TELA DE QUEM ENCONTROU (mockup)
    ========================================================================== */
-.finder__grid{ display:grid; gap:var(--sp-8); align-items:center; }
-@media (min-width:900px){ .finder__grid{ grid-template-columns:minmax(0,1fr) 400px; gap:var(--sp-12); } }
+.finder__grid{ display:grid; gap:var(--sp-10); align-items:start; }
+.finder__copy{ max-width:640px; }
+.finder__eyebrow{
+  display:inline-flex; align-items:center; width:fit-content;
+  margin:0 0 var(--sp-4); padding:7px 12px;
+  border-radius:var(--radius-full); background:var(--teal-100);
+  color:var(--teal-700); font-size:13px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase;
+}
+.finder__proofs{ display:grid; gap:10px; margin-top:var(--sp-6); list-style:none; }
+.finder__proof{
+  display:grid; grid-template-columns:38px minmax(0,1fr); gap:12px; align-items:center;
+  padding:12px 14px; border:1px solid rgba(34,49,58,.16);
+  border-radius:var(--radius-md); background:rgba(255,255,255,.72);
+}
+.finder__proof-icon{
+  display:grid; place-items:center; width:38px; height:38px;
+  border-radius:50%; background:var(--teal-600); color:#fff;
+}
+.finder__proof strong{ display:block; color:var(--navy-900); font-size:15px; line-height:1.35; }
+.finder__proof span:last-child{ display:block; margin-top:2px; color:var(--navy-700); font-size:14px; line-height:1.4; }
+.finder__demo-label{
+  margin:0 0 12px; text-align:center; color:var(--navy-700);
+  font-size:12px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+}
+@media (min-width:900px){
+  #tela-do-finder{ padding-block:clamp(64px,7vw,88px); }
+  .finder__grid{ grid-template-columns:minmax(0,1fr) minmax(320px,370px); gap:clamp(64px,9vw,128px); }
+  .finder__copy{ padding-top:20px; }
+}
+@media (max-width:899px){
+  .finder__copy{ margin-inline:auto; }
+  .finder__demo{ width:100%; max-width:390px; margin-inline:auto; }
+}
 .phone{
   width:100%; max-width:370px; margin-inline:auto;
   background:var(--navy-900); border-radius:40px; padding:10px;
@@ -721,12 +753,12 @@ p.product__price,.product__price{
 }
 .finder-pet__photo{
   background:var(--sand-100);
-  aspect-ratio:16/9; display:flex; align-items:center; justify-content:center;
+  aspect-ratio:16/9; overflow:hidden;
 }
 .finder-pet__card .finder-pet__name,
 .finder-pet__card .finder-pet__meta{ padding-inline:16px; }
 .finder-pet__card .finder-pet__meta{ padding-bottom:10px; }
-.finder-pet__photo svg{ height:80%; width:auto; }
+.finder-pet__photo img{ display:block; width:100%; height:100%; object-fit:cover; object-position:center 43%; }
 .finder-pet__name{
   font-family:var(--font-title); font-weight:700; font-size:23px; line-height:1.2;
   color:var(--navy-900); margin:10px 0 2px;
@@ -1479,15 +1511,31 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   <!-- ===== 9. O que aparece quando alguém encosta o celular ===== -->
   <section class="section section--sand" id="tela-do-finder" aria-labelledby="t-tela">
     <div class="container finder__grid">
-      <div class="reveal">
+      <div class="finder__copy reveal">
+        <p class="finder__eyebrow">O perfil público do pet</p>
         <h2 class="title" id="t-tela">
-          <span class="l1">Quem encontrou não precisa adivinhar</span>
-          <span class="l2">o que fazer.</span>
+          <span class="l1">Quem encontrou seu pet</span>
+          <span class="l2">já sabe o próximo passo.</span>
         </h2>
-        <p class="lead mt-6">A tela abre direto no navegador com foto e nome do pet, aviso de desaparecimento e botões grandes para ligar, chamar no WhatsApp ou informar onde ele foi encontrado. Sem cadastro para quem está ajudando. Você escolhe quais dados ficam visíveis.</p>
+        <p class="lead mt-6">A página abre direto no navegador, sem exigir cadastro de quem está ajudando. As informações importantes aparecem na ordem certa e você decide o que fica visível.</p>
+        <ul class="finder__proofs" aria-label="O que a pessoa consegue fazer ao abrir o perfil">
+          <li class="finder__proof">
+            <span class="finder__proof-icon"><svg width="21" height="21" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg></span>
+            <span><strong>Reconhece o pet pela foto</strong><span>Nome e características confirmam que é o animal certo.</span></span>
+          </li>
+          <li class="finder__proof">
+            <span class="finder__proof-icon"><svg width="21" height="21" aria-hidden="true" focusable="false"><use href="#i-phone"/></svg></span>
+            <span><strong>Fala com você em um toque</strong><span>Ligação e WhatsApp ficam em botões grandes e diretos.</span></span>
+          </li>
+          <li class="finder__proof">
+            <span class="finder__proof-icon"><svg width="21" height="21" aria-hidden="true" focusable="false"><use href="#i-pin"/></svg></span>
+            <span><strong>Avisa onde o pet foi encontrado</strong><span>O local pode ser compartilhado sem instalar aplicativo.</span></span>
+          </li>
+        </ul>
       </div>
 
-      <div class="reveal">
+      <div class="finder__demo reveal">
+        <p class="finder__demo-label">Exemplo da tela de resgate</p>
         <div class="phone" role="img" aria-label="Mockup da tela que abre no celular de quem encontrou o pet: faixa vermelha de pet perdido, foto e nome do animal, botão verde de ligar, botão de WhatsApp, botão para avisar onde encontrou, bloco com informações de saúde e segundo contato de emergência.">
           <div class="phone__screen">
             <div class="phone__brandbar"></div>
@@ -1498,7 +1546,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
             <div class="finder-pet">
               <div class="finder-pet__card">
                 <div class="finder-pet__photo">
-                  <svg width="88" height="88" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg>
+                  <img src="/imagens/pet-perfil-exemplo.webp" width="1254" height="1254" loading="lazy" alt="Nina, uma cachorra vira-lata de pelagem caramelo e branca">
                 </div>
                 <p class="finder-pet__name">Nina</p>
                 <p class="finder-pet__meta">Vira-lata · 8 kg · São Paulo, SP</p>

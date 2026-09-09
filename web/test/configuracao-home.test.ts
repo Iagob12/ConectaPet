@@ -28,7 +28,9 @@ describe('orientacao de configuracao na pagina inicial', () => {
   it('usa imagens especificas para o resgate e para a aproximacao NFC', () => {
     expect(html).toContain('/imagens/home-resgate-conectapet.webp');
     expect(html).toContain('/imagens/home-ativacao-nfc.webp');
+    expect(html).toContain('/imagens/pet-perfil-exemplo.webp');
     expect(html).toContain('Parte superior de trás de um celular próxima à tag ConectaPet');
+    expect(html).toContain('Nina, uma cachorra vira-lata de pelagem caramelo e branca');
     expect(html).not.toContain('data:image');
   });
 });
