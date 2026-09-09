@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
+import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -200,5 +201,46 @@ class AdminIT extends TesteIntegracao {
 
         assertThat(m.tagsEnviadas()).isZero();
         assertThat(m.taxaAtivacao()).isZero();
+    }
+
+    // ---- Contas ------------------------------------------------------------
+
+    @Test
+    @DisplayName("consulta administrativa encontra conta por nome, email ou telefone")
+    void consultaContas() {
+        Usuario maria = novaConta("maria@teste.com", "Maria Oliveira", "+5511998877665");
+        novaConta("joao@teste.com", "Joao Santos", "+5511987654321");
+
+        assertThat(usuarios.buscarContas("maria", PageRequest.of(0, 20)).getContent())
+                .extracting(Usuario::getUuid).containsExactly(maria.getUuid());
+        assertThat(usuarios.buscarContas("@teste.com", PageRequest.of(0, 20)).getTotalElements())
+                .isEqualTo(3); // duas contas criadas aqui + o admin do preparo
+        assertThat(usuarios.buscarContas("998877", PageRequest.of(0, 20)).getContent())
+                .extracting(Usuario::getUuid).containsExactly(maria.getUuid());
+    }
+
+    @Test
+    @DisplayName("consulta administrativa nunca devolve conta excluida ou anonimizada")
+    void consultaNaoExpoeContasRemovidas() {
+        Usuario excluida = novaConta("excluida@teste.com", "Excluida", "+5511911111111");
+        excluida.setExcluidoEm(Instant.now());
+        usuarios.save(excluida);
+
+        Usuario anonimizada = novaConta("anonimizada@teste.com", "Anonimizada", "+5511922222222");
+        anonimizada.setAnonimizadoEm(Instant.now());
+        usuarios.save(anonimizada);
+
+        assertThat(usuarios.buscarContas("", PageRequest.of(0, 20)).getContent())
+                .extracting(Usuario::getEmail)
+                .containsExactly("admin@teste.com");
+    }
+
+    private Usuario novaConta(String email, String nome, String telefone) {
+        Usuario u = new Usuario();
+        u.setEmail(email);
+        u.setNome(nome);
+        u.setTelefonePrincipal(telefone);
+        u.setSenhaHash(encoder.encode("senha-segura-123"));
+        return usuarios.save(u);
     }
 }

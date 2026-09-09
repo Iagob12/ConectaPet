@@ -1,0 +1,119 @@
+---
+export const prerender = false;
+
+import Admin from '../../layouts/Admin.astro';
+import { exigirAdmin, type UsuarioAdmin } from '../../lib/admin';
+import { dia } from '../../lib/painel';
+
+const porta = await exigirAdmin(Astro);
+if ('resposta' in porta) return porta.resposta;
+
+const q = Astro.url.searchParams;
+const termo = (q.get('busca') ?? '').trim().slice(0, 100);
+const pagina = Math.max(0, Number(q.get('pagina') ?? 0) || 0);
+const parametros = new URLSearchParams({ pagina: String(pagina), tamanho: '50' });
+if (termo) parametros.set('busca', termo);
+
+const r = await Astro.locals.api<{
+  conteudo: UsuarioAdmin[]; pagina: number; tamanho: number; total: number;
+}>(`/api/admin/usuarios?${parametros}`);
+
+if (r.status === 401) return Astro.redirect('/entrar?next=%2Fadmin%2Fusuarios');
+
+const dados = r.dados ?? { conteudo: [], pagina: 0, tamanho: 50, total: 0 };
+const ultimaPagina = Math.max(0, Math.ceil(dados.total / dados.tamanho) - 1);
+const basePagina = new URLSearchParams();
+if (termo) basePagina.set('busca', termo);
+
+function telefoneExibicao(valor: string | null): string {
+  if (!valor) return 'Não informado';
+  const digitos = valor.replace(/\D/g, '');
+  const nacional = digitos.startsWith('55') ? digitos.slice(2) : digitos;
+  if (nacional.length === 11) {
+    return `(${nacional.slice(0, 2)}) ${nacional.slice(2, 7)}-${nacional.slice(7)}`;
+  }
+  if (nacional.length === 10) {
+    return `(${nacional.slice(0, 2)}) ${nacional.slice(2, 6)}-${nacional.slice(6)}`;
+  }
+  return valor;
+}
+
+function hrefPagina(alvo: number): string {
+  const p = new URLSearchParams(basePagina);
+  p.set('pagina', String(alvo));
+  return `?${p}`;
+}
+---
+
+<Admin titulo="Contas cadastradas" aba="usuarios">
+  <h1>Contas <span>cadastradas</span></h1>
+  <p class="sub">Consulte quem criou uma conta na ConectaPet. Esta tela é somente para visualização.</p>
+
+  {!r.ok && (
+    <p class="aviso" role="alert"><span>{r.erro ?? 'Não foi possível carregar as contas agora.'}</span></p>
+  )}
+
+  <form class="cartao" method="GET" role="search">
+    <div class="campo">
+      <label for="busca">Buscar pessoa</label>
+      <input id="busca" name="busca" type="search" value={termo} maxlength="100"
+             placeholder="Nome, e-mail ou telefone" autocomplete="off" />
+      <p class="ajuda">Digite parte do nome, e-mail ou telefone cadastrado.</p>
+    </div>
+    <div class="acoes">
+      <button class="btn btn--principal" type="submit">Buscar</button>
+      {termo && <a class="btn btn--secundario" href="/admin/usuarios">Limpar busca</a>}
+    </div>
+  </form>
+
+  <section class="cartao">
+    <h2 class="cartao__titulo">{dados.total} {dados.total === 1 ? 'conta encontrada' : 'contas encontradas'}</h2>
+    {dados.conteudo.length === 0 ? (
+      <p class="cartao__nota" style="margin:8px 0 0">
+        {termo ? 'Nenhuma conta corresponde a essa busca.' : 'Ainda não há contas cadastradas.'}
+      </p>
+    ) : (
+      <div class="tabela-rolagem" tabindex="0" aria-label="Lista de contas cadastradas">
+        <table class="dados">
+          <thead>
+            <tr>
+              <th scope="col">Pessoa</th>
+              <th scope="col">Telefone</th>
+              <th scope="col">E-mail</th>
+              <th scope="col">Situação</th>
+              <th scope="col">Cadastro</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dados.conteudo.map((u) => (
+              <tr>
+                <td>
+                  <span class="conta-identidade">
+                    <strong>{u.nome}</strong>
+                    <span>{u.papel === 'ADMIN' ? 'Administrador' : 'Tutor'}</span>
+                  </span>
+                </td>
+                <td>{telefoneExibicao(u.telefone)}</td>
+                <td><a class="link" href={`mailto:${u.email}`}>{u.email}</a></td>
+                <td>
+                  <span class:list={['estado-conta', { 'estado-conta--inativa': !u.ativo }]}>
+                    {u.ativo ? 'Ativa' : 'Inativa'}
+                  </span>
+                  <div class="item__quando">{u.emailVerificado ? 'E-mail verificado' : 'E-mail pendente'}</div>
+                </td>
+                <td>{dia(u.criadoEm)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </section>
+
+  {ultimaPagina > 0 && (
+    <nav class="acoes" aria-label="Paginação das contas">
+      {pagina > 0 && <a class="btn btn--secundario" style="margin-top:0" href={hrefPagina(pagina - 1)}>Anterior</a>}
+      {pagina < ultimaPagina && <a class="btn btn--secundario" style="margin-top:0" href={hrefPagina(pagina + 1)}>Próxima</a>}
+    </nav>
+  )}
+</Admin>

@@ -344,6 +344,12 @@ table.dados th{position:sticky;top:0;z-index:1}
 table.dados tbody tr:nth-child(even){background:var(--sand-100)}
 table.dados td.codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;font-weight:600;color:var(--navy-900)}
 table.dados td.url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;white-space:normal;word-break:break-all;min-width:230px}
+.conta-identidade{display:flex;flex-direction:column;gap:2px;min-width:180px}
+.conta-identidade strong{color:var(--navy-900)}
+.conta-identidade span{font-size:13px;color:var(--navy-700)}
+.estado-conta{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.estado-conta::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--success-600)}
+.estado-conta--inativa::before{background:var(--gray-500)}
 
 .segredo{border-color:var(--alert-600);background:var(--alert-50)}
 .perigo{background:var(--alert-600);color:#fff;border-color:var(--alert-600)}
@@ -436,7 +442,8 @@ a.copiar{display:inline-flex;align-items:center;justify-content:center;text-deco
   .moldura{padding:8px}
   .topo{padding:10px 14px}
   .folha{padding:22px 20px 40px}
-  .barra__menu{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+  .barra__menu{width:100%;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:2px;padding-bottom:2px}
+  .barra__menu a{flex:0 0 auto}
   .barra__menu a{justify-content:center;padding-inline:6px;text-align:center}
   .metricas{grid-template-columns:1fr 1fr}
   .metrica{padding:12px}

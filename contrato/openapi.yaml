@@ -1185,6 +1185,26 @@ paths:
         '403': { $ref: '#/components/responses/SemPermissao' }
         '409': { $ref: '#/components/responses/EstadoInvalido' }
 
+  /api/admin/usuarios:
+    get:
+      tags: [Administrativo]
+      summary: Consultar contas cadastradas
+      description: Lista somente contas não excluídas e não anonimizadas. Acesso exclusivo de ADMIN.
+      parameters:
+        - name: busca
+          in: query
+          description: Parte do nome, e-mail ou telefone.
+          schema: { type: string, maxLength: 100 }
+        - { $ref: '#/components/parameters/Pagina' }
+        - { $ref: '#/components/parameters/Tamanho' }
+      responses:
+        '200':
+          description: Página de contas cadastradas.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginaUsuariosAdmin' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
   /api/admin/metricas:
     get:
       tags: [Administrativo]
@@ -1780,6 +1800,30 @@ components:
         conteudo:
           type: array
           items: { $ref: '#/components/schemas/Tag' }
+        pagina: { type: integer }
+        tamanho: { type: integer }
+        total: { type: integer, format: int64 }
+
+    UsuarioAdmin:
+      type: object
+      required: [uuid, nome, email, emailVerificado, ativo, papel, criadoEm]
+      properties:
+        uuid: { type: string, format: uuid }
+        nome: { type: string }
+        email: { type: string, format: email }
+        telefone: { type: string, nullable: true, description: Telefone principal em E.164. }
+        emailVerificado: { type: boolean }
+        ativo: { type: boolean }
+        papel: { type: string, enum: [TUTOR, ADMIN] }
+        criadoEm: { type: string, format: date-time }
+
+    PaginaUsuariosAdmin:
+      type: object
+      required: [conteudo, pagina, tamanho, total]
+      properties:
+        conteudo:
+          type: array
+          items: { $ref: '#/components/schemas/UsuarioAdmin' }
         pagina: { type: integer }
         tamanho: { type: integer }
         total: { type: integer, format: int64 }

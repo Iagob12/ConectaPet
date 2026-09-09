@@ -165,6 +165,12 @@ describe('rotas que exigem sessão', () => {
     expect(r.status).toBe(302);
     expect(r.headers.get('location')).toContain('/entrar');
   });
+
+  it('a lista de contas também exige sessão administrativa', async () => {
+    const r = await pegar('/admin/usuarios');
+    expect(r.status).toBe(302);
+    expect(r.headers.get('location')).toBe('/entrar?next=%2Fadmin%2Fusuarios');
+  });
 });
 
 describe('entrada do fluxo de ativação', () => {

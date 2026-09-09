@@ -2,7 +2,7 @@
 interface Props {
   titulo: string;
   voltar?: { href: string; texto: string };
-  aba?: 'lotes' | 'tags' | 'emails';
+  aba?: 'lotes' | 'tags' | 'usuarios' | 'emails';
 }
 const { titulo, voltar, aba } = Astro.props;
 
@@ -43,6 +43,7 @@ import '../styles/base.css';
     <nav class="barra__menu" aria-label="Administrativo">
       <a href="/admin" aria-current={aba === 'lotes' ? 'page' : undefined}>Lotes</a>
       <a href="/admin/tags" aria-current={aba === 'tags' ? 'page' : undefined}>Tags</a>
+      <a href="/admin/usuarios" aria-current={aba === 'usuarios' ? 'page' : undefined}>Contas</a>
       <a href="/admin/emails" aria-current={aba === 'emails' ? 'page' : undefined}>E-mails</a>
       <a href="/sair">Sair</a>
     </nav>

@@ -8,6 +8,8 @@ import br.com.conectapet.seguranca.UsuarioAtual;
 import br.com.conectapet.seguranca.UsuarioAutenticado;
 import br.com.conectapet.notificacao.NotificacaoServico;
 import br.com.conectapet.tag.*;
+import br.com.conectapet.usuario.Usuario;
+import br.com.conectapet.usuario.UsuarioRepositorio;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -18,6 +20,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +53,7 @@ public class AdminControlador {
     private final String ipPimenta;
     private final br.com.conectapet.seguranca.IpDoCliente ipDoCliente;
     private final NotificacaoServico notificacoes;
+    private final UsuarioRepositorio usuarios;
 
     public AdminControlador(LoteServico loteServico, LoteRepositorio lotes, TagRepositorio tags,
                             MetricasServico metricas, ReautenticacaoServico reautenticacao,
@@ -57,7 +61,8 @@ public class AdminControlador {
                             @Value("${conectapet.tag.url-publica}") String urlPublica,
                             @Value("${conectapet.privacidade.ip-pimenta}") String ipPimenta,
                             br.com.conectapet.seguranca.IpDoCliente ipDoCliente,
-                            NotificacaoServico notificacoes) {
+                            NotificacaoServico notificacoes,
+                            UsuarioRepositorio usuarios) {
         this.loteServico = loteServico;
         this.lotes = lotes;
         this.tags = tags;
@@ -69,6 +74,7 @@ public class AdminControlador {
         this.ipPimenta = ipPimenta;
         this.ipDoCliente = ipDoCliente;
         this.notificacoes = notificacoes;
+        this.usuarios = usuarios;
     }
 
     // ---- Reautenticacao ----------------------------------------------------
@@ -159,6 +165,21 @@ public class AdminControlador {
         int limite = Math.min(Math.max(tamanho, 1), 100);
         Page<Tag> page = tags.buscar(status, loteId, PageRequest.of(Math.max(pagina, 0), limite));
         return new PaginaTags(page.getContent().stream().map(TagAdminResposta::de).toList(),
+                page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+
+    // ---- Contas ------------------------------------------------------------
+
+    @GetMapping("/usuarios")
+    public PaginaUsuarios buscarUsuarios(@RequestParam(defaultValue = "") String busca,
+                                         @RequestParam(defaultValue = "0") int pagina,
+                                         @RequestParam(defaultValue = "50") int tamanho) {
+        String termo = busca == null ? "" : busca.trim();
+        if (termo.length() > 100) termo = termo.substring(0, 100);
+        int limite = Math.min(Math.max(tamanho, 1), 100);
+        Page<Usuario> page = usuarios.buscarContas(termo,
+                PageRequest.of(Math.max(pagina, 0), limite, Sort.by(Sort.Direction.DESC, "criadoEm")));
+        return new PaginaUsuarios(page.getContent().stream().map(UsuarioAdminResposta::de).toList(),
                 page.getNumber(), page.getSize(), page.getTotalElements());
     }
 
@@ -253,4 +274,17 @@ public class AdminControlador {
     }
 
     public record PaginaTags(List<TagAdminResposta> conteudo, int pagina, int tamanho, long total) {}
+
+    public record UsuarioAdminResposta(UUID uuid, String nome, String email,
+                                       String telefone, boolean emailVerificado,
+                                       boolean ativo, String papel, Instant criadoEm) {
+        static UsuarioAdminResposta de(Usuario u) {
+            return new UsuarioAdminResposta(u.getUuid(), u.getNome(), u.getEmail(),
+                    u.getTelefonePrincipal(), u.emailVerificado(), u.isAtivo(),
+                    u.getPapel().name(), u.getCriadoEm());
+        }
+    }
+
+    public record PaginaUsuarios(List<UsuarioAdminResposta> conteudo, int pagina,
+                                 int tamanho, long total) {}
 }

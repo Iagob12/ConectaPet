@@ -28,6 +28,11 @@ export type ResumoNotificacoes = {
   falhasRecentes: Array<{ tipo: string; tentativas: number; erro: string | null; criadaEm: string }>;
 };
 
+export type UsuarioAdmin = {
+  uuid: string; nome: string; email: string; telefone: string | null;
+  emailVerificado: boolean; ativo: boolean; papel: string; criadoEm: string;
+};
+
 export const STATUS_TAG: Record<string, string> = {
   CRIADA: 'Criada',
   ENVIADA: 'Enviada',
