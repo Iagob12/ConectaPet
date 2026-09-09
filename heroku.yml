@@ -1,0 +1,8 @@
+# O repositorio tambem contem o front, mas no Heroku so a API e construida.
+# O contexto do build passa a ser api/, onde o Dockerfile, o pom.xml e src/
+# ja estao organizados para uma imagem pequena de producao.
+build:
+  docker:
+    web: api/Dockerfile
+
+# Sem `run`: o Heroku usa o ENTRYPOINT seguro definido no Dockerfile.

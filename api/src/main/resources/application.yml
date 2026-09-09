@@ -22,6 +22,17 @@ spring:
     url: ${BANCO_URL:jdbc:mysql://localhost:3306/conectapet}
     username: ${MYSQL_USER:conectapet}
     password: ${MYSQL_PASSWORD:senha-local}
+    hikari:
+      # Uma instancia pequena nao precisa abrir as 10 conexoes do padrao do
+      # Hikari. Cinco suportam as requisicoes concorrentes sem esgotar o teto
+      # de um MySQL gratuito; uma fica aquecida para detectar conexoes mortas
+      # antes que o primeiro login do cliente as encontre.
+      maximum-pool-size: ${BANCO_POOL_MAXIMO:5}
+      minimum-idle: ${BANCO_POOL_MINIMO:1}
+      connection-timeout: ${BANCO_TEMPO_CONEXAO_MS:10000}
+      validation-timeout: ${BANCO_TEMPO_VALIDACAO_MS:3000}
+      keepalive-time: ${BANCO_KEEPALIVE_MS:120000}
+      max-lifetime: ${BANCO_TEMPO_VIDA_MS:1500000}
 
   jpa:
     # Nunca "update". O esquema e responsabilidade exclusiva do Flyway;
@@ -51,6 +62,9 @@ spring:
       max-request-size: 5MB
 
 server:
+  # Heroku entrega uma porta diferente a cada inicializacao. Render tambem
+  # define PORT; localmente o padrao continua 8080.
+  port: ${PORT:8080}
   error:
     include-message: never
     include-stacktrace: never
