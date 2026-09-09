@@ -32,6 +32,9 @@ services:
     # de resgate cuja página demora 50 s para abrir é pior do que não vender.
     plan: free
     healthCheckPath: /actuator/health
+    # A aplicacao usa shutdown gracioso por 25 s. O Render espera um pouco
+    # alem disso antes de forcar o encerramento da instancia antiga.
+    maxShutdownDelaySeconds: 35
 
     envVars:
       # ---- Banco (externo ao Render) ----

@@ -247,6 +247,22 @@ describe('vitrine e telas públicas', () => {
     });
     expect(r.status).toBe(400);
   });
+
+  it('API fora do ar não acusa senha incorreta', async () => {
+    await api.derrubar();
+    const r = await pegar('/entrar', {
+      method: 'POST',
+      headers: { Origin: site.base, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'email=tutor@exemplo.com&senha=senha-correta',
+    });
+    const html = await r.text();
+    await api.subir();
+    api.perfis.set(ATIVA, perfilDeExemplo());
+
+    expect(html).toContain('temporariamente indisponível');
+    expect(html).toContain('Sua senha não foi considerada incorreta');
+    expect(html).not.toContain('E-mail ou senha incorretos');
+  });
 });
 
 describe('cabeçalhos de segurança', () => {

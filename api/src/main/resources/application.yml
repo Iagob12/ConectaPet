@@ -2,6 +2,11 @@ spring:
   application:
     name: conectapet-api
 
+  lifecycle:
+    # Da tempo para requisicoes em andamento terminarem quando a plataforma
+    # troca a instancia durante um deploy ou manutencao.
+    timeout-per-shutdown-phase: 25s
+
   # Só é usado quando conectapet.email.provedor=smtp. Sem isso definido, o
   # starter-mail fica no classpath sem fazer nada.
   mail:
@@ -65,6 +70,7 @@ server:
   # Heroku entrega uma porta diferente a cada inicializacao. Render tambem
   # define PORT; localmente o padrao continua 8080.
   port: ${PORT:8080}
+  shutdown: graceful
   error:
     include-message: never
     include-stacktrace: never

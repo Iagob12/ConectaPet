@@ -20,16 +20,23 @@ if (Astro.request.method === 'POST') {
   email = String(dados.get('email') ?? '');
   const senha = String(dados.get('senha') ?? '');
 
-  const r = await chamar('/api/auth/login', { metodo: 'POST', corpo: { email, senha } });
+  // O Render gratuito leva cerca de um minuto para acordar. O teto geral de
+  // oito segundos e correto para uma API saudavel, mas aqui fazia o primeiro
+  // login falhar enquanto a requisicao ainda estava acordando o servico.
+  const r = await chamar('/api/auth/login', {
+    metodo: 'POST', corpo: { email, senha }, tetoMs: 70_000,
+  });
 
   if (r.ok) {
     // A API emite os cookies; a pagina so repassa. O token nunca chega perto
     // de JavaScript do cliente.
     return redirecionarCom(next, r.cookies);
   }
-  erro = r.status === 423
-    ? 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.'
-    : 'E-mail ou senha incorretos.';
+  erro = r.status === 0 || r.status >= 500
+    ? 'Nosso sistema está temporariamente indisponível. Sua senha não foi considerada incorreta. Aguarde um instante e tente novamente.'
+    : r.status === 423
+      ? 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.'
+      : 'E-mail ou senha incorretos.';
 }
 ---
 
@@ -56,6 +63,9 @@ if (Astro.request.method === 'POST') {
       <input id="senha" name="senha" type="password" autocomplete="current-password" required />
     </div>
     <button class="btn btn--principal" type="submit">Entrar</button>
+    <p class="estado-envio" aria-live="polite" hidden>
+      Conectando com segurança. O primeiro acesso pode levar até um minuto.
+    </p>
   </form>
 
   <p class="rodape-link">
@@ -65,3 +75,26 @@ if (Astro.request.method === 'POST') {
     Não tem conta? <a class="link" href={`/criar-conta?next=${encodeURIComponent(next)}`}>Criar agora</a>
   </p>
 </Base>
+
+<script>
+  const formulario = document.querySelector<HTMLFormElement>('form.cartao');
+  const botao = formulario?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const estado = formulario?.querySelector<HTMLElement>('.estado-envio');
+  formulario?.addEventListener('submit', () => {
+    if (botao) {
+      botao.disabled = true;
+      botao.textContent = 'Conectando…';
+    }
+    if (estado) estado.hidden = false;
+  });
+</script>
+
+<style>
+  .estado-envio {
+    margin: 12px 0 0;
+    color: var(--cinza, #263640);
+    font-size: .9rem;
+    line-height: 1.45;
+    text-align: center;
+  }
+</style>
