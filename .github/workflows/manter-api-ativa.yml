@@ -1,37 +1,33 @@
-name: Manter API ativa
+name: Monitorar API no Azure
 
 on:
   push:
     branches: [main]
     paths: [.github/workflows/manter-api-ativa.yml]
   schedule:
-    # O Render gratuito hiberna depois de 15 minutos sem trafego. Usamos
-    # minutos fora da virada da hora, quando os agendamentos do GitHub tendem
-    # a enfrentar menos fila.
-    - cron: "3,13,23,33,43,53 * * * *"
+    # A VM nao hiberna. Esta sonda apenas detecta se API e banco deixarem de
+    # responder, em minutos fora da virada da hora para evitar filas do GitHub.
+    - cron: "3,18,33,48 * * * *"
   workflow_dispatch:
 
 permissions: {}
 
 concurrency:
-  group: manter-api-ativa
+  group: monitorar-api-azure
   cancel-in-progress: true
 
 jobs:
   verificar:
     runs-on: ubuntu-latest
-    # Em uma retomada ruim, o Render gratuito já levou pouco mais de três
-    # minutos. O teto antigo cancelava a sonda justamente quando a API estava
-    # terminando de subir, e todas as execuções pareciam falhar para sempre.
-    timeout-minutes: 6
+    timeout-minutes: 2
     steps:
-      - name: Acordar e conferir a API
+      - name: Conferir API e banco
         shell: bash
         run: |
           curl --fail --show-error --silent \
-            --retry 6 \
+            --retry 2 \
             --retry-all-errors \
-            --retry-delay 10 \
-            --connect-timeout 15 \
-            --max-time 300 \
-            https://conectapet-api-e6ub.onrender.com/actuator/health
+            --retry-delay 5 \
+            --connect-timeout 10 \
+            --max-time 30 \
+            https://api.68-211-146-157.sslip.io/healthz

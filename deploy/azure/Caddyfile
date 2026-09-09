@@ -1,6 +1,16 @@
 {$DOMINIO_API} {
 	encode gzip zstd
-	reverse_proxy api:8080
+
+	handle /healthz {
+		rewrite * /actuator/health
+		reverse_proxy api:8080
+	}
+
+	handle {
+		@actuator path /actuator/*
+		respond @actuator 404
+		reverse_proxy api:8080
+	}
 
 	header {
 		Strict-Transport-Security "max-age=31536000"
@@ -9,7 +19,4 @@
 		Referrer-Policy "strict-origin-when-cross-origin"
 		-Server
 	}
-
-	@actuator path /actuator/*
-	respond @actuator 404
 }
