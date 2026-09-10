@@ -1,0 +1,56 @@
+---
+import ConteudoPublico from '../layouts/ConteudoPublico.astro';
+---
+
+<ConteudoPublico
+  titulo="Como configurar uma tag NFC para pet"
+  descricao="Passo a passo ilustrado para ativar o NFC, aproximar o celular do chaveiro ConectaPet e confirmar o cadastro do seu pet."
+  caminho="/como-configurar-tag-nfc-pet"
+  rotulo="Como configurar"
+  imagem="/imagens/ativacao-passo-2-aproximar.webp"
+>
+  <section class="seo-hero">
+    <div>
+      <p class="seo-hero__rotulo">Guia de ativação</p>
+      <h1>Como configurar a tag NFC do seu pet</h1>
+      <p class="seo-hero__lead">Você não configura pelo QR Code do cartão. Desbloqueie o celular, aproxime-o do próprio chaveiro e toque no aviso que aparecer. O link exclusivo da sua tag abrirá o cadastro.</p>
+      <a class="seo-btn" href="/ativar">Também tenho um código</a>
+    </div>
+    <img src="/imagens/ativacao-passo-2-aproximar.webp" alt="Celular sendo aproximado da tag ConectaPet presa à coleira" width="800" height="800" />
+  </section>
+
+  <article class="seo-article">
+    <div class="seo-article__body">
+      <ol class="seo-steps">
+        <li class="seo-step">
+          <img src="/imagens/ativacao-passo-1-nfc.webp" alt="Celular Android com a função NFC ligada nas configurações" width="600" height="600" loading="lazy" />
+          <div><h2>Ative o NFC</h2><p>No Android, procure “NFC” nas configurações e confirme que a função está ligada. No iPhone compatível, basta desbloquear a tela.</p></div>
+        </li>
+        <li class="seo-step">
+          <img src="/imagens/ativacao-passo-2-aproximar.webp" alt="Parte superior traseira do celular próxima à tag NFC do pet" width="600" height="600" loading="lazy" />
+          <div><h2>Encoste o celular no chaveiro</h2><p>Aproxime a parte de cima da traseira do aparelho e mantenha-a junto da tag por dois ou três segundos.</p></div>
+        </li>
+        <li class="seo-step">
+          <img src="/imagens/ativacao-passo-3-aviso.webp" alt="Notificação da ConectaPet aparecendo na tela do celular" width="600" height="600" loading="lazy" />
+          <div><h2>Toque no aviso</h2><p>Quando a notificação da ConectaPet aparecer, toque nela. A página correta será aberta diretamente no navegador.</p></div>
+        </li>
+        <li class="seo-step">
+          <img src="/imagens/ativacao-passo-4-cadastro.webp" alt="Cadastro do pet preenchido e botão de confirmação destacado" width="600" height="600" loading="lazy" />
+          <div><h2>Cadastre e confirme</h2><p>Crie sua conta, preencha os dados do pet e finalize em “Confirmar cadastro do pet”. A tag só fica vinculada depois dessa confirmação.</p></div>
+        </li>
+      </ol>
+
+      <section class="seo-faq" aria-labelledby="faq-configurar">
+        <h2 id="faq-configurar">Se o aviso não aparecer</h2>
+        <details open><summary>Onde devo encostar o celular?</summary><p>Tente a região superior traseira. A posição da antena muda entre modelos, então mova o aparelho lentamente sobre a tag.</p></details>
+        <details><summary>A capa pode atrapalhar?</summary><p>Capas muito grossas ou com partes metálicas podem reduzir a leitura. Retire a capa e tente novamente.</p></details>
+        <details><summary>Posso usar o código da tag?</summary><p>Sim. Abra a <a href="/ativar">página de ativação</a> e digite o código impresso quando a leitura por aproximação não estiver disponível.</p></details>
+      </section>
+    </div>
+    <aside class="seo-article__aside">
+      <strong>Ainda não tem uma tag?</strong>
+      <p>Conheça como a identificação NFC ajuda quem encontrou seu pet a falar com você rapidamente.</p>
+      <a class="seo-btn" href="/tag-nfc-para-cachorro">Entender como funciona</a>
+    </aside>
+  </article>
+</ConteudoPublico>

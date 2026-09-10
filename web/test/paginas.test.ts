@@ -254,6 +254,41 @@ describe('vitrine e telas públicas', () => {
     expect(r.status).toBe(400);
   });
 
+  it('concentra os sinais de busca no domínio oficial', async () => {
+    const html = await (await pegar('/')).text();
+    expect(html).toContain('<link rel="canonical" href="https://www.conectapet.app.br/">');
+    expect(html).toContain('<meta property="og:url" content="https://www.conectapet.app.br/">');
+    expect(html).not.toContain('rel="canonical" href="https://conecta-pet-inky.vercel.app/"');
+    expect(html).toContain('"@type": "Organization"');
+    expect(html).toContain('"@type": "WebSite"');
+  });
+
+  it.each([
+    ['/tag-nfc-para-cachorro', 'Tag NFC para cachorro e gato'],
+    ['/como-configurar-tag-nfc-pet', 'Como configurar a tag NFC'],
+    ['/identificacao-petshop', 'Identificação para petshops'],
+  ])('%s oferece conteúdo indexável para uma busca específica', async (caminho, trecho) => {
+    const r = await pegar(caminho);
+    const html = await r.text();
+    expect(r.status).toBe(200);
+    expect(html).toContain('name="robots" content="index, follow, max-image-preview:large"');
+    expect(html).toContain(`rel="canonical" href="https://www.conectapet.app.br${caminho}"`);
+    expect(html).toContain(trecho);
+    expect((html.match(/<h1/g) ?? []).length).toBe(1);
+  });
+
+  it('publica robots e sitemap sem páginas pessoais', async () => {
+    const robots = await (await pegar('/robots.txt')).text();
+    const sitemap = await (await pegar('/sitemap.xml')).text();
+    expect(robots).toContain('Allow: /');
+    expect(robots).toContain('https://www.conectapet.app.br/sitemap.xml');
+    expect(sitemap).toContain('https://www.conectapet.app.br/tag-nfc-para-cachorro');
+    expect(sitemap).toContain('https://www.conectapet.app.br/como-configurar-tag-nfc-pet');
+    expect(sitemap).not.toContain('/app');
+    expect(sitemap).not.toContain('/admin');
+    expect(sitemap).not.toContain('/p/');
+  });
+
   it('oferece login oficial do Google sem retirar o acesso por senha', async () => {
     const html = await (await pegar('/entrar')).text();
     expect(html).toContain('id="google-signin"');

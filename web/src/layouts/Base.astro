@@ -1,12 +1,19 @@
 ---
 interface Props {
   titulo: string;
+  descricao?: string;
   /** Toda tela de conta e ativação leva noindex: são páginas de dados pessoais. */
   passo?: { atual: number; total: number };
   /** Páginas institucionais públicas podem ser indexadas. */
   indexavel?: boolean;
 }
-const { titulo, passo, indexavel = false } = Astro.props;
+const {
+  titulo,
+  descricao = 'ConectaPet: identificação NFC para pets, com contato rápido e seguro com o tutor.',
+  passo,
+  indexavel = false,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, 'https://www.conectapet.app.br').href;
 
 import '../styles/base.css';
 ---
@@ -17,9 +24,17 @@ import '../styles/base.css';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content={indexavel ? 'index, follow' : 'noindex, nofollow'} />
+  <meta name="description" content={descricao} />
   <meta name="theme-color" content="#FCEBD2" />
   <meta name="color-scheme" content="light" />
   <title>{titulo} — ConectaPet</title>
+  {indexavel && <link rel="canonical" href={canonical} />}
+  {indexavel && <meta property="og:type" content="website" />}
+  {indexavel && <meta property="og:locale" content="pt_BR" />}
+  {indexavel && <meta property="og:site_name" content="ConectaPet" />}
+  {indexavel && <meta property="og:title" content={`${titulo} — ConectaPet`} />}
+  {indexavel && <meta property="og:description" content={descricao} />}
+  {indexavel && <meta property="og:url" content={canonical} />}
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
