@@ -5,6 +5,7 @@ const paginas = [
   { caminho: '/', prioridade: '1.0', frequencia: 'weekly' },
   { caminho: '/tag-nfc-para-cachorro', prioridade: '0.9', frequencia: 'monthly' },
   { caminho: '/como-configurar-tag-nfc-pet', prioridade: '0.9', frequencia: 'monthly' },
+  { caminho: '/cartaz-pet-perdido', prioridade: '0.9', frequencia: 'monthly' },
   { caminho: '/identificacao-petshop', prioridade: '0.8', frequencia: 'monthly' },
   { caminho: '/privacidade', prioridade: '0.2', frequencia: 'yearly' },
 ];

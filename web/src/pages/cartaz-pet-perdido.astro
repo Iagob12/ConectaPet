@@ -1,0 +1,240 @@
+---
+import ConteudoPublico from '../layouts/ConteudoPublico.astro';
+---
+
+<ConteudoPublico
+  titulo="Gerador gratuito de cartaz de pet perdido"
+  descricao="Crie gratuitamente um cartaz de cachorro ou gato perdido com foto e telefone. A ferramenta da ConectaPet funciona no navegador e não envia seus dados."
+  caminho="/cartaz-pet-perdido"
+  rotulo="Cartaz de pet perdido"
+>
+  <section class="cartaz-hero">
+    <div>
+      <p class="seo-hero__rotulo">Ferramenta gratuita ConectaPet</p>
+      <h1>Crie um cartaz de pet perdido em poucos minutos</h1>
+      <p>Coloque a foto, o local e uma forma de contato. Você vê o resultado na hora e baixa um arquivo pronto para compartilhar ou imprimir.</p>
+      <ul>
+        <li>Sem cadastro e sem aplicativo</li>
+        <li>Foto e telefone não saem do seu aparelho</li>
+        <li>Cartaz legível no celular e no papel</li>
+      </ul>
+    </div>
+    <div class="cartaz-hero__selo" aria-label="Ferramenta gratuita e privada">
+      <strong>100% gratuito</strong>
+      <span>Seus dados ficam neste navegador</span>
+    </div>
+  </section>
+
+  <section class="gerador" aria-labelledby="titulo-gerador">
+    <form class="gerador__form" id="form-cartaz">
+      <div class="gerador__cabecalho">
+        <p class="gerador__passo">Personalize</p>
+        <h2 id="titulo-gerador">Dados que vão aparecer no cartaz</h2>
+        <p>Preencha somente o que você deseja divulgar publicamente.</p>
+      </div>
+
+      <label class="campo-arquivo" for="foto-pet">
+        <span>Foto do pet</span>
+        <input id="foto-pet" type="file" accept="image/jpeg,image/png,image/webp" />
+        <small>Use uma foto nítida, mostrando bem o rosto e as características do animal.</small>
+      </label>
+
+      <label for="nome-pet">Nome do pet
+        <input id="nome-pet" type="text" maxlength="32" value="Nina" autocomplete="off" />
+      </label>
+
+      <label for="local-pet">Onde foi visto por último
+        <input id="local-pet" type="text" maxlength="58" value="Vila Mariana — São Paulo, SP" autocomplete="off" />
+      </label>
+
+      <label for="contato-pet">Telefone ou WhatsApp
+        <input id="contato-pet" type="tel" maxlength="32" value="(11) 99999-0000" autocomplete="tel" />
+      </label>
+
+      <label for="detalhe-pet">Informação importante <span>(opcional)</span>
+        <input id="detalhe-pet" type="text" maxlength="72" value="Está usando coleira azul e pode estar assustada" autocomplete="off" />
+      </label>
+
+      <label for="cor-cartaz">Cor de destaque
+        <select id="cor-cartaz">
+          <option value="#F59E24">Laranja ConectaPet</option>
+          <option value="#2FAFB0">Verde-água ConectaPet</option>
+          <option value="#E5484D">Vermelho de alerta</option>
+        </select>
+      </label>
+
+      <p class="gerador__privacidade"><strong>Privacidade:</strong> o cartaz é criado inteiramente no seu navegador. Nada do que você digitar ou escolher é enviado para a ConectaPet.</p>
+    </form>
+
+    <div class="gerador__resultado" aria-live="polite">
+      <div class="gerador__cabecalho">
+        <p class="gerador__passo">Prévia</p>
+        <h2>Seu cartaz pronto</h2>
+        <p>Confira o telefone antes de compartilhar.</p>
+      </div>
+      <div class="cartaz-canvas">
+        <canvas id="previa-cartaz" width="794" height="1123" role="img" aria-label="Prévia do cartaz de pet perdido"></canvas>
+      </div>
+      <div class="gerador__acoes">
+        <button class="seo-btn" id="baixar-cartaz" type="button">Baixar cartaz em PNG</button>
+        <button class="botao-secundario" id="imprimir-cartaz" type="button">Imprimir cartaz</button>
+      </div>
+      <p class="gerador__dica">Ao publicar, inclua também o bairro, a cidade e peça para as pessoas compartilharem.</p>
+    </div>
+  </section>
+
+  <section class="porque-cartaz" aria-labelledby="titulo-ajuda">
+    <div>
+      <p class="seo-hero__rotulo">Depois de divulgar</p>
+      <h2 id="titulo-ajuda">Facilite o contato quando alguém encontrar</h2>
+      <p>O cartaz ajuda na busca. A tag ConectaPet ajuda no momento do encontro: basta aproximar o celular da coleira para abrir o perfil do pet e falar com o tutor.</p>
+      <a class="seo-btn" href="/tag-nfc-para-cachorro">Conhecer a tag NFC</a>
+    </div>
+    <ol>
+      <li><strong>Compartilhe perto do local</strong><span>Grupos de bairro, clínicas e petshops da região costumam alcançar quem está por perto.</span></li>
+      <li><strong>Mantenha o contato disponível</strong><span>Revise mensagens e chamadas e informe um segundo contato de confiança.</span></li>
+      <li><strong>Atualize quando voltar</strong><span>Avise quem ajudou e retire os cartazes físicos depois que o pet estiver seguro.</span></li>
+    </ol>
+  </section>
+</ConteudoPublico>
+
+<style>
+  .cartaz-hero{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:clamp(28px,6vw,72px);align-items:center;padding:clamp(30px,5vw,58px);border:2px solid var(--navy-900);border-radius:var(--radius-xl);background:linear-gradient(135deg,#fff 0%,#fff 62%,var(--orange-100) 100%);box-shadow:var(--shadow-hard)}
+  .cartaz-hero h1{max-width:17ch;margin:0 0 18px;font-size:clamp(32px,5vw,52px);line-height:1.08}
+  .cartaz-hero p,.cartaz-hero li{font-size:17px;line-height:1.65}
+  .cartaz-hero ul{display:grid;gap:8px;margin:22px 0 0;padding:0;list-style:none}
+  .cartaz-hero li::before{content:'✓';display:inline-grid;place-items:center;width:24px;height:24px;margin-right:9px;border-radius:50%;background:var(--teal-100);color:var(--teal-700);font-weight:800}
+  .cartaz-hero__selo{display:grid;place-items:center;min-height:230px;padding:28px;border:2px solid var(--navy-900);border-radius:50%;background:var(--orange-400);color:var(--navy-900);text-align:center;box-shadow:5px 5px 0 var(--navy-900);transform:rotate(2deg)}
+  .cartaz-hero__selo strong{font:800 28px/1.15 var(--font-title);transform:rotate(-2deg)}
+  .cartaz-hero__selo span{max-width:18ch;font-weight:700;transform:rotate(-2deg)}
+  .gerador{display:grid;grid-template-columns:minmax(300px,.8fr) minmax(360px,1.2fr);gap:30px;margin-top:48px;align-items:start}
+  .gerador__form,.gerador__resultado{padding:clamp(22px,4vw,34px);border:2px solid var(--navy-900);border-radius:var(--radius-xl);background:#fff;box-shadow:4px 4px 0 var(--navy-900)}
+  .gerador__resultado{background:var(--sand-100)}
+  .gerador__cabecalho h2{margin:2px 0 8px;font-size:clamp(23px,3vw,30px)}
+  .gerador__cabecalho>p:last-child{margin:0 0 24px;line-height:1.5}
+  .gerador__passo{margin:0;color:var(--teal-700);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+  .gerador label{display:grid;gap:7px;margin-top:18px;color:var(--navy-900);font-weight:700}
+  .gerador label span{font-weight:500;color:var(--navy-500)}
+  .gerador input,.gerador select{width:100%;min-height:50px;padding:11px 13px;border:2px solid var(--navy-700);border-radius:12px;background:#fff;color:var(--navy-900);font:500 16px/1.3 var(--font-body)}
+  .gerador input:focus-visible,.gerador select:focus-visible{outline:3px solid var(--teal-300);outline-offset:2px}
+  .campo-arquivo small{font-weight:400;line-height:1.45;color:var(--navy-600)}
+  .campo-arquivo input{padding:8px}
+  .campo-arquivo input::file-selector-button{margin-right:10px;padding:8px 12px;border:0;border-radius:8px;background:var(--teal-100);color:var(--teal-700);font-weight:800;cursor:pointer}
+  .gerador__privacidade{margin:24px 0 0;padding:14px 16px;border-radius:12px;background:var(--teal-100);font-size:14px;line-height:1.5}
+  .cartaz-canvas{overflow:hidden;border:2px solid var(--navy-900);border-radius:16px;background:#ddd;box-shadow:3px 3px 0 var(--navy-900)}
+  .cartaz-canvas canvas{display:block;width:100%;height:auto;background:#fff}
+  .gerador__acoes{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+  .gerador__acoes button{cursor:pointer;font:700 15px/1.2 var(--font-body)}
+  .botao-secundario{min-height:50px;padding:10px 22px;border:2px solid var(--navy-900);border-radius:999px;background:#fff;color:var(--navy-900)}
+  .gerador__dica{margin:18px 0 0;font-size:14px;line-height:1.5}
+  .porque-cartaz{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:48px;padding:clamp(28px,5vw,52px);border-radius:var(--radius-xl);background:var(--navy-900);color:#fff}
+  .porque-cartaz h2{margin:0 0 14px;color:#fff;font-size:clamp(26px,4vw,38px);line-height:1.2}
+  .porque-cartaz p{font-size:17px;line-height:1.65}
+  .porque-cartaz ol{display:grid;gap:16px;margin:0;padding:0;list-style:none;counter-reset:dica}
+  .porque-cartaz li{position:relative;padding:18px 18px 18px 58px;border:1px solid rgba(255,255,255,.35);border-radius:14px;counter-increment:dica}
+  .porque-cartaz li::before{content:counter(dica);position:absolute;left:17px;top:18px;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--orange-400);color:var(--navy-900);font-weight:800}
+  .porque-cartaz strong,.porque-cartaz span{display:block}.porque-cartaz span{margin-top:5px;color:#e5eef0;line-height:1.5}
+  @media(max-width:820px){.cartaz-hero,.gerador,.porque-cartaz{grid-template-columns:1fr}.cartaz-hero__selo{min-height:0;border-radius:22px;transform:none}.cartaz-hero__selo strong,.cartaz-hero__selo span{transform:none}}
+  @media(max-width:520px){.gerador__form,.gerador__resultado{padding:20px}.gerador__acoes{display:grid}.gerador__acoes button{width:100%}.porque-cartaz{gap:30px;padding:24px}}
+  @media print{.publica__topo,.publica__breadcrumb,.cartaz-hero,.gerador__form,.gerador__resultado .gerador__cabecalho,.gerador__acoes,.gerador__dica,.porque-cartaz,.publica__rodape{display:none!important}.publica__conteudo,.gerador,.gerador__resultado,.cartaz-canvas{display:block!important;width:100%!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:#fff!important}.cartaz-canvas canvas{width:100%;max-height:100vh;object-fit:contain}}
+</style>
+
+<script>
+  const canvas = document.querySelector('#previa-cartaz');
+  const form = document.querySelector('#form-cartaz');
+  const ctx = canvas?.getContext('2d');
+  let foto = null;
+
+  const campo = (id) => document.querySelector(`#${id}`);
+  const valor = (id, padrao) => campo(id)?.value.trim() || padrao;
+
+  function textoQuebrado(texto, x, y, largura, alturaLinha, maxLinhas = 3) {
+    const palavras = texto.split(/\s+/);
+    const linhas = [];
+    let atual = '';
+    for (const palavra of palavras) {
+      const teste = atual ? `${atual} ${palavra}` : palavra;
+      if (ctx.measureText(teste).width <= largura) atual = teste;
+      else {
+        if (atual) linhas.push(atual);
+        atual = palavra;
+        if (linhas.length === maxLinhas - 1) break;
+      }
+    }
+    if (atual && linhas.length < maxLinhas) linhas.push(atual);
+    linhas.forEach((linha, indice) => ctx.fillText(linha, x, y + indice * alturaLinha));
+    return linhas.length * alturaLinha;
+  }
+
+  function imagemCobrindo(img, x, y, largura, altura) {
+    const escala = Math.max(largura / img.width, altura / img.height);
+    const w = img.width * escala;
+    const h = img.height * escala;
+    ctx.drawImage(img, x + (largura - w) / 2, y + (altura - h) / 2, w, h);
+  }
+
+  function desenharPata(x, y) {
+    ctx.fillStyle = '#2FAFB0';
+    ctx.beginPath();ctx.ellipse(x,y+42,62,50,0,0,Math.PI*2);ctx.fill();
+    [[-58,-22,25],[-20,-55,27],[22,-55,27],[59,-22,25]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(x+dx,y+dy,r,0,Math.PI*2);ctx.fill()});
+  }
+
+  function desenhar() {
+    if (!ctx || !canvas) return;
+    const nome = valor('nome-pet', 'SEU PET');
+    const local = valor('local-pet', 'Informe o bairro e a cidade');
+    const contato = valor('contato-pet', 'Informe um telefone');
+    const detalhe = valor('detalhe-pet', 'Aproxime-se com cuidado');
+    const destaque = campo('cor-cartaz')?.value || '#F59E24';
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#FCF5E9';ctx.fillRect(0,0,794,1123);
+    ctx.fillStyle = destaque;ctx.fillRect(0,0,794,205);
+    ctx.fillStyle = '#21343D';ctx.font = '800 74px Poppins, Arial, sans-serif';ctx.textAlign='center';
+    ctx.fillText('PET PERDIDO',397,102);
+    ctx.font = '700 30px Inter, Arial, sans-serif';ctx.fillText('AJUDE A VOLTAR PARA CASA',397,155);
+
+    ctx.save();ctx.beginPath();ctx.roundRect(77,245,640,480,28);ctx.clip();
+    if (foto) imagemCobrindo(foto,77,245,640,480);
+    else {ctx.fillStyle='#D9F1F0';ctx.fillRect(77,245,640,480);desenharPata(397,448)}
+    ctx.restore();ctx.strokeStyle='#21343D';ctx.lineWidth=7;ctx.beginPath();ctx.roundRect(77,245,640,480,28);ctx.stroke();
+
+    ctx.fillStyle='#21343D';ctx.textAlign='center';ctx.font='800 66px Poppins, Arial, sans-serif';
+    ctx.fillText(nome.toUpperCase(),397,815);
+    ctx.font='600 25px Inter, Arial, sans-serif';textoQuebrado(`Visto por último: ${local}`,397,862,650,34,2);
+    ctx.fillStyle=destaque;ctx.beginPath();ctx.roundRect(65,925,664,94,47);ctx.fill();
+    ctx.fillStyle='#21343D';ctx.font='800 34px Inter, Arial, sans-serif';ctx.fillText(`CONTATO: ${contato}`,397,984);
+    ctx.font='600 21px Inter, Arial, sans-serif';ctx.fillStyle='#21343D';textoQuebrado(detalhe,397,1058,670,27,2);
+    ctx.font='700 16px Inter, Arial, sans-serif';ctx.fillStyle='#52646C';ctx.fillText('Cartaz gratuito criado em conectapet.app.br',397,1101);
+  }
+
+  form?.addEventListener('input', desenhar);
+  campo('foto-pet')?.addEventListener('change', (evento) => {
+    const arquivo = evento.currentTarget.files?.[0];
+    if (!arquivo) { foto = null; desenhar(); return; }
+    if (arquivo.size > 8 * 1024 * 1024) { alert('Escolha uma imagem de até 8 MB.'); evento.currentTarget.value=''; return; }
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      const img = new Image();
+      img.onload = () => { foto = img; desenhar(); };
+      img.src = String(leitor.result);
+    };
+    leitor.readAsDataURL(arquivo);
+  });
+
+  campo('baixar-cartaz')?.addEventListener('click', () => {
+    desenhar();
+    canvas?.toBlob((blob) => {
+      if (!blob) return;
+      const link = document.createElement('a');
+      const nome = valor('nome-pet', 'pet').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      link.href = URL.createObjectURL(blob);
+      link.download = `cartaz-${nome || 'pet-perdido'}-conectapet.png`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }, 'image/png');
+  });
+  campo('imprimir-cartaz')?.addEventListener('click', () => { desenhar(); window.print(); });
+  document.fonts?.ready.then(desenhar);
+  desenhar();
+</script>
