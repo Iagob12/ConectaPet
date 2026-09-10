@@ -538,6 +538,12 @@ body.menu-aberto{ overflow:hidden; }
   margin-top:var(--sp-4); font-size:14px; line-height:1.5; color:rgba(255,255,255,.78);
   max-width:52ch;
 }
+.cartaz-callout{padding:22px 0;background:var(--orange-100);border-bottom:1px solid var(--gray-300)}
+.cartaz-callout__inner{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:20px 24px;border:2px solid var(--navy-900);border-radius:var(--radius-lg);background:#fff;box-shadow:3px 3px 0 var(--navy-900)}
+.cartaz-callout__icon{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--orange-300);color:var(--navy-900)}
+.cartaz-callout__copy strong{display:block;font:700 20px/1.25 var(--font-title);color:var(--navy-900)}
+.cartaz-callout__copy span{display:block;margin-top:4px;color:var(--navy-700);font-size:15px}
+@media(max-width:700px){.cartaz-callout__inner{grid-template-columns:auto 1fr}.cartaz-callout__inner .btn{grid-column:1/-1;width:100%}.cartaz-callout__copy strong{font-size:18px}}
 
 /* ==========================================================================
    9. BARRA DE CONFIANÇA
@@ -1330,6 +1336,19 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
       </div>
     </div>
   </section>
+
+  <aside class="cartaz-callout" aria-label="Ferramenta gratuita para pet perdido">
+    <div class="container">
+      <div class="cartaz-callout__inner">
+        <span class="cartaz-callout__icon" aria-hidden="true"><svg width="26" height="26"><use href="#i-pencil"/></svg></span>
+        <span class="cartaz-callout__copy">
+          <strong>Seu pet está perdido agora?</strong>
+          <span>Crie gratuitamente um cartaz com foto, localização e telefone, pronto para compartilhar.</span>
+        </span>
+        <a class="btn btn--primary" href="/cartaz-pet-perdido">Criar cartaz grátis</a>
+      </div>
+    </div>
+  </aside>
 
   <!-- ===== 3. Configurar a tag recebida ===== -->
   <section class="section setup" id="configurar-tag" aria-labelledby="t-configurar">
