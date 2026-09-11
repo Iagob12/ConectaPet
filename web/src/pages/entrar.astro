@@ -12,6 +12,7 @@ const googleClientId = (typeof process !== 'undefined' ? process.env.GOOGLE_CLIE
 let erro: string | null = null;
 let email = '';
 let manterConectado = false;
+type RespostaGoogle = { cadastroIncompleto: boolean };
 
 if (Astro.request.method === 'POST') {
   let dados: FormData;
@@ -25,13 +26,16 @@ if (Astro.request.method === 'POST') {
   const credencialGoogle = String(dados.get('credencialGoogle') ?? '');
   if (credencialGoogle) {
     manterConectado = dados.get('manterConectadoGoogle') === 'true';
-    const r = await chamar('/api/auth/google', {
+    const r = await chamar<RespostaGoogle>('/api/auth/google', {
       metodo: 'POST', corpo: { credencial: credencialGoogle, manterConectado }, tetoMs: 70_000,
     });
-    if (r.ok) return redirecionarCom(next, r.cookies);
-    erro = r.status === 404
-      ? 'Ainda não existe uma conta ConectaPet com esse e-mail. Crie sua conta primeiro e depois você poderá entrar com o Google.'
-      : r.status === 0 || r.status >= 500
+    if (r.ok) {
+      const destino = r.dados?.cadastroIncompleto
+        ? `/completar-cadastro?next=${encodeURIComponent(next)}`
+        : next;
+      return redirecionarCom(destino, r.cookies);
+    }
+    erro = r.status === 0 || r.status >= 500
         ? 'O login com Google está temporariamente indisponível. Tente novamente em instantes.'
         : 'Não foi possível confirmar sua conta Google. Tente novamente.';
   } else {
@@ -76,7 +80,7 @@ if (Astro.request.method === 'POST') {
     <>
       <section class="google-acesso" aria-labelledby="google-titulo">
         <h2 id="google-titulo">Acesso rápido</h2>
-        <p>Use a conta Google que tem o mesmo e-mail cadastrado na ConectaPet.</p>
+        <p>Entre ou crie sua conta com o Google. No primeiro acesso, pediremos apenas seu telefone.</p>
         <div id="google-signin" data-client-id={googleClientId}></div>
         <p class="google-acesso__estado" aria-live="polite" hidden>Confirmando sua conta Google…</p>
       </section>

@@ -106,7 +106,7 @@ public class ContaControlador {
     @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
     public void encerrar(@Valid @RequestBody SenhaEntrada dto) {
         Usuario u = carregar();
-        if (!encoder.matches(dto.senha(), u.getSenhaHash())) {
+        if (u.getSenhaHash() == null || !encoder.matches(dto.senha(), u.getSenhaHash())) {
             throw new ProblemaException(TipoErro.SEM_PERMISSAO, "Senha incorreta.");
         }
         contaServico.encerrar(u.getId());
@@ -130,7 +130,8 @@ public class ContaControlador {
                 Telefone.paraExibicao(u.getTelefonePrincipal()), u.getTelefonePrincipal(),
                 Telefone.paraExibicao(u.getTelefoneSecundario()), u.getTelefoneSecundario(),
                 Telefone.paraExibicao(u.getWhatsapp()), u.getWhatsapp(),
-                u.emailVerificado(), u.getPapel().name(), plano, limiteContatos);
+                u.emailVerificado(), u.getPapel().name(), u.getSenhaHash() != null,
+                plano, limiteContatos);
     }
 
     public record SenhaEntrada(@jakarta.validation.constraints.NotBlank String senha) {}
@@ -142,6 +143,6 @@ public class ContaControlador {
                                 String telefonePrincipalExibicao, String telefonePrincipalE164,
                                 String telefoneSecundarioExibicao, String telefoneSecundarioE164,
                                 String whatsappExibicao, String whatsappE164,
-                                boolean emailVerificado, String papel, String plano,
+                                boolean emailVerificado, String papel, boolean possuiSenha, String plano,
                                 int limiteContatos) {}
 }

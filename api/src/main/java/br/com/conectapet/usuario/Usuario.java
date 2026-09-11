@@ -29,7 +29,8 @@ public class Usuario {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "senha_hash", nullable = false)
+    /** Nula somente em contas criadas pelo Google antes de definirem senha local. */
+    @Column(name = "senha_hash")
     private String senhaHash;
 
     /** Identidade estavel devolvida pelo Google. O e-mail pode mudar; o sub nao. */

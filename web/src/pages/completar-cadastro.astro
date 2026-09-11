@@ -1,0 +1,65 @@
+---
+export const prerender = false;
+
+import Base from '../layouts/Base.astro';
+import { destinoInterno, verDepois } from '../lib/api';
+import { type Conta } from '../lib/painel';
+
+const next = destinoInterno(Astro.url.searchParams.get('next') || '/app');
+let erro: string | null = null;
+let campos: Record<string, string> = {};
+let telefone = '';
+
+const rc = await Astro.locals.api<Conta>('/api/me');
+if (rc.status === 401) {
+  return Astro.redirect(`/entrar?next=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+if (!rc.ok || !rc.dados) return Astro.redirect('/entrar');
+const conta = rc.dados;
+
+if (Astro.request.method === 'POST') {
+  let dados: FormData;
+  try {
+    dados = await Astro.request.formData();
+  } catch {
+    return new Response('Requisicao invalida.', { status: 400 });
+  }
+  telefone = String(dados.get('telefonePrincipal') ?? '');
+  const r = await Astro.locals.api('/api/me', {
+    metodo: 'PUT',
+    corpo: {
+      nome: conta.nome,
+      telefonePrincipal: telefone,
+      telefoneSecundario: conta.telefoneSecundarioE164,
+      whatsapp: telefone,
+    },
+  });
+  if (r.ok) return verDepois(next);
+  erro = r.erro;
+  campos = r.campos;
+}
+---
+
+<Base titulo="Complete seu cadastro" passo={{ atual: 1, total: 1 }}>
+  <p class="sobretitulo">Primeiro acesso com Google</p>
+  <h1>Só falta seu <span>telefone</span></h1>
+  <p class="sub">
+    Olá, {conta.nome}. Este número permite que quem encontrar seu pet fale com você.
+    Você poderá alterar a visibilidade depois.
+  </p>
+
+  {erro && <p class="aviso" role="alert">{erro}</p>}
+
+  <form class="cartao" method="POST">
+    <div class="campo">
+      <label for="telefonePrincipal">Telefone com WhatsApp</label>
+      <input id="telefonePrincipal" name="telefonePrincipal" type="tel"
+             autocomplete="tel" inputmode="tel" placeholder="(11) 99999-0000"
+             required autofocus value={telefone}
+             aria-invalid={campos.telefonePrincipal ? 'true' : undefined} />
+      {campos.telefonePrincipal && <p class="erro-campo">{campos.telefonePrincipal}</p>}
+      <p class="ajuda">Usaremos o mesmo número para ligação e WhatsApp. Você pode separar os dois depois.</p>
+    </div>
+    <button class="btn btn--principal" type="submit">Concluir e continuar</button>
+  </form>
+</Base>

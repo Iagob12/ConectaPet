@@ -77,15 +77,16 @@ public class AutenticacaoServico {
     }
 
     /**
-     * Vincula uma conta existente a uma identidade Google ja verificada.
+     * Entra com uma identidade Google ja verificada e cria a conta quando este
+     * e o primeiro contato da pessoa com a ConectaPet.
      *
-     * Nao cria conta incompleta: telefone e senha continuam sendo recolhidos no
-     * cadastro normal. Depois do primeiro vinculo, o subject estavel impede que
-     * uma eventual reutilizacao do endereco de e-mail em um Google Workspace
-     * entregue a conta ConectaPet a outra pessoa.
+     * O subject, e nao apenas o e-mail, vira a identidade estavel depois do
+     * primeiro acesso. Uma conta criada pelo Google nao recebe uma senha falsa:
+     * senha ausente e um estado explicito, e a pessoa pode criar uma depois pelo
+     * fluxo normal de recuperacao.
      */
     @Transactional
-    public Usuario autenticarGoogle(String email, String subject) {
+    public ResultadoGoogle autenticarGoogle(String email, String nome, String subject) {
         Optional<Usuario> jaVinculado = usuarios.findByGoogleSubjectAndExcluidoEmIsNull(subject);
         if (jaVinculado.isPresent()) {
             if (!jaVinculado.get().isAtivo()) {
@@ -93,11 +94,28 @@ public class AutenticacaoServico {
             }
             // O subject identifica a pessoa; o e-mail pode mudar na conta
             // Google. Nao troca o e-mail cadastrado silenciosamente.
-            return jaVinculado.get();
+            return new ResultadoGoogle(jaVinculado.get(), false);
         }
 
-        Usuario u = usuarios.findByEmailAndExcluidoEmIsNull(normalizarEmail(email))
-                .orElseThrow(() -> new ProblemaException(TipoErro.CONTA_NAO_ENCONTRADA));
+        String emailNormalizado = normalizarEmail(email);
+        Optional<Usuario> contaDoEmail = usuarios.findByEmailAndExcluidoEmIsNull(emailNormalizado);
+        if (contaDoEmail.isEmpty()) {
+            // Um cadastro excluido continua ocupando as chaves unicas para que
+            // identidade e historico nao sejam entregues a outra pessoa. Evita
+            // transformar essa colisao esperada em erro 500 do banco.
+            if (usuarios.existsByEmail(emailNormalizado) || usuarios.existsByGoogleSubject(subject)) {
+                throw new ProblemaException(TipoErro.LOGIN_GOOGLE_INVALIDO);
+            }
+            Usuario novo = new Usuario();
+            novo.setEmail(emailNormalizado);
+            novo.setNome(normalizarNomeGoogle(nome));
+            novo.setSenhaHash(null);
+            novo.setGoogleSubject(subject);
+            novo.setEmailVerificadoEm(Instant.now());
+            return new ResultadoGoogle(usuarios.save(novo), true);
+        }
+
+        Usuario u = contaDoEmail.get();
 
         if (!u.isAtivo()) {
             throw new ProblemaException(TipoErro.LOGIN_GOOGLE_INVALIDO);
@@ -118,7 +136,7 @@ public class AutenticacaoServico {
         // O nome cadastrado pela pessoa continua sendo a fonte de verdade. O
         // nome do Google so serve para validar que o perfil recebido e completo.
         if (mudou) usuarios.save(u);
-        return u;
+        return new ResultadoGoogle(u, false);
     }
 
     /** Novo login abre uma familia nova de refresh. */
@@ -202,5 +220,13 @@ public class AutenticacaoServico {
         return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
+    private String normalizarNomeGoogle(String nome) {
+        String limpo = nome == null ? "" : nome.trim().replaceAll("\\s+", " ");
+        int pontos = limpo.codePointCount(0, limpo.length());
+        if (pontos <= 120) return limpo;
+        return limpo.substring(0, limpo.offsetByCodePoints(0, 120));
+    }
+
     public record Rotacao(Long usuarioId, String tokenNovo) {}
+    public record ResultadoGoogle(Usuario usuario, boolean criado) {}
 }

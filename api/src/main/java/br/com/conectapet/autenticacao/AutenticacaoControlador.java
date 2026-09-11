@@ -101,8 +101,12 @@ public class AutenticacaoControlador {
     @PostMapping("/google")
     public ResponseEntity<UsuarioResposta> loginGoogle(@Valid @RequestBody GoogleEntrada dto) {
         GoogleIdentidadeServico.PerfilGoogle perfil = google.verificar(dto.credencial());
-        Usuario u = servico.autenticarGoogle(perfil.email(), perfil.subject());
-        return ResponseEntity.ok().headers(comSessao(u, dto.manterConectado())).body(UsuarioResposta.de(u));
+        AutenticacaoServico.ResultadoGoogle resultado =
+                servico.autenticarGoogle(perfil.email(), perfil.nome(), perfil.subject());
+        Usuario u = resultado.usuario();
+        return ResponseEntity.status(resultado.criado() ? HttpStatus.CREATED : HttpStatus.OK)
+                .headers(comSessao(u, dto.manterConectado()))
+                .body(UsuarioResposta.de(u));
     }
 
     @PostMapping("/refresh")
@@ -199,10 +203,12 @@ public class AutenticacaoControlador {
             @NotBlank String token,
             @NotBlank @Size(min = 10, max = 100, message = "A senha precisa de ao menos 10 caracteres") String senha) {}
 
-    public record UsuarioResposta(UUID uuid, String email, String nome, boolean emailVerificado, String papel) {
+    public record UsuarioResposta(UUID uuid, String email, String nome, boolean emailVerificado,
+                                  String papel, boolean cadastroIncompleto) {
         static UsuarioResposta de(Usuario u) {
             return new UsuarioResposta(u.getUuid(), u.getEmail(), u.getNome(),
-                    u.emailVerificado(), u.getPapel().name());
+                    u.emailVerificado(), u.getPapel().name(),
+                    u.getTelefonePrincipal() == null || u.getTelefonePrincipal().isBlank());
         }
     }
 }

@@ -20,6 +20,8 @@ public interface UsuarioRepositorio extends JpaRepository<Usuario, Long> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByGoogleSubject(String googleSubject);
+
     /**
      * Visao administrativa das contas ainda existentes.
      *

@@ -195,17 +195,24 @@ const reenviado = Astro.url.searchParams.has('verificacao');
 
     {erroEncerrar && <p class="erro-campo" style="color:#fff">{erroEncerrar}</p>}
 
-    <form method="POST">
-      <input type="hidden" name="acao" value="encerrar" />
-      <div class="campo">
-        <label for="senha-encerrar" style="color:#fff">Confirme sua senha</label>
-        <input id="senha-encerrar" name="senha" type="password" required
-               autocomplete="current-password" />
-      </div>
-      <button class="btn btn--secundario" style="margin-top:0" type="submit">
-        Encerrar minha conta para sempre
-      </button>
-    </form>
+    {conta.possuiSenha ? (
+      <form method="POST">
+        <input type="hidden" name="acao" value="encerrar" />
+        <div class="campo">
+          <label for="senha-encerrar" style="color:#fff">Confirme sua senha</label>
+          <input id="senha-encerrar" name="senha" type="password" required
+                 autocomplete="current-password" />
+        </div>
+        <button class="btn btn--secundario" style="margin-top:0" type="submit">
+          Encerrar minha conta para sempre
+        </button>
+      </form>
+    ) : (
+      <p class="cartao__nota" style="color:#fff">
+        Sua conta usa o Google e ainda não possui senha. Para confirmar uma exclusão,
+        <a href="/esqueci-senha" style="color:#fff;font-weight:700">crie uma senha pelo seu e-mail</a> primeiro.
+      </p>
+    )}
   </section>
 
   <p class="rodape-link"><a class="link" href="/sair">Sair da conta</a></p>

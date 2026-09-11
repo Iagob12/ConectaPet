@@ -296,7 +296,7 @@ describe('vitrine e telas públicas', () => {
     expect(html).toContain('id="google-signin"');
     expect(html).toContain('https://accounts.google.com/gsi/client');
     expect(html).toContain('name="credencialGoogle"');
-    expect(html).toContain('Use a conta Google que tem o mesmo e-mail cadastrado');
+    expect(html).toContain('Entre ou crie sua conta com o Google');
     expect(html).toContain('name="senha"');
   });
 

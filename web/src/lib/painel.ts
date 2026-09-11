@@ -5,7 +5,7 @@ export type Conta = {
   telefonePrincipalExibicao: string | null; telefonePrincipalE164: string | null;
   telefoneSecundarioExibicao: string | null; telefoneSecundarioE164: string | null;
   whatsappExibicao: string | null; whatsappE164: string | null;
-  emailVerificado: boolean; papel: string;
+  emailVerificado: boolean; papel: string; possuiSenha: boolean;
   /** Sempre 'FREE' nesta versao: nao ha plano pago. O campo fica para o dia
    *  em que houver, mas nenhuma tela decide nada com ele. */
   plano: string;

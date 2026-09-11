@@ -48,7 +48,7 @@ public class ReautenticacaoServico {
         var u = usuarios.findById(admin.id())
                 .orElseThrow(() -> new ProblemaException(TipoErro.SEM_PERMISSAO));
 
-        if (!encoder.matches(senha, u.getSenhaHash())) {
+        if (u.getSenhaHash() == null || !encoder.matches(senha, u.getSenhaHash())) {
             throw new ProblemaException(TipoErro.SEM_PERMISSAO, "Senha incorreta.");
         }
 
