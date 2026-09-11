@@ -77,11 +77,11 @@ services:
       # três aqui — e lembre que URL_PUBLICA_TAG já gravada em chip não volta
       # atrás: tag em campo continua apontando para o endereço antigo.
       - key: URL_PUBLICA_TAG
-        value: https://conecta-pet-inky.vercel.app/p/
+        value: https://www.conectapet.app.br/p/
       - key: URL_SITE
-        value: https://conecta-pet-inky.vercel.app
+        value: https://www.conectapet.app.br
       - key: CORS_ORIGENS
-        value: https://conecta-pet-inky.vercel.app
+        value: https://www.conectapet.app.br,https://conectapet.app.br,https://conecta-pet-inky.vercel.app
 
       # ---- Proxies a frente da aplicacao ----
       # TRES, e o numero saiu de medicao, nao de palpite. O diagnostico
