@@ -263,11 +263,22 @@ describe('vitrine e telas públicas', () => {
     expect(html).toContain('"@type": "WebSite"');
   });
 
+  it('redireciona o domínio antigo da Vercel para o domínio oficial', async () => {
+    const r = await pegar('/tag-nfc-para-cachorro?origem=antiga', {
+      redirect: 'manual',
+      headers: { 'X-Forwarded-Host': 'conecta-pet-inky.vercel.app' },
+    });
+    expect(r.status).toBe(308);
+    expect(r.headers.get('location')).toBe('https://www.conectapet.app.br/tag-nfc-para-cachorro?origem=antiga');
+  });
+
   it.each([
+    ['/chaveiro-nfc-pet', 'Chaveiro NFC para pet'],
     ['/tag-nfc-para-cachorro', 'Tag NFC para cachorro e gato'],
     ['/como-configurar-tag-nfc-pet', 'Como configurar a tag NFC'],
     ['/cartaz-pet-perdido', 'Crie um cartaz de pet perdido'],
     ['/identificacao-petshop', 'Identificação para petshops'],
+    ['/sobre-a-conectapet', 'ConectaPet: identificação simples'],
   ])('%s oferece conteúdo indexável para uma busca específica', async (caminho, trecho) => {
     const r = await pegar(caminho);
     const html = await r.text();
@@ -284,8 +295,11 @@ describe('vitrine e telas públicas', () => {
     expect(robots).toContain('Allow: /');
     expect(robots).toContain('https://www.conectapet.app.br/sitemap.xml');
     expect(sitemap).toContain('https://www.conectapet.app.br/tag-nfc-para-cachorro');
+    expect(sitemap).toContain('https://www.conectapet.app.br/chaveiro-nfc-pet');
     expect(sitemap).toContain('https://www.conectapet.app.br/como-configurar-tag-nfc-pet');
     expect(sitemap).toContain('https://www.conectapet.app.br/cartaz-pet-perdido');
+    expect(sitemap).toContain('https://www.conectapet.app.br/sobre-a-conectapet');
+    expect(sitemap).toContain('<lastmod>2026-09-10</lastmod>');
     expect(sitemap).not.toContain('/app');
     expect(sitemap).not.toContain('/admin');
     expect(sitemap).not.toContain('/p/');

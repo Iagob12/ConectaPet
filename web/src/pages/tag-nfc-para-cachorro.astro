@@ -1,5 +1,21 @@
 ---
 import ConteudoPublico from '../layouts/ConteudoPublico.astro';
+
+const perguntas = [
+  ['A tag funciona sem bateria?', 'Sim. A leitura NFC usa a energia do próprio celular durante a aproximação.'],
+  ['Funciona em cachorro e gato?', 'Sim. A identificação pode ser usada na coleira de cães e gatos, respeitando o tamanho adequado para cada animal.'],
+  ['E se o celular não tiver NFC?', 'A tag também possui QR Code, oferecendo uma segunda forma de abrir o perfil.'],
+  ['Os dados podem ser alterados?', 'Sim. O tutor atualiza o perfil pela própria conta e continua usando a mesma tag.'],
+];
+const schemaFaq = {
+  '@type': 'FAQPage',
+  '@id': 'https://www.conectapet.app.br/tag-nfc-para-cachorro#duvidas',
+  mainEntity: perguntas.map(([name, text]) => ({
+    '@type': 'Question',
+    name,
+    acceptedAnswer: { '@type': 'Answer', text },
+  })),
+};
 ---
 
 <ConteudoPublico
@@ -7,6 +23,7 @@ import ConteudoPublico from '../layouts/ConteudoPublico.astro';
   descricao="Entenda como uma tag NFC para cachorro ou gato abre o perfil do pet e permite falar com o tutor sem aplicativo, bateria ou mensalidade."
   caminho="/tag-nfc-para-cachorro"
   rotulo="Tag NFC para pets"
+  schemaAdicional={schemaFaq}
 >
   <section class="seo-hero">
     <div>
@@ -45,10 +62,7 @@ import ConteudoPublico from '../layouts/ConteudoPublico.astro';
 
       <section class="seo-faq" aria-labelledby="faq-tag">
         <h2 id="faq-tag">Dúvidas sobre identificação NFC para pets</h2>
-        <details><summary>A tag funciona sem bateria?</summary><p>Sim. A leitura NFC usa a energia do próprio celular durante a aproximação.</p></details>
-        <details><summary>Funciona em cachorro e gato?</summary><p>Sim. A identificação pode ser usada na coleira de cães e gatos, respeitando o tamanho adequado para cada animal.</p></details>
-        <details><summary>E se o celular não tiver NFC?</summary><p>A tag também possui QR Code, oferecendo uma segunda forma de abrir o perfil.</p></details>
-        <details><summary>Os dados podem ser alterados?</summary><p>Sim. O tutor atualiza o perfil pela própria conta e continua usando a mesma tag.</p></details>
+        {perguntas.map(([pergunta, resposta]) => <details><summary>{pergunta}</summary><p>{resposta}</p></details>)}
       </section>
     </div>
     <aside class="seo-article__aside">

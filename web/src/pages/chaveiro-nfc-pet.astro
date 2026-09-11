@@ -1,0 +1,67 @@
+---
+import ConteudoPublico from '../layouts/ConteudoPublico.astro';
+
+const schemaProduto = {
+  '@type': 'Product',
+  '@id': 'https://www.conectapet.app.br/chaveiro-nfc-pet#produto',
+  name: 'Chaveiro NFC para pet ConectaPet',
+  alternateName: ['Tag NFC para pet', 'Chaveiro de identificação para cachorro e gato'],
+  description: 'Chaveiro de identificação com NFC e QR Code para a coleira de cães e gatos, com perfil online e contatos atualizáveis.',
+  image: [
+    'https://www.conectapet.app.br/imagens/home-resgate-conectapet.webp',
+    'https://www.conectapet.app.br/imagens/home-ativacao-nfc.webp',
+  ],
+  brand: { '@type': 'Brand', name: 'ConectaPet' },
+  category: 'Identificação para animais de estimação',
+};
+---
+
+<ConteudoPublico
+  titulo="Chaveiro NFC para pet: identificação para cachorro e gato"
+  descricao="Conheça o chaveiro NFC para pet ConectaPet: identificação com perfil online, ligação e WhatsApp, sem aplicativo, bateria ou mensalidade obrigatória."
+  caminho="/chaveiro-nfc-pet"
+  rotulo="Chaveiro NFC para pet"
+  imagem="/imagens/home-ativacao-nfc.webp"
+  schemaAdicional={schemaProduto}
+>
+  <section class="seo-hero">
+    <div>
+      <p class="seo-hero__rotulo">Identificação na coleira</p>
+      <h1>Chaveiro NFC para pet: seu contato a uma aproximação</h1>
+      <p class="seo-hero__lead">A ConectaPet é um chaveiro de identificação para cachorro e gato com NFC e QR Code. Se o animal se perder, quem o encontrar abre o perfil no celular e fala com o tutor por ligação ou WhatsApp.</p>
+      <a class="seo-btn" href="/#chamada-final">Quero um chaveiro ConectaPet</a>
+    </div>
+    <img src="/imagens/home-ativacao-nfc.webp" alt="Celular lendo o chaveiro NFC ConectaPet na coleira de um cachorro" width="800" height="600" />
+  </section>
+
+  <article class="seo-article">
+    <div class="seo-article__body">
+      <h2>O que o chaveiro mostra?</h2>
+      <p>O perfil pode apresentar foto e nome do pet, telefone, botão de WhatsApp, segundo contato e cuidados importantes definidos pelo tutor. A pessoa que está ajudando não precisa instalar aplicativo nem fazer login.</p>
+
+      <h2>NFC e QR Code no mesmo identificador</h2>
+      <p>Em celulares compatíveis, basta aproximar a parte traseira do aparelho. O QR Code oferece outra forma de acesso quando a leitura por aproximação não está disponível. Nos dois casos, o perfil abre diretamente no navegador.</p>
+
+      <h2>Por que usar na coleira?</h2>
+      <ul>
+        <li><strong>Contato direto:</strong> ligação e WhatsApp ficam em destaque para quem encontrou.</li>
+        <li><strong>Dados atualizáveis:</strong> se o telefone mudar, o tutor edita o perfil sem trocar o chaveiro.</li>
+        <li><strong>Sem bateria:</strong> o NFC não precisa ser carregado.</li>
+        <li><strong>Sem mensalidade obrigatória:</strong> o perfil básico continua disponível sem cobrança recorrente.</li>
+      </ul>
+
+      <h2>Chaveiro NFC não é rastreador GPS</h2>
+      <p>O produto não acompanha a localização do animal. Sua função é tornar a identificação clara e facilitar a conversa entre quem encontrou e o tutor. Ele também não substitui os cuidados preventivos, a coleira adequada ou o microchip.</p>
+
+      <h2>Como ativar ao receber</h2>
+      <p>Desbloqueie o celular, confirme que o NFC está ligado e aproxime-o do próprio chaveiro. Toque na notificação da ConectaPet, crie sua conta, preencha o perfil e confirme o cadastro. Veja o <a href="/como-configurar-tag-nfc-pet">guia ilustrado de configuração</a>.</p>
+
+      <p>Quer conhecer todos os detalhes da tecnologia? Leia também <a href="/tag-nfc-para-cachorro">como funciona a tag NFC para cachorro e gato</a>.</p>
+    </div>
+    <aside class="seo-article__aside">
+      <strong>Já está com o chaveiro?</strong>
+      <p>A ativação começa ao aproximar o celular do próprio chaveiro, e não pelo QR Code do cartão.</p>
+      <a class="seo-btn" href="/como-configurar-tag-nfc-pet">Configurar minha tag</a>
+    </aside>
+  </article>
+</ConteudoPublico>

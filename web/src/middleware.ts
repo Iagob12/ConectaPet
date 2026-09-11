@@ -3,6 +3,8 @@ import { chamar, chamarBruto, mesclarCookies, temCookie, type Opcoes, type Respo
 
 const SESSAO = 'cp_sessao';
 const REFRESH = 'cp_refresh';
+const HOST_ANTIGO = 'conecta-pet-inky.vercel.app';
+const ORIGEM_OFICIAL = 'https://www.conectapet.app.br';
 
 /**
  * Renovacao de sessao no servidor, transparente para a pagina.
@@ -16,6 +18,21 @@ const REFRESH = 'cp_refresh';
  * final — inclusive quando a pagina responde com um redirect proprio.
  */
 export const onRequest = defineMiddleware(async (ctx, next) => {
+  // O domínio gratuito da Vercel continua tecnicamente acessível mesmo depois
+  // da entrada do domínio próprio. Redirecionar as páginas de leitura evita
+  // duas URLs concorrendo pelo mesmo conteúdo e concentra links, histórico e
+  // demais sinais de busca no endereço oficial da marca.
+  const hostRecebido = (ctx.request.headers.get('x-forwarded-host') ?? ctx.url.hostname).split(':')[0].toLowerCase();
+  if (['GET', 'HEAD'].includes(ctx.request.method) && hostRecebido === HOST_ANTIGO) {
+    const destino = new URL(ctx.url.pathname + ctx.url.search, ORIGEM_OFICIAL);
+    const redirecionamento = new Response(null, {
+      status: 308,
+      headers: { Location: destino.href, 'Cache-Control': 'public, max-age=3600' },
+    });
+    aplicarCabecalhosDeSeguranca(redirecionamento);
+    return redirecionamento;
+  }
+
   // Formulários autenticados usam cookies HttpOnly. SameSite=Lax já barra a
   // maioria dos POSTs vindos de outro site, mas não deve ser a única linha de
   // defesa: navegadores antigos e ambientes que tratam subdomínios de forma

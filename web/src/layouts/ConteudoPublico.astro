@@ -7,12 +7,14 @@ interface Props {
   caminho: string;
   rotulo: string;
   imagem?: string;
+  schemaAdicional?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { titulo, descricao, caminho, rotulo, imagem = '/imagens/home-resgate-conectapet.webp' } = Astro.props;
+const { titulo, descricao, caminho, rotulo, imagem = '/imagens/home-resgate-conectapet.webp', schemaAdicional } = Astro.props;
 const origem = 'https://www.conectapet.app.br';
 const canonical = new URL(caminho, origem).href;
 const imagemAbsoluta = new URL(imagem, origem).href;
+const extras = schemaAdicional ? (Array.isArray(schemaAdicional) ? schemaAdicional : [schemaAdicional]) : [];
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -33,6 +35,7 @@ const schema = {
         { '@type': 'ListItem', position: 2, name: titulo, item: canonical },
       ],
     },
+    ...extras,
   ],
 };
 ---
@@ -74,8 +77,8 @@ const schema = {
         </span>
       </a>
       <nav aria-label="Navegação principal">
+        <a href="/chaveiro-nfc-pet">Chaveiro NFC</a>
         <a href="/como-configurar-tag-nfc-pet">Configurar tag</a>
-        <a href="/tag-nfc-para-cachorro">Como funciona</a>
         <a href="/identificacao-petshop">Para parceiros</a>
       </nav>
       <a class="publica__acao" href="/#chamada-final">Quero minha tag</a>
@@ -89,6 +92,7 @@ const schema = {
     <footer class="publica__rodape">
       <strong>ConectaPet</strong>
       <span>Identificação que aproxima e protege.</span>
+      <a href="/sobre-a-conectapet">Sobre a ConectaPet</a>
       <a href="/privacidade">Política de privacidade</a>
     </footer>
   </div>

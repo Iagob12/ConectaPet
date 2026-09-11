@@ -1,0 +1,53 @@
+---
+import ConteudoPublico from '../layouts/ConteudoPublico.astro';
+
+const schemaOrganizacao = {
+  '@type': 'AboutPage',
+  '@id': 'https://www.conectapet.app.br/sobre-a-conectapet#sobre',
+  about: { '@id': 'https://www.conectapet.app.br/#organizacao' },
+};
+---
+
+<ConteudoPublico
+  titulo="Sobre a ConectaPet"
+  descricao="Conheça a ConectaPet, marca brasileira de identificação NFC para pets criada para aproximar quem encontra um animal do seu tutor."
+  caminho="/sobre-a-conectapet"
+  rotulo="Sobre a ConectaPet"
+  schemaAdicional={schemaOrganizacao}
+>
+  <section class="seo-hero">
+    <div>
+      <p class="seo-hero__rotulo">Aproxima e protege</p>
+      <h1>ConectaPet: identificação simples no momento que mais importa</h1>
+      <p class="seo-hero__lead">A ConectaPet é uma marca brasileira de identificação NFC para animais de estimação. Nosso produto ajuda quem encontra um cachorro ou gato a reconhecer o pet e falar diretamente com o tutor.</p>
+      <a class="seo-btn" href="/tag-nfc-para-cachorro">Conhecer a tag NFC</a>
+    </div>
+    <img src="/imagens/home-resgate-conectapet.webp" alt="Pessoa usando a ConectaPet para acessar o perfil de um cachorro encontrado" width="800" height="600" />
+  </section>
+
+  <article class="seo-article">
+    <div class="seo-article__body">
+      <h2>Por que a ConectaPet existe</h2>
+      <p>Quando um pet se perde, a pessoa que o encontra precisa saber rapidamente com quem falar. Uma gravação pode ficar desatualizada, enquanto a leitura de um microchip costuma depender de uma clínica ou ONG. A ConectaPet coloca um caminho de contato acessível na própria coleira.</p>
+
+      <h2>Como aproximamos pessoas e pets</h2>
+      <p>O tutor cadastra o perfil do animal e escolhe quais informações serão públicas. Quem encontrar aproxima o celular da tag ou lê o QR Code e abre uma página com ações claras para ligar, chamar no WhatsApp ou informar o encontro.</p>
+
+      <h2>Princípios do produto</h2>
+      <ul>
+        <li><strong>Facilidade:</strong> a página abre no navegador, sem aplicativo para quem encontrou.</li>
+        <li><strong>Clareza:</strong> contatos e informações importantes aparecem de forma direta.</li>
+        <li><strong>Controle:</strong> o tutor atualiza os dados e decide o que fica visível.</li>
+        <li><strong>Acessibilidade:</strong> a experiência é pensada para diferentes telas e situações de uso.</li>
+      </ul>
+
+      <h2>ConectaPet para tutores e parceiros</h2>
+      <p>A identificação pode acompanhar cães e gatos e também integrar ações de petshops, clínicas veterinárias e ONGs. Parceiros podem conhecer as opções na página de <a href="/identificacao-petshop">identificação para petshops e organizações</a>.</p>
+    </div>
+    <aside class="seo-article__aside">
+      <strong>Fale com a ConectaPet</strong>
+      <p>Dúvidas sobre o produto, ativação ou parcerias podem ser atendidas diretamente pela equipe.</p>
+      <a class="seo-btn" href="https://wa.me/5567984360414?text=Ol%C3%A1!%20Conheci%20a%20ConectaPet%20pelo%20site%20e%20quero%20saber%20mais.">Conversar no WhatsApp</a>
+    </aside>
+  </article>
+</ConteudoPublico>
