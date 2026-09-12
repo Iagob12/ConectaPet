@@ -1,5 +1,35 @@
 ---
 import ConteudoPublico from '../layouts/ConteudoPublico.astro';
+
+const origem = 'https://www.conectapet.app.br';
+const passos = [
+  ['Ative o NFC', 'No Android, ligue o NFC nas configurações. No iPhone compatível, desbloqueie a tela.', '/imagens/ativacao-passo-1-nfc.webp'],
+  ['Encoste o celular no chaveiro', 'Aproxime a parte superior traseira do aparelho da tag por dois ou três segundos.', '/imagens/ativacao-passo-2-aproximar.webp'],
+  ['Toque no aviso', 'Abra a notificação da ConectaPet que aparecer no celular.', '/imagens/ativacao-passo-3-aviso.webp'],
+  ['Cadastre e confirme', 'Preencha o perfil e finalize no botão Confirmar cadastro do pet.', '/imagens/ativacao-passo-4-cadastro.webp'],
+];
+const perguntas = [
+  ['Onde devo encostar o celular?', 'Tente a região superior traseira e mova o aparelho lentamente sobre a tag.'],
+  ['A capa pode atrapalhar?', 'Capas muito grossas ou com partes metálicas podem reduzir a leitura. Retire a capa e tente novamente.'],
+  ['Posso usar o código da tag?', 'Sim. Abra a página de ativação e digite o código impresso quando a leitura por aproximação não estiver disponível.'],
+];
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${origem}/como-configurar-tag-nfc-pet#passo-a-passo`,
+    name: 'Como configurar a tag NFC do seu pet',
+    description: 'Passo a passo para ativar, aproximar e cadastrar a tag NFC ConectaPet.',
+    totalTime: 'PT5M',
+    step: passos.map(([name, text, image], indice) => ({
+      '@type': 'HowToStep', position: indice + 1, name, text, image: `${origem}${image}`,
+    })),
+  },
+  {
+    '@type': 'FAQPage',
+    '@id': `${origem}/como-configurar-tag-nfc-pet#duvidas`,
+    mainEntity: perguntas.map(([name, text]) => ({ '@type': 'Question', name, acceptedAnswer: { '@type': 'Answer', text } })),
+  },
+];
 ---
 
 <ConteudoPublico
@@ -8,6 +38,7 @@ import ConteudoPublico from '../layouts/ConteudoPublico.astro';
   caminho="/como-configurar-tag-nfc-pet"
   rotulo="Como configurar"
   imagem="/imagens/ativacao-passo-2-aproximar.webp"
+  schemaAdicional={schema}
 >
   <section class="seo-hero">
     <div>

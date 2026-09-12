@@ -11,9 +11,8 @@
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="google-site-verification" content="wzbNk2yFO65geE_dq5n-od55f3N8H1eCRREnOqNKfBQ">
 <link rel="canonical" href="https://www.conectapet.app.br/">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap">
+<link rel="preload" as="image" href="/imagens/home-resgate-conectapet.webp" fetchpriority="high">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="ConectaPet | Chaveiro e Tag NFC para Cachorro e Gato">
@@ -59,10 +58,9 @@
 <!--
   ConectaPet — landing page (arquivo único, sem dependências externas).
 
-  TIPOGRAFIA: o design system pede Archivo Black (display) + Inter (corpo).
-  Como a página não pode ter dependências externas, as famílias são declaradas
-  com fallback de sistema. Para usar as fontes reais, adicione no <head>:
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+  TIPOGRAFIA: Inter + Poppins, declaradas no CSS com font-display:swap para o
+  texto aparecer imediatamente, sem uma folha de estilos externa bloqueando a
+  primeira pintura.
 
   LOGO: a arte oficial é /marca.png (só o símbolo) e /logo.png (símbolo + nome
   + slogan), recortadas do arquivo original. Ela aparece no herói e no
@@ -75,6 +73,9 @@
 -->
 
 <style>
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;src:url("https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2") format("woff2")}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:700;font-display:swap;src:url("https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2") format("woff2")}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:800;font-display:swap;src:url("https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLDD4Z1xlFQ.woff2") format("woff2")}
 /* ==========================================================================
    1. TOKENS  (Design System ConectaPet — seção 6)
    ========================================================================== */
@@ -1266,7 +1267,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   <!-- ===== 1. Menu principal ===== -->
   <header class="site-header" id="topo">
     <div class="container nav">
-      <a class="brand" href="#topo" aria-label="ConectaPet — ir para o início">
+      <a class="brand" href="#topo" aria-label="ConectaPet — Aproxima e Protege, ir para o início">
         <img class="brand__mark brand__mark--cor" src="/marca.png" srcset="/marca.png 1x, /marca@2x.png 2x"
              width="46" height="42" alt="" decoding="async">
         <img class="brand__mark brand__mark--claro" src="/marca-branca.png" srcset="/marca-branca.png 1x, /marca-branca@2x.png 2x"
@@ -1862,21 +1863,21 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
       <ul class="grid grid--3 list-plain">
         <li class="card card--peach card--link post reveal">
           <div class="card__media"><img src="/imagens/home-resgate-conectapet.webp" width="700" height="525" loading="lazy" alt="Pessoa usando o celular para identificar um cachorro encontrado"></div>
-          <p class="post__meta">Pet encontrado · 6 min</p>
-          <h3 class="h3"><a href="/blog/achei-um-cachorro-perdido-o-que-fazer">Achei um cachorro perdido: o que fazer?</a></h3>
-          <p class="post__resumo">Como proteger o animal, procurar o tutor e divulgar o encontro.</p>
+          <p class="post__meta">Pet perdido · 8 min</p>
+          <h3 class="h3"><a href="/blog/cachorro-fugiu-como-procurar">Meu cachorro fugiu: como procurar</a></h3>
+          <p class="post__resumo">Um plano prático para as primeiras horas da busca.</p>
         </li>
         <li class="card card--mint card--link post reveal">
           <div class="card__media"><img src="/imagens/home-ativacao-nfc.webp" width="700" height="525" loading="lazy" alt="Celular lendo uma tag NFC para pet"></div>
-          <p class="post__meta">Identificação pet · 7 min</p>
-          <h3 class="h3"><a href="/blog/tag-nfc-plaquinha-microchip-ou-gps">Tag NFC, plaquinha, microchip ou GPS?</a></h3>
-          <p class="post__resumo">Compare as tecnologias e entenda a função de cada uma.</p>
+          <p class="post__meta">Tecnologia NFC · 6 min</p>
+          <h3 class="h3"><a href="/blog/como-funciona-nfc-no-celular">Como funciona o NFC no celular</a></h3>
+          <p class="post__resumo">Onde aproximar e o que fazer se o aviso não aparecer.</p>
         </li>
         <li class="card card--sky card--link post reveal">
           <div class="card__media"><img src="/imagens/pet-perfil-exemplo.webp" width="700" height="525" loading="lazy" alt="Perfil de identificação de um cachorro no celular"></div>
-          <p class="post__meta">Prevenção · 6 min</p>
-          <h3 class="h3"><a href="/blog/como-evitar-que-seu-cachorro-se-perca">Como evitar que seu cachorro se perca</a></h3>
-          <p class="post__resumo">Um checklist para passeios, portões e identificação atualizada.</p>
+          <p class="post__meta">Identificação pet · 6 min</p>
+          <h3 class="h3"><a href="/blog/o-que-colocar-na-identificacao-do-pet">O que colocar na identificação do pet</a></h3>
+          <p class="post__resumo">Os dados que ajudam e o que é melhor manter privado.</p>
         </li>
       </ul>
       <div class="blog-home__acoes"><a class="btn btn--secondary" href="/blog">Ver todos os artigos</a></div>
@@ -1963,8 +1964,8 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
     <div class="container">
       <div class="footer__top">
         <div class="footer__brand">
-          <a class="brand" href="#topo" aria-label="ConectaPet — ir para o início">
-            <img class="brand__mark" src="/marca-branca.png" srcset="/marca-branca.png 1x, /marca-branca@2x.png 2x"
+          <a class="brand" href="#topo" aria-label="ConectaPet — Aproxima e Protege, ir para o início">
+            <img class="brand__mark" src="/marca-branca.png"
                  width="56" height="51" alt="" loading="lazy" decoding="async">
             <span class="brand__text">
               <span class="brand__name">Conecta<span>Pet</span></span>

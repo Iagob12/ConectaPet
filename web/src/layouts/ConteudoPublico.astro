@@ -38,6 +38,10 @@ const schema = {
     ...extras,
   ],
 };
+
+// Conteúdo editorial e institucional é igual para todos. Guardá-lo na borda
+// da Vercel reduz TTFB e mantém essas páginas disponíveis sem tocar na API.
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 ---
 
 <!doctype html>
@@ -50,9 +54,7 @@ const schema = {
   <meta name="theme-color" content="#FCEBD2" />
   <title>{titulo} — ConectaPet</title>
   <link rel="canonical" href={canonical} />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" />
   <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta property="og:type" content="article" />
@@ -62,7 +64,11 @@ const schema = {
   <meta property="og:description" content={descricao} />
   <meta property="og:url" content={canonical} />
   <meta property="og:image" content={imagemAbsoluta} />
+  <meta property="og:image:alt" content={titulo} />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={`${titulo} — ConectaPet`} />
+  <meta name="twitter:description" content={descricao} />
+  <meta name="twitter:image" content={imagemAbsoluta} />
   <script type="application/ld+json" set:html={JSON.stringify(schema)} />
 </head>
 <body>
@@ -79,9 +85,22 @@ const schema = {
       <nav aria-label="Navegação principal">
         <a href="/chaveiro-nfc-pet">Chaveiro NFC</a>
         <a href="/como-configurar-tag-nfc-pet">Configurar tag</a>
+        <a href="/blog">Guias</a>
         <a href="/identificacao-petshop">Para parceiros</a>
       </nav>
       <a class="publica__acao" href="/#chamada-final">Quero minha tag</a>
+      <details class="publica__menu">
+        <summary>Menu</summary>
+        <div>
+          <nav aria-label="Navegação principal no celular">
+            <a href="/chaveiro-nfc-pet">Chaveiro NFC</a>
+            <a href="/como-configurar-tag-nfc-pet">Configurar tag</a>
+            <a href="/blog">Guias</a>
+            <a href="/identificacao-petshop">Para parceiros</a>
+          </nav>
+          <a class="publica__acao" href="/#chamada-final">Quero minha tag</a>
+        </div>
+      </details>
     </header>
 
     <main id="conteudo" class="publica__conteudo" tabindex="-1">
@@ -93,6 +112,7 @@ const schema = {
       <strong>ConectaPet</strong>
       <span>Identificação que aproxima e protege.</span>
       <a href="/sobre-a-conectapet">Sobre a ConectaPet</a>
+      <a href="/blog">Guias para tutores</a>
       <a href="/privacidade">Política de privacidade</a>
     </footer>
   </div>
@@ -106,6 +126,16 @@ const schema = {
   .publica__topo nav a{padding:10px 12px;border-radius:999px;color:var(--navy-900);font-weight:600;text-decoration:none}
   .publica__topo nav a:hover{background:var(--teal-100)}
   .publica__acao{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 20px;border:2px solid var(--navy-900);border-radius:999px;background:var(--teal-500);color:var(--navy-900);font-weight:700;text-decoration:none;box-shadow:2px 2px 0 var(--navy-900)}
+  .publica__menu{display:none;margin-left:auto}
+  .publica__menu summary{display:inline-flex;align-items:center;min-height:44px;padding:8px 18px;border:2px solid var(--navy-900);border-radius:999px;background:#fff;color:var(--navy-900);font-weight:700;cursor:pointer;list-style:none}
+  .publica__menu summary::-webkit-details-marker{display:none}
+  .publica__menu summary::before{content:'☰';margin-right:8px;font-size:19px;line-height:1}
+  .publica__menu[open] summary::before{content:'×';font-size:24px}
+  .publica__menu>div{position:absolute;top:calc(100% + 8px);right:max(16px,calc((100vw - 1200px)/2));width:min(330px,calc(100vw - 32px));padding:18px;border:2px solid var(--navy-900);border-radius:18px;background:#fff;box-shadow:4px 4px 0 var(--navy-900)}
+  .publica__menu nav{display:grid;gap:4px;margin:0 0 14px}
+  .publica__menu nav a{padding:11px 12px;border-radius:10px;color:var(--navy-900);font-weight:700;text-decoration:none}
+  .publica__menu nav a:hover{background:var(--teal-100)}
+  .publica__menu .publica__acao{display:flex;width:100%}
   .publica__conteudo{width:min(100% - 40px,1040px);margin:0 auto;padding:40px 0 80px}
   .publica__breadcrumb{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;font-size:14px;color:var(--navy-700)}
   .publica__breadcrumb a{color:var(--teal-700);font-weight:700}
@@ -138,8 +168,8 @@ const schema = {
   .publica__rodape{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;padding:28px 20px;background:var(--navy-900);color:#fff;font-size:14px}
   .publica__rodape a{color:#fff}
   @media(max-width:800px){
-    .publica__topo nav{display:none}
-    .publica__acao{margin-left:auto;font-size:14px;padding-inline:14px}
+    .publica__topo>nav,.publica__topo>.publica__acao{display:none}
+    .publica__menu{display:block}
     .seo-hero,.seo-article{grid-template-columns:1fr}
     .seo-hero img{order:-1}
     .seo-article__aside{position:static}
@@ -149,7 +179,7 @@ const schema = {
     .publica__topo .marca__slogan{display:none}
     .publica__topo .marca img{width:44px}
     .publica__topo .marca__nome{font-size:17px}
-    .publica__acao{font-size:13px;padding-inline:12px}
+    .publica__menu summary{font-size:14px;padding-inline:14px}
     .publica__conteudo{width:min(100% - 28px,1040px);padding-top:24px}
     .seo-hero{padding:22px}
     .seo-step{grid-template-columns:1fr}

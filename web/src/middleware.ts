@@ -176,15 +176,9 @@ function aplicarCabecalhosDeSeguranca(resposta: Response) {
     // na pagina, e nonce por requisicao exigiria reescrever o build. O ganho
     // que fica de pe e o que importa aqui — script de OUTRO servidor nao roda.
     "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
-    // A landing carrega Inter e Poppins do Google Fonts: a folha vem de
-    // fonts.googleapis.com e os arquivos de fonte de fonts.gstatic.com. Sao os
-    // dois unicos hosts externos do site inteiro, e estao aqui nominalmente —
-    // liberar 'https:' inteiro seria mais facil e nao protegeria de nada.
-    //
-    // Descoberto quebrando: a primeira versao desta politica bloqueou a folha,
-    // e a landing passou a renderizar com a fonte do sistema. Nada quebra de
-    // forma visivel nesse caso — so a tipografia inteira muda, em silencio.
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    // As declarações @font-face ficam no CSS do próprio site; somente os
+    // arquivos WOFF2 vêm do host nominal do Google Fonts.
+    "style-src 'self' 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
     "frame-src https://accounts.google.com",
     "object-src 'none'",

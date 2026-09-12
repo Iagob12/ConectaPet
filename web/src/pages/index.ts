@@ -16,8 +16,9 @@ export const GET: APIRoute = () =>
   new Response(landing, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      // Publica e igual para todo mundo, mas revalida: a copy ainda muda.
-      'Cache-Control': 'public, max-age=0, must-revalidate',
+      // A página é pública e igual para todos. A borda da Vercel pode servi-la
+      // rapidamente e manter uma cópia durante uma revalidação.
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 

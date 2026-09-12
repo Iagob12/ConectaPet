@@ -280,6 +280,9 @@ describe('vitrine e telas públicas', () => {
     ['/identificacao-petshop', 'Identificação para petshops'],
     ['/sobre-a-conectapet', 'ConectaPet: identificação simples'],
     ['/blog', 'Informação prática para proteger'],
+    ['/blog/cachorro-fugiu-como-procurar', 'Comece perto do ponto onde ele sumiu'],
+    ['/blog/como-funciona-nfc-no-celular', 'O NFC funciona por aproximação'],
+    ['/blog/o-que-colocar-na-identificacao-do-pet', 'O essencial é permitir o contato rápido'],
     ['/blog/achei-um-cachorro-perdido-o-que-fazer', 'Primeiro, tire o cachorro do perigo'],
     ['/blog/tag-nfc-plaquinha-microchip-ou-gps', 'As quatro soluções não fazem a mesma coisa'],
     ['/blog/como-evitar-que-seu-cachorro-se-perca', 'Prevenção depende de várias pequenas barreiras'],
@@ -304,6 +307,9 @@ describe('vitrine e telas públicas', () => {
     expect(sitemap).toContain('https://www.conectapet.app.br/cartaz-pet-perdido');
     expect(sitemap).toContain('https://www.conectapet.app.br/sobre-a-conectapet');
     expect(sitemap).toContain('https://www.conectapet.app.br/blog/achei-um-cachorro-perdido-o-que-fazer');
+    expect(sitemap).toContain('https://www.conectapet.app.br/blog/cachorro-fugiu-como-procurar');
+    expect(sitemap).toContain('https://www.conectapet.app.br/blog/como-funciona-nfc-no-celular');
+    expect(sitemap).toContain('https://www.conectapet.app.br/blog/o-que-colocar-na-identificacao-do-pet');
     expect(sitemap).toContain('https://www.conectapet.app.br/blog/tag-nfc-plaquinha-microchip-ou-gps');
     expect(sitemap).toContain('https://www.conectapet.app.br/blog/como-evitar-que-seu-cachorro-se-perca');
     expect(sitemap).toContain('<lastmod>2026-09-10</lastmod>');
@@ -318,6 +324,33 @@ describe('vitrine e telas públicas', () => {
     expect(html).toContain('Equipe ConectaPet');
     expect(html).toContain('datetime="2026-09-11"');
     expect(html).toContain('href="/blog"');
+  });
+
+  it('mantém a navegação completa nas páginas públicas em telas pequenas', async () => {
+    const html = await (await pegar('/blog')).text();
+    expect(html).toContain('class="publica__menu"');
+    expect(html).toContain('Navegação principal no celular');
+    expect(html).toContain('href="/blog">Guias</a>');
+  });
+
+  it('entrega as páginas públicas pelo cache da borda', async () => {
+    for (const caminho of ['/', '/blog', '/chaveiro-nfc-pet']) {
+      const cache = (await pegar(caminho)).headers.get('cache-control') ?? '';
+      expect(cache, caminho).toContain('s-maxage=3600');
+      expect(cache, caminho).toContain('stale-while-revalidate=86400');
+    }
+  });
+
+  it('publica o guia de ativação como passo a passo estruturado', async () => {
+    const html = await (await pegar('/como-configurar-tag-nfc-pet')).text();
+    expect(html).toContain('"@type":"HowTo"');
+    expect(html).toContain('"@type":"HowToStep"');
+    expect(html).toContain('"@type":"FAQPage"');
+  });
+
+  it('não anuncia um snippet de produto sem preço ou avaliações verificáveis', async () => {
+    const html = await (await pegar('/chaveiro-nfc-pet')).text();
+    expect(html).not.toContain('"@type":"Product"');
   });
 
   it('oferece login oficial do Google sem retirar o acesso por senha', async () => {
@@ -395,8 +428,9 @@ it('a política não bloqueia as fontes que a landing carrega', async () => {
     for (const origem of new Set(externos)) {
       expect(csp, `${origem} não está liberado no CSP`).toContain(origem);
     }
-    // Guarda contra o teste virar vazio se a landing parar de linkar externos.
-    expect(csp).toContain('https://fonts.googleapis.com');
+    // As declarações agora são locais, para não bloquear a primeira pintura;
+    // somente o arquivo da fonte vem do host nominal abaixo.
+    expect(html).not.toContain('fonts.googleapis.com/css2');
     expect(csp).toContain('https://fonts.gstatic.com');
   });
 

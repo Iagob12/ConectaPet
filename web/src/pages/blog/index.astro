@@ -1,35 +1,6 @@
 ---
 import ConteudoPublico from '../../layouts/ConteudoPublico.astro';
-
-const artigos = [
-  {
-    titulo: 'Achei um cachorro perdido: o que fazer?',
-    resumo: 'Um passo a passo seguro para proteger o animal, procurar o tutor e divulgar o encontro.',
-    caminho: '/blog/achei-um-cachorro-perdido-o-que-fazer',
-    categoria: 'Pet encontrado',
-    tempo: '6 min de leitura',
-    imagem: '/imagens/home-resgate-conectapet.webp',
-    alt: 'Pessoa usando o celular para identificar um cachorro encontrado',
-  },
-  {
-    titulo: 'Tag NFC, plaquinha, microchip ou GPS?',
-    resumo: 'Entenda a função de cada identificação e como combinar soluções sem confundir contato com rastreamento.',
-    caminho: '/blog/tag-nfc-plaquinha-microchip-ou-gps',
-    categoria: 'Identificação pet',
-    tempo: '7 min de leitura',
-    imagem: '/imagens/home-ativacao-nfc.webp',
-    alt: 'Celular sendo aproximado de uma identificação NFC para pet',
-  },
-  {
-    titulo: 'Como evitar que seu cachorro se perca',
-    resumo: 'Cuidados simples para passeios, portões, identificação e atualização dos contatos do tutor.',
-    caminho: '/blog/como-evitar-que-seu-cachorro-se-perca',
-    categoria: 'Prevenção',
-    tempo: '6 min de leitura',
-    imagem: '/imagens/pet-perfil-exemplo.webp',
-    alt: 'Cachorro identificado com perfil digital para contato do tutor',
-  },
-];
+import { artigos, caminhoDoArtigo } from '../../data/artigos';
 
 const schemaBlog = {
   '@type': 'Blog',
@@ -41,8 +12,8 @@ const schemaBlog = {
   blogPost: artigos.map((artigo) => ({
     '@type': 'BlogPosting',
     headline: artigo.titulo,
-    url: `https://www.conectapet.app.br${artigo.caminho}`,
-    datePublished: '2026-09-11',
+    url: `https://www.conectapet.app.br${caminhoDoArtigo(artigo)}`,
+    datePublished: artigo.publicado,
   })),
 };
 ---
@@ -68,12 +39,12 @@ const schemaBlog = {
     <div class="blog-home__grid">
       {artigos.map((artigo) => (
         <article class="blog-card">
-          <a href={artigo.caminho} aria-label={`Ler: ${artigo.titulo}`}><img src={artigo.imagem} alt={artigo.alt} width="700" height="525" loading="lazy" /></a>
+          <a href={caminhoDoArtigo(artigo)} aria-label={`Ler: ${artigo.titulo}`}><img src={artigo.imagem} alt={artigo.alt} width="700" height="525" loading="lazy" /></a>
           <div class="blog-card__corpo">
             <div class="blog-card__meta"><span>{artigo.categoria}</span><span>{artigo.tempo}</span></div>
-            <h2><a href={artigo.caminho}>{artigo.titulo}</a></h2>
+            <h2><a href={caminhoDoArtigo(artigo)}>{artigo.titulo}</a></h2>
             <p>{artigo.resumo}</p>
-            <a class="blog-card__ler" href={artigo.caminho}>Ler artigo <span aria-hidden="true">→</span></a>
+            <a class="blog-card__ler" href={caminhoDoArtigo(artigo)}>Ler artigo <span aria-hidden="true">→</span></a>
           </div>
         </article>
       ))}

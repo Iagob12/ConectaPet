@@ -1,5 +1,6 @@
 ---
 import ConteudoPublico from './ConteudoPublico.astro';
+import { artigos, caminhoDoArtigo } from '../data/artigos';
 
 interface Props {
   titulo: string;
@@ -15,19 +16,20 @@ const { titulo, descricao, slug, categoria, tempoLeitura, imagem, imagemAlt } = 
 const origem = 'https://www.conectapet.app.br';
 const caminho = `/blog/${slug}`;
 const canonical = `${origem}${caminho}`;
-const todosArtigos = [
-  { slug: 'achei-um-cachorro-perdido-o-que-fazer', titulo: 'Achei um cachorro perdido: o que fazer?', categoria: 'Pet encontrado' },
-  { slug: 'tag-nfc-plaquinha-microchip-ou-gps', titulo: 'Tag NFC, plaquinha, microchip ou GPS?', categoria: 'Identificação pet' },
-  { slug: 'como-evitar-que-seu-cachorro-se-perca', titulo: 'Como evitar que seu cachorro se perca', categoria: 'Prevenção' },
-];
-const relacionados = todosArtigos.filter((artigo) => artigo.slug !== slug);
+const artigoAtual = artigos.find((artigo) => artigo.slug === slug);
+const relacionados = artigos
+  .filter((artigo) => artigo.slug !== slug)
+  .sort((a, b) => Number(b.categoria === categoria) - Number(a.categoria === categoria))
+  .slice(0, 3);
+const publicado = artigoAtual?.publicado ?? '2026-09-12';
+const atualizado = artigoAtual?.atualizado ?? publicado;
 const schemaArtigo = {
   '@type': 'BlogPosting',
   '@id': `${canonical}#artigo`,
   headline: titulo,
   description: descricao,
-  datePublished: '2026-09-11',
-  dateModified: '2026-09-11',
+  datePublished: publicado,
+  dateModified: atualizado,
   inLanguage: 'pt-BR',
   mainEntityOfPage: { '@id': `${canonical}#pagina` },
   image: `${origem}${imagem}`,
@@ -52,7 +54,7 @@ const schemaArtigo = {
       <p class="blog-artigo__resumo">{descricao}</p>
       <div class="blog-artigo__meta">
         <span>Equipe ConectaPet</span>
-        <time datetime="2026-09-11">11 de setembro de 2026</time>
+        <time datetime={publicado}>{new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${publicado}T12:00:00Z`))}</time>
         <span>{tempoLeitura}</span>
       </div>
     </header>
@@ -72,7 +74,7 @@ const schemaArtigo = {
       <div><p>Mais orientações</p><h2 id="continue-lendo">Continue lendo</h2></div>
       <div class="blog-artigo__relacionados-grid">
         {relacionados.map((artigo) => (
-          <a href={`/blog/${artigo.slug}`}><span>{artigo.categoria}</span><strong>{artigo.titulo}</strong><b aria-hidden="true">→</b></a>
+          <a href={caminhoDoArtigo(artigo)}><span>{artigo.categoria}</span><strong>{artigo.titulo}</strong><b aria-hidden="true">→</b></a>
         ))}
       </div>
     </section>
@@ -105,12 +107,12 @@ const schemaArtigo = {
   .blog-artigo__relacionados{margin-top:64px;padding-top:34px;border-top:1px solid var(--gray-300)}
   .blog-artigo__relacionados>div:first-child p{margin:0;color:var(--teal-700);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
   .blog-artigo__relacionados h2{margin:4px 0 20px;color:var(--navy-900);font-size:28px}
-  .blog-artigo__relacionados-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .blog-artigo__relacionados-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
   .blog-artigo__relacionados-grid a{display:grid;grid-template-columns:1fr auto;gap:7px 14px;padding:20px;border:2px solid var(--navy-900);border-radius:var(--radius-lg);background:#fff;color:var(--navy-900);text-decoration:none;box-shadow:2px 2px 0 var(--navy-900)}
   .blog-artigo__relacionados-grid span{grid-column:1/-1;color:var(--teal-700);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
   .blog-artigo__relacionados-grid strong{font:700 17px/1.35 var(--font-title)}
   .blog-artigo__relacionados-grid b{align-self:end;color:var(--teal-700);font-size:22px}
   .blog-artigo__relacionados-grid a:hover{background:var(--teal-100)}
-  @media(max-width:760px){.blog-artigo__grade{grid-template-columns:1fr;gap:36px}.blog-artigo__lateral{position:static}.blog-artigo__meta>*+*::before{display:none}.blog-artigo__meta{gap:6px 14px}.blog-artigo__capa{border-radius:var(--radius-lg)}}
+  @media(max-width:760px){.blog-artigo__grade{grid-template-columns:1fr;gap:36px}.blog-artigo__lateral{position:static}.blog-artigo__meta>*+*::before{display:none}.blog-artigo__meta{gap:6px 14px}.blog-artigo__capa{border-radius:var(--radius-lg)}.blog-artigo__relacionados-grid{grid-template-columns:1fr}}
   @media(max-width:560px){.blog-artigo__relacionados-grid{grid-template-columns:1fr}}
 </style>

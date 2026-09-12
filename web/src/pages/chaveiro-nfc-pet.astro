@@ -1,19 +1,5 @@
 ---
 import ConteudoPublico from '../layouts/ConteudoPublico.astro';
-
-const schemaProduto = {
-  '@type': 'Product',
-  '@id': 'https://www.conectapet.app.br/chaveiro-nfc-pet#produto',
-  name: 'Chaveiro NFC para pet ConectaPet',
-  alternateName: ['Tag NFC para pet', 'Chaveiro de identificação para cachorro e gato'],
-  description: 'Chaveiro de identificação com NFC e QR Code para a coleira de cães e gatos, com perfil online e contatos atualizáveis.',
-  image: [
-    'https://www.conectapet.app.br/imagens/home-resgate-conectapet.webp',
-    'https://www.conectapet.app.br/imagens/home-ativacao-nfc.webp',
-  ],
-  brand: { '@type': 'Brand', name: 'ConectaPet' },
-  category: 'Identificação para animais de estimação',
-};
 ---
 
 <ConteudoPublico
@@ -22,7 +8,6 @@ const schemaProduto = {
   caminho="/chaveiro-nfc-pet"
   rotulo="Chaveiro NFC para pet"
   imagem="/imagens/home-ativacao-nfc.webp"
-  schemaAdicional={schemaProduto}
 >
   <section class="seo-hero">
     <div>

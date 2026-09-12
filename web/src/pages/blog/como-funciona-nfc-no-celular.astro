@@ -1,0 +1,45 @@
+---
+import BlogArtigo from '../../layouts/BlogArtigo.astro';
+---
+
+<BlogArtigo
+  titulo="Como funciona o NFC no celular para ler uma tag pet"
+  descricao="Entenda como aproximar o celular de uma tag NFC para pet, onde fica a antena e o que fazer quando a notificação não aparece."
+  slug="como-funciona-nfc-no-celular"
+  categoria="Tecnologia NFC"
+  tempoLeitura="6 min de leitura"
+  imagem="/imagens/ativacao-passo-2-aproximar.webp"
+  imagemAlt="Parte traseira de um celular sendo aproximada de uma tag NFC para pet"
+>
+  <h2>O NFC funciona por aproximação</h2>
+  <p>NFC é uma comunicação de curto alcance. A tag guarda um endereço digital e não precisa de bateria própria: ao aproximar um celular compatível, o aparelho lê esse endereço e mostra uma notificação. Depois do toque, a página abre no navegador.</p>
+  <p>Na ConectaPet, esse endereço leva ao perfil do animal. Quem encontrou consegue ver as informações liberadas pelo tutor e usar botões de ligação ou WhatsApp sem instalar aplicativo.</p>
+
+  <h2>Onde encostar a tag no celular</h2>
+  <p>A posição da antena varia conforme o modelo. Na maioria dos aparelhos, comece pela parte superior traseira. Mantenha o celular desbloqueado, aproxime devagar e espere dois ou três segundos. Se não houver resposta, mova a tag alguns centímetros e tente novamente.</p>
+
+  <div class="blog-artigo__destaque"><p><strong>Não precisa encostar com força.</strong> A leitura depende da posição das antenas, não de pressão. Capas grossas, suportes magnéticos e objetos metálicos podem diminuir o alcance.</p></div>
+
+  <h2>Como ativar o NFC</h2>
+  <h3>No Android</h3>
+  <p>Abra as configurações do aparelho e pesquise por “NFC”. Ative a opção quando ela estiver disponível. O nome e o caminho podem mudar entre fabricantes.</p>
+  <h3>No iPhone</h3>
+  <p>Nos modelos compatíveis com leitura em segundo plano, normalmente basta desbloquear a tela e aproximar a parte superior do aparelho. Não existe um botão geral de NFC igual ao de muitos celulares Android.</p>
+
+  <h2>O que fazer se não aparecer uma notificação</h2>
+  <ul>
+    <li>Desbloqueie a tela e tente novamente.</li>
+    <li>Confirme se o NFC está ativo nas configurações.</li>
+    <li>Retire capas espessas ou acessórios magnéticos.</li>
+    <li>Mude lentamente o ponto de aproximação.</li>
+    <li>Evite testar sobre uma mesa ou superfície metálica.</li>
+    <li>Use o QR Code da tag como alternativa, quando disponível.</li>
+  </ul>
+
+  <h2>Leitura e configuração são momentos diferentes</h2>
+  <p>No primeiro acesso, o endereço exclusivo abre o fluxo de ativação para o tutor criar a conta e cadastrar o pet. Depois da confirmação final, o mesmo endereço passa a abrir o perfil público do animal. A tag só é vinculada quando o cadastro é concluído.</p>
+  <p>Veja as telas e posições corretas no <a href="/como-configurar-tag-nfc-pet">passo a passo ilustrado para configurar a tag NFC</a>.</p>
+
+  <h2>NFC não é GPS</h2>
+  <p>A leitura NFC acontece somente quando alguém aproxima um aparelho. Ela não acompanha o deslocamento do pet nem transmite localização continuamente. A vantagem é oferecer identificação sem bateria, com contatos que podem ser atualizados pelo tutor.</p>
+</BlogArtigo>

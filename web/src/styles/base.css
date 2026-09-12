@@ -1,3 +1,10 @@
+/* Fontes declaradas diretamente: elimina a folha remota do Google Fonts que
+ * bloqueava a primeira pintura. font-display:swap mantém o texto imediatamente
+ * legível enquanto os arquivos WOFF2 são baixados. */
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;src:url("https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2") format("woff2")}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:700;font-display:swap;src:url("https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2") format("woff2")}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:800;font-display:swap;src:url("https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLDD4Z1xlFQ.woff2") format("woff2")}
+
 /* Tokens e componentes compartilhados entre o fluxo de ativacao e o painel.
  *
  * Os valores aqui sao os MESMOS do landing.html, e isso e verificado por
