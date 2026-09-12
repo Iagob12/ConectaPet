@@ -896,9 +896,12 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   border:1.5px dashed var(--gray-300); border-radius:var(--radius-md);
   padding:12px; font-size:14px; color:var(--navy-700); background:var(--white);
 }
-.post .card__media{ height:120px; }
-.post .card__media svg{ height:72px; width:auto; }
-.post h3{ font-size:18px; line-height:1.35; }
+.post .card__media{ height:170px; padding:0; }
+.post .card__media img{ display:block; width:100%; height:100%; object-fit:cover; }
+.post h3{ font-size:20px; line-height:1.35; }
+.post__meta{ margin:0 0 10px; color:var(--teal-700)!important; font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.post__resumo{ margin:10px 0 0; font-size:15px; line-height:1.55; }
+.blog-home__acoes{ margin-top:var(--sp-8); }
 
 /* ==========================================================================
    17. PAINÉIS: PETSHOPS, CHAMADA FINAL, NEWSLETTER
@@ -1846,35 +1849,37 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
   </section>
 
   <!-- ===== 15. Conteúdo / blog ===== -->
-  <!-- Fora do ar até os artigos existirem. Para revê-la, use <html class="rascunho">. -->
-  <section class="section rascunho-only" id="blog" aria-labelledby="t-blog">
+  <section class="section section--sand" id="blog" aria-labelledby="t-blog">
     <div class="container">
       <div class="section-head reveal">
         <h2 class="title" id="t-blog">
-          <span class="l1">Dicas de quem entende</span>
-          <span class="l2">de pet perdido.</span>
+          <span class="l1">Informação que ajuda</span>
+          <span class="l2">antes e depois de um pet se perder.</span>
         </h2>
-        <p class="nota">Quatro cards de artigos, por exemplo:</p>
+        <p class="lead">Guias objetivos para prevenir fugas, escolher uma identificação e agir com segurança quando um animal é encontrado.</p>
       </div>
 
-      <ul class="grid grid--4 list-plain">
+      <ul class="grid grid--3 list-plain">
         <li class="card card--peach card--link post reveal">
-          <div class="card__media"><svg width="72" height="72" aria-hidden="true" focusable="false"><use href="#i-clock"/></svg></div>
-          <h3 class="h3"><a href="#blog">O que fazer nas primeiras 24 horas depois que seu pet sumiu</a></h3>
+          <div class="card__media"><img src="/imagens/home-resgate-conectapet.webp" width="700" height="525" loading="lazy" alt="Pessoa usando o celular para identificar um cachorro encontrado"></div>
+          <p class="post__meta">Pet encontrado · 6 min</p>
+          <h3 class="h3"><a href="/blog/achei-um-cachorro-perdido-o-que-fazer">Achei um cachorro perdido: o que fazer?</a></h3>
+          <p class="post__resumo">Como proteger o animal, procurar o tutor e divulgar o encontro.</p>
         </li>
         <li class="card card--mint card--link post reveal">
-          <div class="card__media"><svg width="72" height="72" aria-hidden="true" focusable="false"><use href="#i-pencil"/></svg></div>
-          <h3 class="h3"><a href="#blog">Como montar um cartaz de pet desaparecido que as pessoas leem</a></h3>
+          <div class="card__media"><img src="/imagens/home-ativacao-nfc.webp" width="700" height="525" loading="lazy" alt="Celular lendo uma tag NFC para pet"></div>
+          <p class="post__meta">Identificação pet · 7 min</p>
+          <h3 class="h3"><a href="/blog/tag-nfc-plaquinha-microchip-ou-gps">Tag NFC, plaquinha, microchip ou GPS?</a></h3>
+          <p class="post__resumo">Compare as tecnologias e entenda a função de cada uma.</p>
         </li>
         <li class="card card--sky card--link post reveal">
-          <div class="card__media"><svg width="72" height="72" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg></div>
-          <h3 class="h3"><a href="#blog">Microchip, tag e plaquinha: o que a lei exige no seu estado</a></h3>
-        </li>
-        <li class="card card--aqua card--link post reveal">
-          <div class="card__media"><svg width="72" height="72" aria-hidden="true" focusable="false"><use href="#i-paw"/></svg></div>
-          <h3 class="h3"><a href="#blog">Achei um cachorro na rua: o passo a passo</a></h3>
+          <div class="card__media"><img src="/imagens/pet-perfil-exemplo.webp" width="700" height="525" loading="lazy" alt="Perfil de identificação de um cachorro no celular"></div>
+          <p class="post__meta">Prevenção · 6 min</p>
+          <h3 class="h3"><a href="/blog/como-evitar-que-seu-cachorro-se-perca">Como evitar que seu cachorro se perca</a></h3>
+          <p class="post__resumo">Um checklist para passeios, portões e identificação atualizada.</p>
         </li>
       </ul>
+      <div class="blog-home__acoes"><a class="btn btn--secondary" href="/blog">Ver todos os artigos</a></div>
     </div>
   </section>
 
@@ -2000,7 +2005,7 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{ background:var(
             <ul class="footer__list">
               <li><a href="/sobre-a-conectapet">Sobre a ConectaPet</a></li>
               <li><a href="/tag-nfc-para-cachorro">Sobre a tag NFC</a></li>
-              <li><span class="footer__soon">Blog</span></li>
+              <li><a href="/blog">Blog ConectaPet</a></li>
               <li><a href="/identificacao-petshop">Para petshops</a></li>
               <li><a href="/identificacao-petshop">Parcerias com ONGs</a></li>
               <li><span class="footer__soon">Trabalhe conosco</span></li>

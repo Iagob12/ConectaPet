@@ -1,0 +1,106 @@
+---
+import ConteudoPublico from '../../layouts/ConteudoPublico.astro';
+
+const artigos = [
+  {
+    titulo: 'Achei um cachorro perdido: o que fazer?',
+    resumo: 'Um passo a passo seguro para proteger o animal, procurar o tutor e divulgar o encontro.',
+    caminho: '/blog/achei-um-cachorro-perdido-o-que-fazer',
+    categoria: 'Pet encontrado',
+    tempo: '6 min de leitura',
+    imagem: '/imagens/home-resgate-conectapet.webp',
+    alt: 'Pessoa usando o celular para identificar um cachorro encontrado',
+  },
+  {
+    titulo: 'Tag NFC, plaquinha, microchip ou GPS?',
+    resumo: 'Entenda a função de cada identificação e como combinar soluções sem confundir contato com rastreamento.',
+    caminho: '/blog/tag-nfc-plaquinha-microchip-ou-gps',
+    categoria: 'Identificação pet',
+    tempo: '7 min de leitura',
+    imagem: '/imagens/home-ativacao-nfc.webp',
+    alt: 'Celular sendo aproximado de uma identificação NFC para pet',
+  },
+  {
+    titulo: 'Como evitar que seu cachorro se perca',
+    resumo: 'Cuidados simples para passeios, portões, identificação e atualização dos contatos do tutor.',
+    caminho: '/blog/como-evitar-que-seu-cachorro-se-perca',
+    categoria: 'Prevenção',
+    tempo: '6 min de leitura',
+    imagem: '/imagens/pet-perfil-exemplo.webp',
+    alt: 'Cachorro identificado com perfil digital para contato do tutor',
+  },
+];
+
+const schemaBlog = {
+  '@type': 'Blog',
+  '@id': 'https://www.conectapet.app.br/blog#blog',
+  name: 'Blog ConectaPet',
+  description: 'Orientações sobre identificação, prevenção e reencontro de animais de estimação.',
+  inLanguage: 'pt-BR',
+  publisher: { '@id': 'https://www.conectapet.app.br/#organizacao' },
+  blogPost: artigos.map((artigo) => ({
+    '@type': 'BlogPosting',
+    headline: artigo.titulo,
+    url: `https://www.conectapet.app.br${artigo.caminho}`,
+    datePublished: '2026-09-11',
+  })),
+};
+---
+
+<ConteudoPublico
+  titulo="Blog ConectaPet: identificação, prevenção e reencontro de pets"
+  descricao="Guias claros da ConectaPet para proteger cães e gatos, identificar animais e agir quando um pet desaparece ou é encontrado."
+  caminho="/blog"
+  rotulo="Blog"
+  schemaAdicional={schemaBlog}
+>
+  <section class="blog-home__hero">
+    <p class="seo-hero__rotulo">Conteúdo para tutores</p>
+    <h1>Informação prática para proteger e reencontrar pets</h1>
+    <p>Guias objetivos para agir com segurança, escolher uma identificação adequada e facilitar o contato entre quem encontrou e o tutor.</p>
+  </section>
+
+  <section class="blog-home__lista" aria-labelledby="artigos-recentes">
+    <div class="blog-home__titulo">
+      <div><p>Conteúdo novo</p><h2 id="artigos-recentes">Artigos recentes</h2></div>
+      <span>{artigos.length} guias publicados</span>
+    </div>
+    <div class="blog-home__grid">
+      {artigos.map((artigo) => (
+        <article class="blog-card">
+          <a href={artigo.caminho} aria-label={`Ler: ${artigo.titulo}`}><img src={artigo.imagem} alt={artigo.alt} width="700" height="525" loading="lazy" /></a>
+          <div class="blog-card__corpo">
+            <div class="blog-card__meta"><span>{artigo.categoria}</span><span>{artigo.tempo}</span></div>
+            <h2><a href={artigo.caminho}>{artigo.titulo}</a></h2>
+            <p>{artigo.resumo}</p>
+            <a class="blog-card__ler" href={artigo.caminho}>Ler artigo <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+</ConteudoPublico>
+
+<style>
+  .blog-home__hero{padding:clamp(30px,6vw,64px);border:2px solid var(--navy-900);border-radius:var(--radius-xl);background:linear-gradient(135deg,#fff 0%,#fff 64%,var(--teal-100) 100%);box-shadow:var(--shadow-hard);text-align:center}
+  .blog-home__hero h1{max-width:20ch;margin:0 auto 16px;color:var(--navy-900);font-size:clamp(32px,5vw,50px);line-height:1.1}
+  .blog-home__hero>p:last-child{max-width:64ch;margin:0 auto;font-size:18px;line-height:1.65}
+  .blog-home__lista{margin-top:56px}
+  .blog-home__titulo{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:24px}
+  .blog-home__titulo p{margin:0 0 4px;color:var(--teal-700);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .blog-home__titulo h2{margin:0;color:var(--navy-900);font-size:clamp(27px,4vw,36px)}
+  .blog-home__titulo>span{color:var(--navy-700);font-size:14px}
+  .blog-home__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+  .blog-card{overflow:hidden;border:2px solid var(--navy-900);border-radius:var(--radius-lg);background:#fff;box-shadow:3px 3px 0 var(--navy-900)}
+  .blog-card>a{display:block;overflow:hidden;border-bottom:2px solid var(--navy-900)}
+  .blog-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;transition:transform .25s ease}
+  .blog-card:hover img{transform:scale(1.025)}
+  .blog-card__corpo{padding:22px}
+  .blog-card__meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--teal-700);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+  .blog-card h2{margin:14px 0 10px;font-size:21px;line-height:1.25}
+  .blog-card h2 a{color:var(--navy-900);text-decoration:none}
+  .blog-card p{margin:0;font-size:15px;line-height:1.6}
+  .blog-card__ler{display:inline-flex;margin-top:18px;color:var(--teal-700);font-weight:800}
+  @media(max-width:900px){.blog-home__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:620px){.blog-home__grid{grid-template-columns:1fr}.blog-home__titulo{align-items:start;flex-direction:column}.blog-card__corpo{padding:20px}}
+</style>
